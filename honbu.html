@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FUKUSHI QUEST 本部モニター</title>
+<style>
+  :root{ --bg:#211c14; --panel:#2c2519; --line:#3d3527; --cream:#f2ecdd; --gold:#e0b64a; --sub:#c9bfa6; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--cream);
+        font-family:'Hiragino Kaku Gothic ProN','Yu Gothic','Noto Sans JP',sans-serif; }
+  header{ display:flex; align-items:center; justify-content:space-between; padding:14px 26px;
+          background:linear-gradient(180deg,#2c2519,#211c14); border-bottom:2px solid var(--line); }
+  header h1{ margin:0; font-size:26px; letter-spacing:.06em; }
+  header h1 b{ color:var(--gold); }
+  header .st{ font-size:13px; color:var(--sub); }
+  .wrap{ display:grid; grid-template-columns:1.35fr 1fr; gap:18px; padding:18px 22px; }
+  @media (max-width:900px){ .wrap{ grid-template-columns:1fr; } }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 18px; }
+  .card h2{ margin:0 0 12px; font-size:19px; color:var(--gold); letter-spacing:.04em; }
+  /* 在庫 */
+  .prize{ display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line); }
+  .prize:last-child{ border-bottom:none; }
+  .rchip{ min-width:44px; text-align:center; font-weight:800; font-size:12px; padding:4px 6px; border-radius:8px; color:#211c14; }
+  .r1{ background:#7db4d8; } .r2{ background:#79c08a; } .r3{ background:#e08a8a; } .r4{ background:linear-gradient(90deg,#e0b64a,#f0d98a); }
+  .pname{ flex:1; font-size:17px; }
+  .pnum{ font-size:15px; color:var(--sub); min-width:96px; text-align:right; }
+  .pnum b{ font-size:22px; color:var(--cream); }
+  .pnum.zero b{ color:#e07a7a; }
+  .bar{ width:150px; height:12px; background:#1c180f; border-radius:6px; overflow:hidden; margin-left:8px; }
+  .bar>i{ display:block; height:100%; background:linear-gradient(90deg,var(--gold),#f0d98a); }
+  /* ランキング */
+  .rk{ display:flex; align-items:center; gap:12px; padding:10px 4px; border-bottom:1px solid var(--line); }
+  .rk:last-child{ border-bottom:none; }
+  .rank{ min-width:40px; font-weight:900; font-size:20px; color:var(--gold); text-align:center; }
+  .rank.top1{ color:#ffd76a; } .rank.top2{ color:#d9d9d9; } .rank.top3{ color:#d8a56b; }
+  .nick{ flex:1; font-size:17px; }
+  .recog{ font-size:12px; color:var(--sub); }
+  .pts{ font-size:20px; font-weight:800; }
+  .pts small{ font-size:12px; color:var(--sub); font-weight:400; }
+  .foot{ padding:8px 22px 18px; color:var(--sub); font-size:12px; }
+  .demo{ display:inline-block; margin-left:10px; padding:2px 8px; border:1px solid var(--line); border-radius:8px; color:#e0b64a; font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>FUKUSHI <b>QUEST</b> 本部モニター</h1>
+  <div class="st" id="st">接続中…</div>
+</header>
+<div class="wrap">
+  <div class="card">
+    <h2>🎁 景品 在庫</h2>
+    <div id="prizes"></div>
+  </div>
+  <div class="card">
+    <h2>🏆 ランキング</h2>
+    <div id="ranking"></div>
+  </div>
+</div>
+<div class="foot">自動更新（リアルタイム）。景品確定ごとに在庫が減り、ポイント獲得でランキングが動きます。<span id="demo"></span></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const cfg = window.FQ_CONFIG || {};
+const REAL = cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf("YOUR-PROJECT")<0 && window.supabase;
+const rchip = r => `<span class="rchip r${r}">${({1:'青',2:'緑',3:'赤',4:'虹'})[r]||'-'}</span>`;
+function renderPrizes(rows){
+  rows=(rows||[]).slice().sort((a,b)=>(a.sort-b.sort)||a.name.localeCompare(b.name));
+  document.getElementById('prizes').innerHTML = rows.map(p=>{
+    const pct = p.initial_stock>0 ? Math.round(p.stock/p.initial_stock*100) : 0;
+    return `<div class="prize">${rchip(p.rarity)}
+      <span class="pname">${p.name}</span>
+      <span class="pnum ${p.stock<=0?'zero':''}"><b>${p.stock}</b> / ${p.initial_stock}</span>
+      <span class="bar"><i style="width:${pct}%"></i></span></div>`;
+  }).join('') || '<div class="prize">景品が未登録です</div>';
+}
+function renderRanking(rows){
+  rows=(rows||[]).slice().sort((a,b)=>b.points-a.points).slice(0,20);
+  document.getElementById('ranking').innerHTML = rows.map((r,i)=>{
+    const rk=i+1, cls = rk<=3?`top${rk}`:'';
+    return `<div class="rk"><span class="rank ${cls}">${rk}</span>
+      <span class="nick">${r.nickname||'（未設定）'}<span class="recog"> ・ ${r.recog_no||''}</span></span>
+      <span class="pts">${r.points}<small> pt</small></span></div>`;
+  }).join('') || '<div class="rk">まだ参加者がいません</div>';
+}
+
+async function boot(){
+  const st=document.getElementById('st');
+  if(!REAL){
+    document.getElementById('demo').innerHTML='<span class="demo">DEMO表示（config.js未設定）</span>';
+    st.textContent='デモ表示';
+    renderPrizes([
+      {name:'地域店舗 商品券 500円',rarity:1,stock:82,initial_stock:100,sort:10},
+      {name:'カフェ ドリンク券',rarity:1,stock:74,initial_stock:100,sort:11},
+      {name:'オリジナルグッズ',rarity:2,stock:31,initial_stock:50,sort:20},
+      {name:'ノベルティ 文具セット',rarity:2,stock:40,initial_stock:50,sort:21},
+      {name:'キッチンカー 利用券',rarity:3,stock:6,initial_stock:20,sort:30},
+      {name:'特賞 コラボグッズ',rarity:4,stock:1,initial_stock:5,sort:40},
+    ]);
+    renderRanking([
+      {nickname:'ハルカ',recog_no:'4737',points:34},{nickname:'そうた',recog_no:'1180',points:29},
+      {nickname:'みお',recog_no:'2093',points:27},{nickname:'けんと',recog_no:'5521',points:22},
+      {nickname:'あやの',recog_no:'0846',points:18},{nickname:'ゆうき',recog_no:'3312',points:15},
+    ]);
+    return;
+  }
+  const sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  async function load(){
+    const [{data:pz},{data:rk}] = await Promise.all([
+      sb.from('prizes').select('*'),
+      sb.from('ranking').select('*')
+    ]);
+    renderPrizes(pz); renderRanking(rk);
+    st.textContent='更新 '+new Date().toLocaleTimeString('ja-JP');
+  }
+  await load();
+  sb.channel('honbu')
+    .on('postgres_changes',{event:'*',schema:'public',table:'prizes'},load)
+    .on('postgres_changes',{event:'*',schema:'public',table:'participants'},load)
+    .subscribe();
+  setInterval(load, 10000); // 保険のポーリング
+}
+boot();
+</script>
+</body>
+</html>
