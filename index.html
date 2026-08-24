@@ -48,8 +48,14 @@
   .ptchip .val{color:var(--red);font-size:22px;min-width:22px;text-align:center;}
   /* sections */
   section{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px;margin-top:16px;box-shadow:var(--shadow);position:relative;}
-  section:nth-of-type(odd){transform:rotate(-.4deg);}
-  section:nth-of-type(even){transform:rotate(.4deg);}
+  /* fq-flat-v1: 枠の傾き（1つおきに ±0.4度）をやめた。2026-08-24 ユーザー判断。
+     元は「手で貼った紙」の風合いを出すための演出だったが、
+     ・見ていて気持ち悪い（本人の言葉）
+     ・傾いた要素の中の文字は、端末によって輪郭がぼやける
+     1500人がそれぞれ違う端末で見るので、読みやすさを優先した。
+     ★戻したくなったら、下の2行のコメントを外すだけ。
+     section:nth-of-type(odd){transform:rotate(-.4deg);}
+     section:nth-of-type(even){transform:rotate(.4deg);} */
   .sec-h{display:flex;align-items:center;gap:9px;margin:0 0 4px;font-size:19px;font-weight:900;}
   .sec-h .em{font-size:20px;}
   .sec-sub{color:var(--muted);font-size:12.5px;margin:0 0 12px;line-height:1.7;font-weight:500;}

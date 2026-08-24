@@ -54,6 +54,7 @@ python3 -m http.server 8000
 | `fq-honbu-lite-v1` | 本部モニターの負荷を下げる（`honbu.html`） |
 | `fq-draws3-v1` | ハズレ個数の自動計算が3倍ずれていた（`index.html` 主催者設定） |
 | `check-v1` | **動作チェックページ `check.html` を新設**（前日と当日の朝に開く） |
+| `fq-flat-v1` | 枠の傾き（±0.4度）をやめた（`index.html` の `<style>`） |
 
 **追加SQL：`supabase_migration_20260824.sql` を Supabase の SQL Editor で1回 Run すること。**
 これを流さないと、認識番号が仮のままになり、ガチャ回数の上限も効かない。
@@ -361,3 +362,30 @@ git push origin main
 
 GitHub Pages の帯域は月100GB、Supabase 無料枠は月5GB。どちらも収まる。
 `index.html` は GitHub Pages 側なので Supabase の無料枠は使わない。
+
+
+---
+
+## `fq-flat-v1` — 枠の傾きをやめた
+
+元のデザインは、`section` を1つおきに **±0.4度** 傾けていた。
+「手で貼った紙」の風合いを出すための演出（背景の紙色・破線の枠・手書き風フォントとセット）。
+
+```css
+/* 元のCSS。いまはコメントアウトしてある */
+section:nth-of-type(odd){transform:rotate(-.4deg);}
+section:nth-of-type(even){transform:rotate(.4deg);}
+```
+
+**2026-08-24 にユーザー判断で外した。** 理由は2つ。
+
+1. 見ていて落ち着かない（本人の言葉：「なんか気持ち悪い」）
+2. 傾いた要素の中の文字は、端末によって輪郭がぼやける。
+   **1500人がそれぞれ違う端末で見るので、読みやすさを優先した**
+
+**★この2行は消さずに `<style>` の中にコメントとして残してある。** 戻したくなったらコメントを外すだけ。
+
+**★これは `<style>`（＝演出の正本）に手を入れた唯一の箇所。**
+「演出は触っていない」という確認をするときは、この1か所だけ差分が出るのが正しい。
+
+`honbu.html` と `check.html` はもともと傾いていない（遠くから数字を読む画面なので）。
