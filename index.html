@@ -301,7 +301,7 @@
     </div>
   </section>
 
-  <section class="testpanel">
+  <section class="testpanel" id="devPanel" style="display:none">
     <div class="sec-h hand"><span class="em">🧪</span>音・演出をすぐ確認（開発テスト用）</div>
     <div class="warnband">本番公開時はこの枠ごと消せます。QRを貯めなくても、ここから<b>ガチャ演出と効果音</b>をすぐ再生して確認できます。<br>※音が出ないときは、先に画面を1回タップしてから押してください（スマホ／ブラウザの自動再生制限のためです）。</div>
     <div class="scan-grid">
@@ -345,8 +345,8 @@
   <div class="foot">
     <div id="revive"></div>
     進捗はこの端末に保存されます。<br>
-    <button class="linkbtn" data-act="reset">最初からやり直す（リセット）</button><br>
-    <button class="linkbtn" data-act="adminToggle" style="color:#6a4a10;font-weight:800;">⚙️ 主催者用の設定（景品・当たる確率）</button>
+    <span id="resetLink" style="display:none"><button class="linkbtn" data-act="reset">最初からやり直す（リセット）</button><br></span>
+    <button class="linkbtn" id="admLink" data-act="adminToggle" style="display:none;color:#6a4a10;font-weight:800;">⚙️ 主催者用の設定（景品・当たる確率）</button>
     <div class="credit">キャラクター：326（ナカムラミツル）／ 許諾のうえ使用</div>
   </div>
 
@@ -354,10 +354,10 @@
     <div class="sec-h hand"><span class="em">⚙️</span>主催者用の設定</div>
     <div class="adm-note">この設定はこの端末に保存されます。参加者には表示されません（この画面は下のボタンで閉じられます）。</div>
     <h4>景品と当たる確率</h4>
-    <p class="adm-note">それぞれの景品の<b>個数</b>と<b>想定来場者数</b>を入れると、ハズレの数と各当選確率が自動で計算されます。数字はあとから自由に微調整できます（レア度＝演出の色：青1／緑2／赤3／虹4）。</p>
+    <p class="adm-note">それぞれの景品の<b>個数</b>と<b>想定来場者数</b>を入れると、ハズレの数と各当選確率が自動で計算されます。数字はあとから自由に微調整できます（レア度＝演出の色：青1／緑2／赤3／虹4）。<br><b>★1人が最大3回引くので、ガチャの総回数は「来場者数×3」です。</b>ハズレの個数はその回数から計算されます。</p>
     <div class="att-row">
       <label class="att-l">想定来場者数<input type="number" id="attendees" min="0" step="1"></label>
-      <button class="btn2" data-act="autoLose">来場者数からハズレを自動計算</button>
+      <button class="btn2" data-act="autoLose">ガチャ総回数（来場者数×3）からハズレを自動計算</button>
     </div>
     <div class="prow-head3"><span>景品（絵文字・名前・種類・レア度）</span><span>個数 → 確率</span></div>
     <div id="prizeRows"></div>
@@ -771,6 +771,30 @@ function render(){
 
 function resetAll(){if(!confirm('進捗をすべて消して最初からやり直しますか？'))return;store.clear();S=defState();render();toast('リセットしました');}
 
+/* ==== fq-role-v1: 表示モード（参加者／開発テスト／主催者）====
+   参加者は何もしなければ何も見えない。以下はURLで一度だけ開けば、その端末に記憶される。
+     ?dev=1   … 「音・演出をすぐ確認」パネルと「最初からやり直す」を出す
+     ?admin=1 … 「⚙️ 主催者用の設定」を出す
+   消すときは ?dev=0 / ?admin=0
+   ★これを入れた理由：参加者に見えていると「ポイント+1」連打でクエストを回らずに
+     ガチャが引け、確率も書き換えられてしまうため。 */
+var ROLEKEY='fukushi_quest_326_role';
+(function(){
+  var role={dev:false,admin:false};
+  try{ var s=localStorage.getItem(ROLEKEY); if(s){ var j=JSON.parse(s); if(j){ role.dev=!!j.dev; role.admin=!!j.admin; } } }catch(e){}
+  try{
+    var p=new URLSearchParams(location.search), touched=false;
+    ['dev','admin'].forEach(function(k){
+      var v=p.get(k);
+      if(v!==null){ role[k]=(v!=='0'&&v!=='false'); touched=true; }
+    });
+    if(touched){ try{ localStorage.setItem(ROLEKEY,JSON.stringify(role)); }catch(e){} }
+  }catch(e){}
+  var dp=document.getElementById('devPanel'); if(dp) dp.style.display=role.dev?'':'none';
+  var rl=document.getElementById('resetLink'); if(rl) rl.style.display=role.dev?'':'none';
+  var al=document.getElementById('admLink');   if(al) al.style.display=role.admin?'':'none';
+  window.FQ_ROLE=role;
+})();
 (function(){try{var params=new URLSearchParams(location.search);var q=params.get('q');if(q){scan(q);if(history.replaceState)history.replaceState(null,'',location.pathname);}}catch(e){}})();
 (function(){ var n=document.getElementById('playerName'); if(n) n.value=(S.name||''); var d=document.getElementById('devId'); if(d) d.textContent=DID; })();
 render();
@@ -865,13 +889,38 @@ function recalcProbs(){
   rows.forEach(function(row,i){ var sp=row.querySelector('.pf-prob'); if(sp) sp.textContent = total>0? ('→ '+(counts[i]/total*100).toFixed(1)+'%') : '→ –'; });
   var lp=document.getElementById('loseProb'); if(lp) lp.textContent = total>0? ((lose/total*100).toFixed(1)+'%') : '–';
   var att=parseFloat((document.getElementById('attendees')||{}).value)||0;
-  var tb=document.getElementById('totBox'); if(tb) tb.innerHTML='景品 合計 <b>'+sum+'</b> 個 ＋ ハズレ <b>'+lose+'</b> ＝ <b>全'+total+'本</b>'+(att?('　／　想定来場者 '+att+'人'+(att!==total?'（差 '+(att-total)+'）':'（一致）')):'');
+  var draws=att*(window.DRAWS_PER_PERSON||3);
+  var tb=document.getElementById('totBox');
+  if(tb){
+    var msg='景品 合計 <b>'+sum+'</b> 個 ＋ ハズレ <b>'+lose+'</b> ＝ <b>全'+total+'本</b>';
+    if(att){
+      msg+='<br>想定来場者 '+att+'人 × 3回 ＝ <b>ガチャ最大 '+draws+'回</b>';
+      if(total!==draws) msg+='（'+(draws>total?'不足 '+(draws-total):'余り '+(total-draws))+'）';
+      else msg+='（一致）';
+      /* 当たりは毎回この比率で抽選される（箱から減るのではない）。
+         景品はサーバー在庫なので、当選が在庫数に達した時点で以後は全部ハズレになる。
+         当たる確率は sum/total なので、在庫 sum 個が尽きるのは およそ total 回目。 */
+      if(sum>0 && total>0 && draws>total){
+        msg+='<br><b style="color:#c0392b">⚠ この設定だと、景品は約 '+total+' 回目（全体の '+Math.round(total/draws*100)+'%）で尽きます。</b>'
+           + '以降はみんなハズレになります。景品を増やすか、ハズレの個数を増やしてください。';
+      } else if(sum>0 && total>0){
+        msg+='<br><span style="color:#5f8a34">最後まで景品が残る見込みです。</span>';
+      }
+    }
+    tb.innerHTML=msg;
+  }
 }
+/* fq-draws3-v1: ハズレの個数は「来場者数」ではなく「ガチャの総回数」から引く。
+   1人が最大3回引ける設計なので、1500人なら最大4500回。
+   ここを1人1回で計算していると、当たりが出すぎて景品が中盤で尽きる。
+   ★この 3 は supabase_migration_20260824.sql の MAX_DRAWS と必ず同じ数にすること。 */
+var DRAWS_PER_PERSON=3;
 function autoLose(){
   var rows=document.querySelectorAll('#prizeRows .padminrow'), sum=0;
   rows.forEach(function(row){ var v=parseFloat(row.querySelector('[data-fld=count]').value); if(!isNaN(v)) sum+=Math.max(0,v); });
   var att=parseFloat((document.getElementById('attendees')||{}).value)||0;
-  var lc=document.getElementById('loseCount'); if(lc) lc.value=Math.max(0,Math.round(att-sum));
+  var draws=att*DRAWS_PER_PERSON;
+  var lc=document.getElementById('loseCount'); if(lc) lc.value=Math.max(0,Math.round(draws-sum));
   recalcProbs();
 }
 function readAdminForm(){
@@ -971,14 +1020,13 @@ if ('serviceWorker' in navigator) {
   document.addEventListener('input', function(ev){ var t=ev.target; if(t && t.id==='playerName'){ clearTimeout(nameTimer); nameTimer=setTimeout(syncName, 600); } });
 
   // ---- ランキング表示 ----
-  function renderRank(rows){
-    rows = (rows||[]).slice().filter(function(r){return (r.points||0)>0;}).sort(function(a,b){return b.points-a.points;});
-    var top = rows.slice(0,20);
+  /* fq-rank-lite-v1: 全件ではなく「上位20人」と「自分の1行」だけを受け取る。
+     以前は全参加者ぶん（1500人なら1500行≒90KB）を毎回取り直していた。 */
+  function renderRank(top, myRow){
     var me = document.getElementById('rankMe');
-    var mineRow=null; for(var k=0;k<rows.length;k++){ if(rows[k].recog_no===DID){ mineRow={rank:k+1,pts:rows[k].points}; break; } }
-    if(me){ me.textContent = mineRow ? (mineRow.rank+'位 / '+mineRow.pts+'pt') : ((S.name||'')?'ランキング未反映':'なまえを入れてね'); }
-    var html = top.map(function(r,i){
-      var rk=i+1, mine=(r.recog_no===DID);
+    if(me){ me.textContent = (myRow && (myRow.points||0)>0) ? (myRow.rank+'位 / '+myRow.points+'pt') : ((S.name||'')?'ランキング未反映':'なまえを入れてね'); }
+    var html = (top||[]).map(function(r,i){
+      var rk=r.rank||(i+1), mine=(r.recog_no===DID);
       return '<div class="quest'+(mine?' done':'')+'" style="padding:8px 10px;margin-bottom:8px">'
         + '<div style="min-width:30px;text-align:center;font-weight:900;font-size:18px;color:var(--mustard)">'+rk+'</div>'
         + '<div class="qbody"><div class="qtitle">'+(esc(r.nickname)||'（未設定）')+(mine?' <span style="color:var(--red)">（あなた）</span>':'')+'</div>'
@@ -987,8 +1035,19 @@ if ('serviceWorker' in navigator) {
     }).join('');
     document.getElementById('rankList').innerHTML = html || '<span class="empty">まだ参加者がいません。最初の1人になろう！</span>';
   }
+  var rankBusy=false, RANKCOLS='recog_no,nickname,points,rank';
   function refreshRanking(){
-    sb.from('ranking').select('*').then(function(res){ if(res && !res.error){ renderRank(res.data); } });
+    if(rankBusy) return; rankBusy=true;
+    Promise.all([
+      sb.from('ranking').select(RANKCOLS).gt('points',0).order('rank',{ascending:true}).limit(20),
+      sb.from('ranking').select(RANKCOLS).eq('recog_no', DID).limit(1)
+    ]).then(function(rs){
+      rankBusy=false;
+      if(rs[0] && rs[0].error){ console.warn('ranking取得エラー', rs[0].error); return; }
+      var top   = (rs[0] && rs[0].data) || [];
+      var myRow = (((rs[1] && rs[1].data) || [])[0]) || null;
+      renderRank(top, myRow);
+    }).catch(function(e){ rankBusy=false; console.warn('ranking取得失敗', e); });
   }
 
   // ---- 起動時：サーバー在庫を確率(CFG)へ同期（各端末で当選率が実在庫に追従）----
@@ -1049,17 +1108,60 @@ if ('serviceWorker' in navigator) {
   if(typeof testAddPoint==='function'){ var _tap=testAddPoint; window.testAddPoint=function(){ _tap(); syncPoints(); }; }
   if(typeof resetAll==='function'){ var _reset=resetAll; window.resetAll=function(){ var before=points(); _reset(); if(points()!==before) syncPoints(); }; }
 
+  // ---- fq-recog-serial-v1: 認識番号をサーバーから受け取る ----
+  /* これまで：端末が 1000〜9999 の乱数を自分で決めていた（9000通り）。
+     1500人だと、ほぼ確実に何組もかぶる＝2人が同じデータを共有してしまう。
+     （大抽選会はこの番号で当選を発表するので、かぶりは直接トラブルになる）
+     これから：Supabase の連番（0001, 0002 …）を1端末に1つ配る。かぶりゼロ。
+     発行できなかった端末は乱数のまま「仮」として動かす（演出は止めない）。
+     次に開いた時、まだ何も送っていなければ発行し直す。 */
+  var SRVKEY='fukushi_quest_326_did_srv';
+  function isServerIssued(){ try{ return localStorage.getItem(SRVKEY)==='1'; }catch(e){ return false; } }
+  function showDevId(tmp){
+    var d=document.getElementById('devId'); if(!d) return;
+    d.textContent = tmp ? ('仮'+DID) : DID;
+    d.title = tmp ? 'まだ番号が確定していません。電波の良い場所で開き直してください。' : '';
+  }
+  function ensureRecog(){
+    if(isServerIssued()){ showDevId(false); return Promise.resolve(); }
+    // すでにこの番号でポイントを送っていたら、番号を変えると二重登録になるので変えない
+    if(getLast()>0){ showDevId(false); return Promise.resolve(); }
+    return sb.rpc('issue_recog').then(function(res){
+      if(res && res.error){ throw res.error; }
+      var v = res && res.data;
+      if(typeof v==='string' && v.length){
+        DID = v; window.DID = v;
+        try{ localStorage.setItem(DIDKEY, v); localStorage.setItem(SRVKEY,'1'); }catch(e){}
+        setLast(0);           // 新しい番号なので、ポイントは最初から送り直す
+        showDevId(false);
+      } else { showDevId(true); }
+    }).catch(function(e){
+      console.warn('issue_recog失敗（仮番号のまま進みます）', e);
+      showDevId(true);
+    });
+  }
+
   // ---- 起動 ----
   var rs=document.getElementById('rankSec'); if(rs) rs.style.display='block';
-  syncStockToCfg();
-  syncPoints();   // URLのQR(?q=)で先に加算された分もここで反映
-  syncName();
-  refreshRanking();
-  sb.channel('fq_participant')
-    .on('postgres_changes', {event:'*', schema:'public', table:'participants'}, refreshRanking)
-    .on('postgres_changes', {event:'*', schema:'public', table:'prizes'}, syncStockToCfg)
-    .subscribe();
-  setInterval(refreshRanking, 15000);
+  ensureRecog().then(function(){
+    syncStockToCfg();
+    syncPoints();   // URLのQR(?q=)で先に加算された分もここで反映
+    syncName();
+    refreshRanking();
+  });
+
+  /* fq-rank-lite-v1: realtime購読は本部モニター(honbu.html)だけにする。
+     参加者端末が購読すると、誰か1人がQRを読むたびに全端末がランキングを
+     取り直し、掛け算で無料枠（realtime同時200接続・転送月5GB）を大きく超える。
+     参加者側は「自分が動いた時」＋「60秒ごと・画面を見ている間だけ」で十分。 */
+  setInterval(function(){
+    if(document.visibilityState!=='visible') return;   // 裏に回っている間は通信しない
+    if(window.busy) return;                            // ガチャ演出中は邪魔しない
+    refreshRanking();
+  }, 60000);
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='visible') refreshRanking();
+  });
 })();
 </script>
 </body>

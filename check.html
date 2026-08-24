@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FUKUSHI QUEST 動作チェック</title>
+<style>
+  :root{ --paper:#f1ead8; --card:#fffdf6; --ink:#463a2c; --muted:#8f8069; --line:#e0d4b8;
+         --ok:#5f8a34; --warn:#c9821b; --ng:#c0392b; --blue:#3f7fa6; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;padding:0 0 60px;background:var(--paper);color:var(--ink);
+       font-family:"Hiragino Maru Gothic ProN","Zen Maru Gothic","Noto Sans JP",sans-serif;font-weight:600;line-height:1.7;}
+  .wrap{max-width:720px;margin:0 auto;padding:0 14px;}
+  header{padding:18px 0 12px;border-bottom:2px dashed var(--line);margin-bottom:16px;}
+  h1{margin:0;font-size:21px;font-weight:900;}
+  h1 b{color:var(--ng);}
+  .lead{color:var(--muted);font-size:13px;margin:6px 0 0;}
+  .verdict{border-radius:16px;padding:16px 18px;margin:16px 0;font-size:17px;font-weight:900;border:3px solid var(--line);background:var(--card);}
+  .verdict.ok{border-color:var(--ok);background:#f2f8ec;color:var(--ok);}
+  .verdict.warn{border-color:var(--warn);background:#fdf6e7;color:#8a5a12;}
+  .verdict.ng{border-color:var(--ng);background:#fdefed;color:var(--ng);}
+  .verdict small{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-top:6px;}
+  section{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:14px;}
+  section h2{margin:0 0 10px;font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px;}
+  .row{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line);align-items:flex-start;}
+  .row:first-of-type{border-top:none;}
+  .mark{flex:0 0 auto;width:24px;text-align:center;font-size:17px;font-weight:900;line-height:1.5;}
+  .m-ok{color:var(--ok);} .m-warn{color:var(--warn);} .m-ng{color:var(--ng);} .m-run{color:var(--blue);}
+  .rb{flex:1;min-width:0;}
+  .rt{font-size:14px;font-weight:800;}
+  .rd{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:2px;word-break:break-word;}
+  .rd b{color:var(--ink);}
+  .fix{font-size:12.5px;margin-top:5px;padding:8px 10px;border-radius:9px;background:#fdefed;border:1.5px solid #f0c9c2;color:#8a3a2c;}
+  .fix.warn{background:#fdf6e7;border-color:#ecd9a8;color:#8a5a12;}
+  .fix b{color:inherit;}
+  button{font-family:inherit;font-weight:800;cursor:pointer;border-radius:12px;border:2px solid var(--line);
+         background:#fbf6ea;color:var(--ink);padding:11px 16px;font-size:14px;}
+  button:active{transform:translateY(2px);}
+  button.primary{background:linear-gradient(135deg,#f2b64e,#e7a43a);color:#6b4700;border-color:#fff;box-shadow:0 4px 0 #c07f16;}
+  button:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+  .note{font-size:12.5px;color:var(--muted);margin:8px 0 0;}
+  pre{background:#efe6cf;border-radius:10px;padding:11px 12px;font-size:12px;overflow-x:auto;
+      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:500;line-height:1.6;color:#5a4526;}
+  label{font-size:13.5px;font-weight:800;display:inline-flex;align-items:center;gap:8px;}
+  input[type=number]{font-family:inherit;font-size:15px;font-weight:800;width:110px;padding:7px 9px;
+                     border:2px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+  th,td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);}
+  th{font-size:11.5px;color:var(--muted);font-weight:700;}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;}
+  .foot{color:var(--muted);font-size:12px;margin-top:22px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>FUKUSHI <b>QUEST</b> ／ 動作チェック</h1>
+    <p class="lead">このページを開くだけで、当日に必要なものが揃っているかを調べます。<br>
+      <b>前日と当日の朝に、必ず一度開いてください。</b></p>
+  </header>
+
+  <div class="verdict" id="verdict">調べています…</div>
+
+  <section>
+    <h2>① 設定と接続</h2>
+    <div id="g1"></div>
+  </section>
+
+  <section>
+    <h2>② 追加SQLが入っているか</h2>
+    <div id="g2"><div class="row"><div class="mark m-run">…</div><div class="rb">
+      <div class="rt">まだ調べていません</div>
+      <div class="rd">この確認は、実際にサーバーの関数を呼んで試します。<b>認識番号を1つ消費します</b>（本番前の後片づけSQLで元に戻ります）。</div>
+    </div></div></div>
+    <div class="btns"><button class="primary" id="btnRpc">関数まで確認する（番号を1つ使います）</button></div>
+  </section>
+
+  <section>
+    <h2>③ 景品の中身</h2>
+    <div id="g3"></div>
+    <div id="prizeTable"></div>
+  </section>
+
+  <section>
+    <h2>④ 景品の数は足りているか</h2>
+    <p class="note">1人が最大<b>3回</b>引けます。来場者数を入れると、景品が最後まで持つかを計算します。</p>
+    <label>想定来場者数 <input type="number" id="att" min="0" step="10" value="1500"></label>
+    <div id="g4"></div>
+  </section>
+
+  <section>
+    <h2>⑤ 公開されているファイル</h2>
+    <div id="g5"></div>
+  </section>
+
+  <section>
+    <h2>本番前の後片づけ</h2>
+    <p class="note">テストで使った番号・履歴・在庫を、本番の状態に戻します。
+      Supabase の SQL Editor に貼って Run してください。<b>これを忘れると、当日の1人目が中途半端な番号から始まります。</b></p>
+<pre>alter sequence recog_seq restart with 1;
+delete from draws;
+delete from participants;
+update prizes set stock = initial_stock;</pre>
+  </section>
+
+  <div class="btns" style="margin-top:16px">
+    <button class="primary" onclick="location.reload()">もう一度調べる</button>
+    <button onclick="location.href='index.html'">アプリを開く</button>
+    <button onclick="location.href='honbu.html'">本部モニターを開く</button>
+  </div>
+
+  <div class="foot">FUKUSHI QUEST 326 ／ check-v1</div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var CHECK_ID = '__check__';           // 診断が使うテスト用の認識番号
+  var DRAWS_PER_PERSON = 3;             // index.html / MAX_DRAWS と同じ値
+  var results = [];                     // 総合判定用
+
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function row(g, level, title, detail, fix){
+    results.push(level);
+    var mk = {ok:'✓', warn:'⚠', ng:'✕', run:'…'}[level] || '…';
+    var el = document.createElement('div');
+    el.className = 'row';
+    el.innerHTML = '<div class="mark m-'+level+'">'+mk+'</div><div class="rb">'
+      + '<div class="rt">'+title+'</div>'
+      + (detail ? '<div class="rd">'+detail+'</div>' : '')
+      + (fix ? '<div class="fix'+(level==='warn'?' warn':'')+'">'+fix+'</div>' : '')
+      + '</div>';
+    document.getElementById(g).appendChild(el);
+    paintVerdict();
+  }
+  function paintVerdict(){
+    var v = document.getElementById('verdict');
+    if(results.indexOf('ng') >= 0){
+      v.className='verdict ng';
+      v.innerHTML='当日、このままでは動きません<small>下の ✕ が付いている項目を直してください。</small>';
+    } else if(results.indexOf('warn') >= 0){
+      v.className='verdict warn';
+      v.innerHTML='動きますが、確認したほうがよい点があります<small>下の ⚠ を見てください。</small>';
+    } else if(results.length){
+      v.className='verdict ok';
+      v.innerHTML='ここまでは大丈夫です<small>②の「関数まで確認する」もまだなら押してください。</small>';
+    }
+  }
+
+  // ============================================================ ① 設定と接続
+  var cfg = window.FQ_CONFIG || {};
+  var hasCfg = !!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0
+               && cfg.SUPABASE_ANON_KEY && cfg.SUPABASE_ANON_KEY.indexOf('YOUR-ANON') < 0);
+  var sb = null;
+
+  if(!window.FQ_CONFIG){
+    row('g1','ng','config.js が読み込めていません','このページと同じ場所に <b>config.js</b> がありません。',
+        'フォルダごと公開できているか確認してください。<b>index.html だけを置いても動きません。</b>');
+  } else if(!hasCfg){
+    row('g1','ng','config.js がまだ設定されていません',
+        '<b>YOUR-PROJECT / YOUR-ANON-KEY</b> のままです。共有機能（ランキング・景品の在庫）は動きません。',
+        'Supabase の <b>Settings → API</b> から <b>Project URL</b> と <b>anon public</b> キーをコピーして、config.js の2か所を貼り替えてください。');
+  } else {
+    var host = '';
+    try { host = new URL(cfg.SUPABASE_URL).host; } catch(e){}
+    row('g1','ok','config.js は設定されています','接続先: <b>'+esc(host)+'</b>');
+  }
+
+  if(!window.supabase){
+    row('g1','ng','supabase-js が読み込めませんでした',
+        'インターネットにつながっていないか、CDN が届いていません。',
+        '会場の電波を確認してください。<b>この状態だと、ランキングも景品の在庫共有も動きません</b>（ガチャの演出だけは動きます）。');
+  } else {
+    row('g1','ok','supabase-js を読み込めました', null);
+  }
+
+  if(hasCfg && window.supabase){
+    sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  }
+
+  // ============================================================ 接続 → ③ 景品
+  function boot(){
+    if(!sb){
+      row('g3','ng','景品を確認できません','Supabase につながっていないためです。', 'まず①を直してください。');
+      document.getElementById('btnRpc').disabled = true;
+      return;
+    }
+    sb.from('prizes').select('*').then(function(res){
+      if(res.error){
+        var m = (res.error.message || '') + ' ' + (res.error.hint || '');
+        if(/relation|does not exist|schema cache/i.test(m)){
+          row('g1','ng','Supabase にはつながりましたが、テーブルがありません',
+              'エラー: '+esc(res.error.message),
+              '<b>supabase_schema.sql</b> を SQL Editor で Run してください。');
+        } else {
+          row('g1','ng','Supabase につながりません','エラー: '+esc(res.error.message),
+              '<b>プロジェクトが一時停止していないか確認してください。</b>無料プランは1週間さわらないと自動で止まります。Supabase の画面で「Resume project」を押して数分待てば戻ります。');
+        }
+        document.getElementById('btnRpc').disabled = true;
+        return;
+      }
+      row('g1','ok','Supabase につながりました','プロジェクトは動いています。');
+      checkPrizes(res.data || []);
+    }).catch(function(e){
+      row('g1','ng','Supabase につながりません（通信エラー）', esc(String(e && e.message || e)),
+          '<b>プロジェクトが一時停止している可能性が高いです。</b>Supabase の画面で「Resume project」を押して数分待ってから、もう一度調べてください。');
+      document.getElementById('btnRpc').disabled = true;
+    });
+
+    // ランキングのビューが読めるか
+    sb.from('ranking').select('recog_no,nickname,points,rank').limit(1).then(function(res){
+      if(res.error){
+        row('g1','ng','ランキング（ranking ビュー）が読めません','エラー: '+esc(res.error.message),
+            '<b>supabase_schema.sql</b> の後半（ビューと grant）が入っていない可能性があります。');
+      } else {
+        row('g1','ok','ランキングを読めます', null);
+      }
+    }).catch(function(){});
+  }
+
+  var PRIZES = [];
+  function checkPrizes(rows){
+    PRIZES = rows;
+    if(!rows.length){
+      row('g3','ng','景品が1つも登録されていません',
+          'prizes テーブルが空です。この状態だと<b>全員ハズレになります</b>。',
+          'Supabase の <b>Table Editor → prizes</b> で景品を追加してください（name / rarity / stock / initial_stock / sort）。');
+      return;
+    }
+    row('g3','ok','景品が '+rows.length+' 種類 登録されています', null);
+
+    var noInit = rows.filter(function(p){ return !(p.initial_stock > 0); });
+    if(noInit.length){
+      row('g3','warn','initial_stock が入っていない景品が '+noInit.length+' 件あります',
+          esc(noInit.map(function(p){return p.name;}).join('、')),
+          '<b>本部モニターの残量バーが出ません。</b>Table Editor で initial_stock に最初の個数を入れてください。');
+    }
+
+    var over = rows.filter(function(p){ return p.stock > p.initial_stock; });
+    if(over.length){
+      row('g3','warn','在庫が最初の個数より多い景品があります',
+          esc(over.map(function(p){return p.name+'（'+p.stock+'/'+p.initial_stock+'）';}).join('、')),
+          'テスト中に在庫を戻した名残かもしれません。initial_stock を実際の用意数に合わせてください。');
+    }
+
+    var badR = rows.filter(function(p){ return [1,2,3,4].indexOf(p.rarity) < 0; });
+    if(badR.length){
+      row('g3','ng','レア度が 1〜4 以外の景品があります',
+          esc(badR.map(function(p){return p.name+'（rarity='+p.rarity+'）';}).join('、')),
+          'アプリはレア度 <b>1=青 / 2=緑 / 3=赤 / 4=虹</b> だけを扱います。<b>それ以外は絶対に当たりません。</b>');
+    }
+
+    var zero = rows.filter(function(p){ return p.stock <= 0; });
+    if(zero.length === rows.length){
+      row('g3','ng','すべての景品が在庫0です','この状態だと全員ハズレになります。',
+          '本番前の後片づけSQL（このページの下）で <b>update prizes set stock = initial_stock;</b> を流してください。');
+    } else if(zero.length){
+      row('g3','warn','在庫0の景品が '+zero.length+' 件あります',
+          esc(zero.map(function(p){return p.name;}).join('、')),
+          'テストで減らしたぶんなら、後片づけSQLで戻ります。本番前に必ず流してください。');
+    }
+
+    // レア度ごとのまとめ
+    var by = {1:0,2:0,3:0,4:0};
+    rows.forEach(function(p){ if(by[p.rarity]!=null) by[p.rarity] += (p.stock||0); });
+    var miss = [1,2,3,4].filter(function(r){ return by[r] === 0; });
+    if(miss.length){
+      row('g3','warn','在庫のないレア度があります：'+miss.map(function(r){return ({1:'青1',2:'緑2',3:'赤3',4:'虹4'})[r];}).join('、'),
+          'そのレア度が当たると、サーバーに景品が無いので<b>ハズレ演出</b>になります。',
+          '虹4（特賞）が無いと、一番盛り上がる演出のあとにハズレが出ます。1つは残しておくことをおすすめします。');
+    }
+
+    var tbl = '<table><tr><th>景品</th><th>レア度</th><th class="n">残り</th><th class="n">最初</th></tr>'
+      + rows.slice().sort(function(a,b){ return (a.sort-b.sort) || String(a.name).localeCompare(b.name); }).map(function(p){
+          var rl = ({1:'青1',2:'緑2',3:'赤3',4:'虹4'})[p.rarity] || ('?'+p.rarity);
+          return '<tr><td>'+esc(p.name)+'</td><td>'+rl+'</td>'
+               + '<td class="n"'+(p.stock<=0?' style="color:#c0392b;font-weight:900"':'')+'>'+(p.stock||0)+'</td>'
+               + '<td class="n">'+(p.initial_stock||0)+'</td></tr>';
+        }).join('') + '</table>';
+    document.getElementById('prizeTable').innerHTML = tbl;
+
+    balance();
+  }
+
+  // ============================================================ ④ 数のつり合い
+  function balance(){
+    var g = document.getElementById('g4');
+    g.innerHTML = '';
+    var att = parseFloat(document.getElementById('att').value) || 0;
+    var stock = PRIZES.reduce(function(a,p){ return a + Math.max(0, p.stock||0); }, 0);
+    var draws = att * DRAWS_PER_PERSON;
+    if(!att || !stock){ return; }
+
+    var el = document.createElement('div');
+    el.className = 'row';
+    /* ここは「壊れているか」ではなく「当日の配り方が偏らないか」の話なので、
+       いちばん重くても ⚠ にとどめる（アプリは在庫が尽きても自動でハズレ演出になる）。 */
+    var lvl, msg, fix = '';
+    if(stock >= draws){
+      lvl='ok';
+      msg='景品 <b>'+stock+'個</b> ／ ガチャ最大 <b>'+draws+'回</b>（'+att+'人 × 3回）<br>'
+        + '全員が3回引いても景品が残ります。';
+    } else {
+      lvl='warn';
+      msg='景品 <b>'+stock+'個</b> ／ ガチャ最大 <b>'+draws+'回</b>（'+att+'人 × 3回）';
+      fix='景品より引く回数のほうが多いので、<b>当たる確率の設定しだいでは途中で景品が尽きます</b>。'
+        + '尽きたあとは自動でハズレ演出になるので壊れませんが、後から来た人が1つももらえません。<br>'
+        + 'アプリの <b>⚙️主催者用の設定</b>（<code>?admin=1</code> で開く）で「ハズレの個数」を大きくすると、'
+        + '当たりが薄く広く出て最後まで持ちます。目安として<b>ハズレを '+Math.max(0, draws - stock)+' 個以上</b>にしてください。';
+    }
+    el.innerHTML = '<div class="mark m-'+lvl+'">'+({ok:'✓',warn:'⚠'})[lvl]+'</div><div class="rb">'
+      + '<div class="rt">景品の数と、引く回数</div><div class="rd">'+msg+'</div>'
+      + (fix ? '<div class="fix warn">'+fix+'</div>' : '') + '</div>';
+    g.appendChild(el);
+    if(lvl === 'warn' && !balanceCounted){ balanceCounted = true; results.push('warn'); paintVerdict(); }
+  }
+  var balanceCounted = false;
+  document.getElementById('att').addEventListener('input', balance);
+
+  // ============================================================ ② 追加SQL（RPC）
+  document.getElementById('btnRpc').addEventListener('click', function(){
+    var b = this; b.disabled = true; b.textContent = '確認中…';
+    var g = document.getElementById('g2'); g.innerHTML = '';
+
+    sb.rpc('issue_recog').then(function(res){
+      if(res.error) throw res.error;
+      if(typeof res.data === 'string' && res.data.length){
+        row('g2','ok','issue_recog が動きました（認識番号の連番発行）',
+            '発行された番号: <b>'+esc(res.data)+'</b>',
+            res.data === '0001' ? null
+              : '<b>本番前に、下の後片づけSQLで番号を1に戻してください。</b>いまのままだと当日の1人目が「'+esc(res.data)+'」の次から始まります。');
+      } else {
+        row('g2','ng','issue_recog が番号を返しませんでした','返り値: '+esc(JSON.stringify(res.data)),
+            '<b>supabase_migration_20260824.sql</b> をもう一度 Run してください。');
+      }
+    }).catch(function(e){
+      row('g2','ng','issue_recog がありません','エラー: '+esc(String(e && e.message || e)),
+          '<b>supabase_migration_20260824.sql</b> を Supabase の SQL Editor で Run してください。'
+          + 'これが無いと、参加者全員の認識番号が「仮」のままになります。');
+    }).then(function(){
+      // claim_prize：存在しないレア度(-1)で呼ぶので、景品の在庫は減らない
+      return sb.rpc('claim_prize', {p_recog: CHECK_ID, p_rarity: -1}).then(function(res){
+        if(res.error) throw res.error;
+        row('g2','ok','claim_prize が動きました（景品の在庫をサーバーで確定する関数）',
+            '在庫は減らしていません（存在しないレア度で試しています）。');
+      }).catch(function(e){
+        var m = String(e && e.message || e);
+        row('g2','ng','claim_prize が呼べません','エラー: '+esc(m),
+            /not find the function|PGRST202|ambiguous/i.test(m)
+              ? '関数が<b>二重に定義されている</b>可能性があります。SQL Editor で <b>drop function claim_prize(text,integer,integer);</b> を実行してから、追加SQLをもう一度 Run してください。'
+              : '<b>supabase_schema.sql</b> と <b>supabase_migration_20260824.sql</b> の両方が入っているか確認してください。');
+      });
+    }).then(function(){
+      return sb.rpc('add_points', {p_recog: CHECK_ID, p_nick: '', p_delta: 0}).then(function(res){
+        if(res.error) throw res.error;
+        row('g2','ok','add_points が動きました（ポイントの加算）',
+            'テスト用の番号 <b>'+CHECK_ID+'</b> で試しました。0ポイントなのでランキングには出ません。');
+      }).catch(function(e){
+        row('g2','ng','add_points が呼べません','エラー: '+esc(String(e && e.message || e)),
+            '<b>supabase_schema.sql</b> を Run してください。');
+      });
+    }).then(function(){
+      b.textContent = '確認が終わりました';
+      row('g2','warn','テストの跡が残っています',
+          '認識番号を1つ消費し、テスト用の履歴が1件入りました。',
+          '<b>本番前に、このページの下にある「後片づけSQL」を必ず流してください。</b>');
+    });
+  });
+
+  // ============================================================ ⑤ ファイル
+  fetch('service-worker.js?_=' + Math.random()).then(function(r){ return r.text(); }).then(function(t){
+    if(/fq326-v3/.test(t) && /url\.origin\s*!==\s*self\.location\.origin/.test(t)){
+      row('g5','ok','service-worker.js は修正済みの版です','キャッシュ名 fq326-v3。Supabase への通信を横取りしません。');
+    } else {
+      row('g5','ng','service-worker.js が古い版です',
+          '公開されているのは修正前のファイルです。',
+          '<b>この状態だと、ランキングと景品の在庫が最初の1回で固定されて更新されません。</b>'
+          + '2026-08-24 版の service-worker.js を公開し直してください。');
+    }
+  }).catch(function(){
+    row('g5','warn','service-worker.js を読めませんでした','ファイルが無いか、通信できていません。', null);
+  });
+
+  fetch('index.html?_=' + Math.random()).then(function(r){ return r.text(); }).then(function(t){
+    var need = ['fq-role-v1','fq-rank-lite-v1','fq-recog-serial-v1','fq-draws3-v1'];
+    var miss = need.filter(function(m){ return t.indexOf(m) < 0; });
+    if(!miss.length){
+      row('g5','ok','index.html は修正済みの版です',
+          '1500人むけの修正が全部入っています（'+need.join(' / ')+'）。約 '+Math.round(t.length/1024/1024*10)/10+'MB。');
+    } else {
+      row('g5','ng','index.html が古い版です','入っていない修正: <b>'+miss.join(' / ')+'</b>',
+          '2026-08-24 版の index.html を公開し直してください。'
+          + '古いままだと、認識番号がかぶり、ランキングの通信量で無料枠を超えます。');
+    }
+  }).catch(function(){
+    row('g5','warn','index.html を読めませんでした','ファイルが無いか、通信できていません。', null);
+  });
+
+  if(location.protocol === 'file:'){
+    row('g5','warn','ファイルを直接開いています（file://）',
+        'この開き方だと Service Worker が動かず、一部の確認ができません。',
+        '本当の確認は<b>公開したURL（https://…）で開いて</b>行ってください。');
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

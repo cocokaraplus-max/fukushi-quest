@@ -109,17 +109,24 @@ async function boot(){
   async function load(){
     const [{data:pz},{data:rk}] = await Promise.all([
       sb.from('prizes').select('*'),
-      sb.from('ranking').select('*')
+      sb.from('ranking').select('recog_no,nickname,points,rank').gt('points',0).order('rank',{ascending:true}).limit(20)
     ]);
     renderPrizes(pz); renderRanking(rk);
     st.textContent='更新 '+new Date().toLocaleTimeString('ja-JP');
   }
-  await load();
+  /* fq-honbu-lite-v1: 1500人規模むけの軽量化
+     - ランキングは上位20人だけ取る（全件だと1回90KB）
+     - realtimeは1件ごとに飛んでくるので、まとめて3秒に1回だけ取り直す
+       （1500人が7回スキャンすると1万件。そのたびに取り直すと本部だけで数百MB） */
+  let t=null, loading=false;
+  async function safeLoad(){ if(loading) return; loading=true; try{ await load(); }catch(e){ console.warn(e); } loading=false; }
+  function bump(){ if(t) return; t=setTimeout(function(){ t=null; safeLoad(); }, 3000); }
+  await safeLoad();
   sb.channel('honbu')
-    .on('postgres_changes',{event:'*',schema:'public',table:'prizes'},load)
-    .on('postgres_changes',{event:'*',schema:'public',table:'participants'},load)
+    .on('postgres_changes',{event:'*',schema:'public',table:'prizes'},bump)
+    .on('postgres_changes',{event:'*',schema:'public',table:'participants'},bump)
     .subscribe();
-  setInterval(load, 10000); // 保険のポーリング
+  setInterval(safeLoad, 30000); // 保険のポーリング
 }
 boot();
 </script>
