@@ -99,7 +99,12 @@
     <h3>大会リセット</h3>
     <div class="astats" id="resetWhat"></div>
     <label for="resetPass">合言葉</label>
-    <input type="password" id="resetPass" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <!-- fq-pass-eye-v1: 打ち間違いに気づけるよう、見るボタンを付ける -->
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="password" id="resetPass" autocomplete="off" autocapitalize="off" spellcheck="false" style="flex:1;">
+      <button type="button" id="resetEye" class="cbtn" title="合言葉を見る"
+              style="flex:0 0 auto;padding:10px 13px;font-size:18px;line-height:1;">👁</button>
+    </div>
     <label class="aack"><input type="checkbox" id="resetAck">
       <span>消えたデータは戻せないことを理解しました</span></label>
     <div class="amsg" id="resetMsg"></div>
@@ -231,6 +236,16 @@ boot();
   var ack   = document.getElementById('resetAck');
   var go    = document.getElementById('resetGo');
   var msg   = document.getElementById('resetMsg');
+  /* fq-pass-eye-v1: 押すたびに 見える／隠れる を切り替える。
+     ★人前で押さないこと。ページを開き直せば必ず隠れた状態から始まる。 */
+  var eye = document.getElementById('resetEye');
+  if (eye) eye.addEventListener('click', function(){
+    var showing = (pass.type === 'text');
+    pass.type = showing ? 'password' : 'text';
+    eye.textContent = showing ? '👁' : '🙈';
+    eye.title = showing ? '合言葉を見る' : '合言葉を隠す';
+    try { pass.focus(); } catch(e) {}
+  });
 
   function sync(){ go.disabled = !(pass.value.trim() && ack.checked); }
   pass.addEventListener('input', sync);

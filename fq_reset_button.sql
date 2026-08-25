@@ -79,10 +79,13 @@ begin
   select count(*) into np from participants;
   select count(*) into nd from draws;
 
-  delete from draws;
-  delete from participants;
+  -- ★where を外さないこと。Supabase には「うっかり全消し」を防ぐ安全装置(safeupdate)があり、
+  --   where の付いていない delete / update は拒否される（2026-08-26 に実際に弾かれた）。
+  delete from draws where true;
+  delete from participants where true;
   execute 'alter sequence recog_seq restart with 1';
-  update prizes set stock = initial_stock;
+  update prizes set stock = initial_stock
+   where stock is distinct from initial_stock;
 
   insert into fq_reset_log (participants_deleted, draws_deleted, note)
     values (np, nd, 'fq_reset');

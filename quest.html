@@ -1206,8 +1206,14 @@ if ('serviceWorker' in navigator) {
     + '<div style="font-weight:900;font-size:18px;margin-bottom:10px;">関係者用</div>'
     + '<div id="fqGateMsg" style="font-size:13px;color:#666;line-height:1.8;margin-bottom:12px;">'
     + '合言葉を入れてください。</div>'
+    /* fq-pass-eye-v1: 打ち間違いに気づけるよう、見るボタンを付ける */
+    + '<div style="display:flex;gap:8px;align-items:center;">'
     + '<input id="fqGatePass" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"'
-    + ' style="width:100%;padding:11px 12px;font-size:16px;border:2px solid #ddd;border-radius:9px;">'
+    + ' style="flex:1;padding:11px 12px;font-size:16px;border:2px solid #ddd;border-radius:9px;">'
+    + '<button type="button" id="fqGateEye" title="合言葉を見る"'
+    + ' style="flex:0 0 auto;padding:10px 13px;font-size:18px;line-height:1;border:1px solid #ccc;'
+    + 'border-radius:9px;background:#eee;cursor:pointer;">👁</button>'
+    + '</div>'
     + '<div id="fqGateDid" style="display:none;font-size:12px;color:#444;background:#f4f4f4;'
     + 'border-radius:9px;padding:10px 12px;margin-top:12px;line-height:1.8;word-break:break-all;"></div>'
     + '<div style="display:flex;gap:9px;margin-top:14px;">'
@@ -1222,6 +1228,16 @@ if ('serviceWorker' in navigator) {
   var pw  = box.querySelector('#fqGatePass');
   var did = box.querySelector('#fqGateDid');
   var go  = box.querySelector('#fqGateGo');
+  /* fq-pass-eye-v1: 押すたびに 見える／隠れる を切り替える。
+     ★人前で押さないこと。ページを開き直せば必ず隠れた状態から始まる。 */
+  var eye = box.querySelector('#fqGateEye');
+  if (eye) eye.addEventListener('click', function(){
+    var showing = (pw.type === 'text');
+    pw.type = showing ? 'password' : 'text';
+    eye.textContent = showing ? '👁' : '🙈';
+    eye.title = showing ? '合言葉を見る' : '合言葉を隠す';
+    try { pw.focus(); } catch(e) {}
+  });
 
   function close_(){ box.remove(); }
   box.querySelector('#fqGateNo').addEventListener('click', close_);
