@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>つながるフェスタ 2026｜豊田市福祉センター</title>
+<meta name="description" content="いつもの「福祉」のイメージが、ちょっと変わる一日。2026年12月13日(日) 10:00〜16:00 豊田市福祉センター／入場無料">
+<meta name="theme-color" content="#E7DE01">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   ★ここだけ直せば中身が変わります。HTMLはさわらなくて大丈夫です。
+
+   ・insta … インスタのURL。空 "" にすると、その人はリンクになりません
+   ・photo … 写真のURL（例 "img/walters.jpg"）。空なら色の丸に頭文字が出ます
+   ・写真は fukushi-quest フォルダの中に img という入れ物を作って、
+     そこに入れてから "img/ファイル名.jpg" と書いてください
+   ══════════════════════════════════════════════════════════════════ */
+const FQ = {
+
+  /* ── イベントの基本情報 ── */
+  event: {
+    title:    'つながるフェスタ',
+    catch:    'いつもの「福祉」のイメージが、\nちょっと変わる一日。',
+    lead:     '人がつながれば、できることがもっと広がる！',
+    date:     '2026年12月13日',
+    youbi:    '日',
+    dateISO:  '2026-12-13T10:00:00+09:00',   // カウントダウンに使います
+    time:     '10:00〜16:00',
+    place:    '豊田市福祉センター',
+    address:  '〒471-0877 愛知県豊田市錦町1-1-1',
+    host:     '豊田市社会福祉協議会 主催',
+    mapQuery: '豊田市福祉センター',
+  },
+
+  /* ── SPECIAL STAGE（1F 大ホール） ──
+     insta は追跡用の「?utm_source=…」を外した短い形にしてあります。
+     長いままでも開きますが、短いほうが安全で見やすいです。 */
+  stage: [
+    { time:'10:00〜10:30', name:'豊田大谷高校ダンス部', note:'ダンス',
+      insta:'https://www.instagram.com/toyotaotani_dance/', photo:'' },
+    { time:'11:00〜12:00', name:'ウォルターズ',         note:'ライブ',
+      insta:'https://www.instagram.com/walters0830/',      photo:'' },
+    { time:'13:00〜14:00', name:'かすこんねぅ',         note:'ライブ',
+      insta:'https://www.instagram.com/kasukonnnnnneu/',   photo:'' },
+    { time:'15:00〜16:00', name:'プラタナス',           note:'ライブ',
+      insta:'https://www.instagram.com/takuma_pts/',       photo:'' },
+  ],
+
+  /* ── スペシャルゲスト ── */
+  guest: {
+    name:  '326（ナカムラミツル）さん',
+    role:  'イラストレーター',
+    insta: 'https://www.instagram.com/nakamura326/',
+    photo: '',
+    text:  'フォークデュオ「19」の元メンバーで、人気カードゲーム「ito」を手がけた'
+         + 'イラストレーター・326（ナカムラミツル）さんが、イベントに参加します。\n'
+         + '今回のイベントでは、イラストのご提供や企画のアイデア出しなどにご協力いただきました。'
+         + '当日は、326さんご本人からお話を伺う時間も予定しています。',
+  },
+
+  /* ── DISCOVER（3F・4F フロア） ── */
+  discover: {
+    text: '地域の魅力や福祉の仕事にふれる、たくさんのブースが大集合！\n新しい発見や、人とのつながりを見つけよう！',
+    groups: [
+      { label:'出展事業所（一例）', color:'green',
+        items:['高齢者福祉','障がい福祉','児童福祉','相談・支援','医療・リハビリ'] },
+      { label:'相談・体験コーナー', color:'pink',
+        items:['お仕事相談','就職サポート','見学・体験','ミニセミナー','資格・制度紹介'] },
+    ],
+  },
+
+  /* ── FOOD（駐車場・1F・3F） ── */
+  food: {
+    text: '会場にはキッチンカーが大集合！\nおいしいものを片手に、フェスタを楽しもう。',
+    items: ['（キッチンカー名）','（キッチンカー名）','（キッチンカー名）',
+            '（キッチンカー名）','（キッチンカー名）'],
+    note:  '他にも美味しいフードが盛りだくさん！',
+  },
+
+  /* ── 協賛・協力（会社名でもお店の名前でもOK） ── */
+  sponsors: [
+    { name:'（協賛企業名）', kind:'協賛', insta:'', url:'' },
+    { name:'（協賛企業名）', kind:'協賛', insta:'', url:'' },
+    { name:'（協力団体名）', kind:'協力', insta:'', url:'' },
+    { name:'（協力団体名）', kind:'協力', insta:'', url:'' },
+  ],
+
+  /* ── 運営スタッフ ── */
+  staff: [
+    { name:'（お名前）', role:'実行委員長', insta:'', photo:'' },
+    { name:'（お名前）', role:'ステージ担当', insta:'', photo:'' },
+    { name:'（お名前）', role:'ブース担当', insta:'', photo:'' },
+    { name:'（お名前）', role:'フード担当', insta:'', photo:'' },
+    { name:'（お名前）', role:'広報担当', insta:'', photo:'' },
+  ],
+
+  /* ── アクセス ── */
+  access: {
+    station: '名鉄豊田線「豊田市駅」',
+    notes: [
+      '駐車場の台数には限りがあります。ご来場の際は公共交通機関のご利用にご協力ください。',
+      '駐車場が満車となる場合があります。',
+      '周辺施設への無断駐車・路上駐車はご遠慮ください。',
+    ],
+  },
+};
+</script>
+
+<style>
+  :root{
+    /* チラシから実際に色を取りました */
+    --yellow:#E7DE01; --yellow-l:#F1EE6A; --yellow-d:#D9D000;
+    --pink:#E84686; --blue:#1186CE; --orange:#E75409; --green:#2FA84F;
+    --ink:#36271E; --paper:#FFFDF5; --line:#E4DCC8; --muted:#8B7F6E;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
+    font-weight:700; color:var(--ink); background:var(--paper); line-height:1.75;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 18px;}
+  a{color:inherit;}
+
+  /* ══════════ ヒーロー ══════════ */
+  .hero{position:relative;background:var(--yellow);overflow:hidden;padding:26px 0 34px;}
+  /* 背景に散らすキーワード（チラシの雰囲気） */
+  /* 背景のキーワード。読ませるものではないので、うっすらと。
+     中央は文字が乗るので、左右の端だけに置く（下のJSで位置を決めている） */
+  .kw{position:absolute;color:#EDE83C;font-weight:900;line-height:1;opacity:.75;
+      user-select:none;pointer-events:none;white-space:nowrap;}
+  .hero-in{position:relative;z-index:2;text-align:center;}
+
+  /* ★チラシは縦書きだが、Webでは横書きにした。
+     縦書き＋文字装飾は、端末やフォントの組み合わせで字が重なることがあるため。
+     1500人がそれぞれ違う端末で見るので、確実に読めるほうを取った。 */
+  .catch{margin:2px auto 20px;font-size:clamp(15px,4.1vw,19px);font-weight:900;
+         letter-spacing:.02em;line-height:2.0;white-space:pre-line;text-wrap:balance;}
+  .catch em{font-style:normal;background:#fff;border-radius:6px;
+            padding:2px 7px;margin:0 1px;display:inline-block;}
+
+  /* ロゴ「つながる」＝白フチ＋黒フチの泡文字 */
+  .logo{margin:6px 0 2px;font-size:clamp(58px,17vw,112px);font-weight:900;
+        letter-spacing:.02em;line-height:1.05;}
+  .logo span{display:inline-block;
+    -webkit-text-stroke:9px #fff; paint-order:stroke fill;
+    filter:drop-shadow(2px 3px 0 var(--ink)) drop-shadow(-2px -1px 0 var(--ink))
+           drop-shadow(2px -1px 0 var(--ink)) drop-shadow(-2px 3px 0 var(--ink));}
+  .logo .c1{color:var(--pink);} .logo .c2{color:var(--blue);}
+  .logo .c3{color:var(--orange);} .logo .c4{color:var(--green);}
+  .logo2{font-size:clamp(38px,11vw,74px);font-weight:900;color:#fff;letter-spacing:.06em;
+         -webkit-text-stroke:8px var(--ink); paint-order:stroke fill; margin-bottom:14px;}
+
+  .free{display:inline-block;background:#fff;border:3px solid var(--ink);border-radius:999px;
+        padding:7px 24px;font-size:17px;font-weight:900;margin:4px 0 16px;transform:rotate(-3deg);}
+
+  .when{display:inline-flex;align-items:baseline;gap:6px;justify-content:center;flex-wrap:wrap;
+        font-weight:900;margin-top:6px;}
+  .when .y{font-size:15px;} .when .md{font-size:46px;letter-spacing:-.02em;}
+  .when .yb{font-size:15px;border:2.5px solid var(--ink);border-radius:50%;
+            width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;}
+  .when2{font-size:17px;font-weight:900;margin-top:2px;}
+  .when3{font-size:14px;font-weight:700;margin-top:2px;}
+
+  /* カウントダウン */
+  .cd{display:inline-flex;gap:8px;margin-top:16px;}
+  .cd div{background:#fff;border:2.5px solid var(--ink);border-radius:12px;
+          min-width:62px;padding:6px 4px;line-height:1.2;}
+  .cd b{display:block;font-size:26px;font-weight:900;}
+  .cd small{font-size:10.5px;color:var(--muted);font-weight:700;}
+
+  /* ══════════ 共通セクション ══════════ */
+  section{padding:44px 0 8px;}
+  .lead{background:var(--ink);color:#fff;text-align:center;padding:22px 20px;
+        font-size:clamp(15.5px,4.2vw,22px);font-weight:900;line-height:1.7;
+        letter-spacing:.01em;text-wrap:balance;}
+  .lead span{display:inline-block;}   /* 変なところで折れないように語のまとまりを保つ */
+
+  .sec-h{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+  .sec-h h2{font-size:clamp(24px,6.5vw,34px);font-weight:900;letter-spacing:.02em;
+            border:3px solid var(--ink);border-radius:10px;padding:4px 14px;background:#fff;}
+  .sec-h .sub{font-size:13.5px;font-weight:700;color:var(--muted);}
+  .sec-h .where{margin-left:auto;font-size:12px;font-weight:900;color:#fff;
+                border-radius:7px;padding:4px 11px;white-space:nowrap;}
+  .w-pink{background:var(--pink);} .w-blue{background:var(--blue);}
+  .w-green{background:var(--green);} .w-orange{background:var(--orange);}
+  .sec-t{white-space:pre-line;font-size:14.5px;font-weight:700;margin:12px 0 18px;line-height:1.9;}
+
+  /* ══════════ ステージ ══════════ */
+  .acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
+  .act{background:#fff;border:2.5px solid var(--ink);border-radius:16px;overflow:hidden;
+       display:block;text-decoration:none;transition:.14s;}
+  a.act:active{transform:translateY(2px);}
+  .act .t{background:var(--pink);color:#fff;text-align:center;font-size:12.5px;
+          font-weight:900;padding:5px 4px;letter-spacing:.02em;}
+  .act .ph{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
+           font-size:40px;font-weight:900;position:relative;background-size:cover;background-position:center;
+           border-bottom:2.5px solid var(--ink);}
+  .act .ph .ini{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .act .ph .ini small{font-size:10px;font-weight:700;opacity:.65;letter-spacing:.08em;}
+  .act .ig{position:absolute;right:7px;bottom:7px;width:26px;height:26px;border-radius:8px;
+           background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;
+           box-shadow:0 1px 4px rgba(0,0,0,.25);}
+  .act .n{padding:9px 8px;text-align:center;font-size:13.5px;font-weight:900;line-height:1.45;}
+  .act .n small{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:2px;}
+  .act .n .link{display:block;font-size:10.5px;color:var(--pink);font-weight:900;margin-top:3px;}
+
+  /* ══════════ ゲスト ══════════ */
+  .guest{background:var(--blue);color:#fff;border-radius:20px;padding:20px 18px;
+         display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
+  .guest .ph{width:104px;height:104px;border-radius:14px;background:rgba(255,255,255,.22);
+             flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+             font-size:30px;font-weight:900;background-size:cover;background-position:center;
+             border:3px solid #fff;position:relative;text-decoration:none;color:#fff;}
+  .guest .ph .ig{position:absolute;right:-7px;bottom:-7px;width:28px;height:28px;border-radius:9px;
+                 background:#fff;display:flex;align-items:center;justify-content:center;
+                 box-shadow:0 2px 6px rgba(0,0,0,.3);}
+  .guest .b{flex:1;min-width:200px;}
+  .guest h3{font-size:19px;font-weight:900;margin-bottom:2px;}
+  .guest .role{font-size:12px;opacity:.9;margin-bottom:8px;}
+  .guest p{font-size:13.5px;font-weight:500;line-height:1.85;white-space:pre-line;}
+
+  /* ══════════ チップ ══════════ */
+  .grp{margin-bottom:16px;}
+  .grp .gl{display:inline-block;font-size:11.5px;font-weight:900;color:#fff;
+           border-radius:6px;padding:3px 10px;margin-bottom:8px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{background:#fff;border:2.5px solid var(--ink);border-radius:10px;
+        padding:8px 14px;font-size:13.5px;font-weight:900;}
+
+  /* ══════════ フード ══════════ */
+  .foods{display:flex;flex-wrap:wrap;gap:8px;}
+  .foods span{background:#fff;border:2px dashed var(--orange);border-radius:10px;
+              padding:7px 13px;font-size:13px;font-weight:800;color:#a8420a;}
+
+  /* ══════════ クエスト導線 ══════════ */
+  .quest{background:var(--yellow);border:3px solid var(--ink);border-radius:20px;
+         padding:22px 18px;text-align:center;}
+  .quest h3{font-size:clamp(19px,5vw,25px);font-weight:900;margin-bottom:6px;}
+  .quest p{font-size:13.5px;font-weight:700;margin-bottom:14px;line-height:1.8;}
+  .qbtn{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;
+        border-radius:999px;padding:14px 30px;font-size:16px;font-weight:900;
+        box-shadow:0 5px 0 rgba(0,0,0,.28);}
+  .qbtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.28);}
+
+  /* ══════════ 人・団体の一覧 ══════════ */
+  .people{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px;}
+  .per{text-align:center;text-decoration:none;display:block;}
+  .per .av{width:74px;height:74px;border-radius:50%;margin:0 auto 7px;
+           border:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center;
+           font-size:24px;font-weight:900;background-size:cover;background-position:center;
+           position:relative;}
+  .per .av .ig{position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:50%;
+               background:#fff;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;}
+  .per .n{font-size:12.5px;font-weight:900;line-height:1.4;}
+  .per .r{font-size:10.5px;color:var(--muted);font-weight:700;}
+
+  .orgs{display:flex;flex-wrap:wrap;gap:9px;}
+  .org{background:#fff;border:2.5px solid var(--line);border-radius:12px;padding:10px 15px;
+       text-decoration:none;display:flex;align-items:center;gap:8px;}
+  .org .k{font-size:10px;font-weight:900;color:#fff;background:var(--green);
+          border-radius:5px;padding:2px 7px;}
+  .org .k.協力{background:var(--blue);}
+  .org .nm{font-size:13.5px;font-weight:900;}
+
+  /* ══════════ アクセス ══════════ */
+  .acc{background:#fff;border:2.5px solid var(--ink);border-radius:18px;padding:18px;}
+  .acc h3{font-size:18px;font-weight:900;margin-bottom:4px;}
+  .acc .ad{font-size:13.5px;font-weight:700;margin-bottom:4px;}
+  .acc .st{font-size:13.5px;font-weight:700;margin-bottom:12px;}
+  .acc ul{list-style:none;font-size:12px;color:var(--muted);font-weight:700;line-height:1.85;}
+  .acc ul li:before{content:"※ ";}
+  .mapbtn{display:inline-block;margin-top:12px;background:var(--blue);color:#fff;
+          text-decoration:none;border-radius:10px;padding:11px 20px;font-size:14px;font-weight:900;}
+
+  footer{background:var(--ink);color:#fff;text-align:center;padding:26px 18px 34px;margin-top:44px;}
+  footer .h{font-size:15px;font-weight:900;}
+  footer .c{font-size:11.5px;opacity:.7;margin-top:8px;line-height:1.8;}
+
+  /* 下の固定バー（スマホ） */
+  .bar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--ink);
+       display:flex;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:8px;}
+  .bar a{flex:1;text-align:center;text-decoration:none;border-radius:11px;padding:11px 6px;
+         font-size:13px;font-weight:900;}
+  .bar .a1{background:var(--yellow);color:var(--ink);}
+  .bar .a2{background:#fff;color:var(--ink);}
+  body{padding-bottom:76px;}
+  @media(min-width:761px){ .bar{display:none;} body{padding-bottom:0;} }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div id="kws"></div>
+  <div class="wrap hero-in">
+    <div class="catch" id="catch"></div>
+    <div class="logo">
+      <span class="c1">つ</span><span class="c2">な</span><span class="c3">が</span><span class="c4">る</span>
+    </div>
+    <div class="logo2">フェスタ</div>
+    <div class="free">入場無料</div>
+    <div class="when" id="when"></div>
+    <div class="when2" id="when2"></div>
+    <div class="when3" id="when3"></div>
+    <div class="cd" id="cd"></div>
+  </div>
+</div>
+
+<div class="lead" id="lead"></div>
+
+<section class="wrap">
+  <div class="sec-h"><h2>SPECIAL STAGE</h2><span class="sub">– 見る・聞く –</span>
+    <span class="where w-pink">1F 大ホール</span></div>
+  <div class="acts" id="acts"></div>
+</section>
+
+<section class="wrap">
+  <div class="sec-h"><h2>SPECIAL GUEST</h2></div>
+  <div class="guest" id="guest"></div>
+</section>
+
+<section class="wrap">
+  <div class="sec-h"><h2>DISCOVER</h2><span class="sub">– 知る・出会う・相談する・つながる –</span>
+    <span class="where w-blue">3F・4F フロア</span></div>
+  <div class="sec-t" id="discoverText"></div>
+  <div id="discover"></div>
+</section>
+
+<section class="wrap">
+  <div class="sec-h"><h2>FOOD</h2><span class="sub">– 食べる・楽しむ –</span>
+    <span class="where w-orange">駐車場・1F・3F</span></div>
+  <div class="sec-t" id="foodText"></div>
+  <div class="foods" id="foods"></div>
+</section>
+
+<section class="wrap">
+  <div class="quest">
+    <h3>🎁 会場をまわって、ガチャをまわそう</h3>
+    <p>会場のQRコードを読み取ってポイントを集めると、ガチャが引けます。<br>
+       人と出会うほど、いいことがあるかも。</p>
+    <a class="qbtn" href="index.html">クエストをはじめる</a>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="sec-h"><h2>協賛・協力</h2></div>
+  <div class="sec-t">このイベントは、たくさんの企業・団体のみなさまに支えられています。</div>
+  <div class="orgs" id="orgs"></div>
+</section>
+
+<section class="wrap">
+  <div class="sec-h"><h2>運営スタッフ</h2></div>
+  <div class="sec-t">当日、会場でお待ちしています。困ったことがあれば声をかけてください。</div>
+  <div class="people" id="staff"></div>
+</section>
+
+<section class="wrap">
+  <div class="sec-h"><h2>アクセス</h2></div>
+  <div class="acc" id="acc"></div>
+</section>
+
+<footer>
+  <div class="h" id="host"></div>
+  <div class="c">つながるフェスタ 2026<br>いつもの「福祉」のイメージが、ちょっと変わる一日。</div>
+</footer>
+
+<div class="bar">
+  <a class="a1" href="index.html">🎁 クエスト</a>
+  <a class="a2" href="#" id="barMap">🗺 会場への行き方</a>
+</div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const COLORS = ['#E84686','#1186CE','#E75409','#2FA84F'];
+  const LIGHTS = ['#FBDDE8','#DCEDF9','#FBE1D4','#DBF0E2'];   // 写真が入るまでの淡い下地
+  const IG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#36271E" stroke-width="2.2">'
+           + '<rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.4"/>'
+           + '<circle cx="17.6" cy="6.4" r="1.3" fill="#36271E" stroke="none"/></svg>';
+
+  /* ── 背景のキーワード ── */
+  (function(){
+    // 左右の端だけに置く（中央はロゴと文字が乗るので空けておく）
+    const L = ['交流','くらし','地域','ふくし','未来'];
+    const R = ['笑顔','やさしさ','支え合い','出会い','人'];
+    let h = '';
+    L.forEach((w,i) => {
+      h += '<div class="kw" style="font-size:'+(30+(i%3)*16)+'px;top:'+(4+i*19)+'%;left:-2%;'
+         + (i%2 ? 'writing-mode:vertical-rl;' : '') + '">' + w + '</div>';
+    });
+    R.forEach((w,i) => {
+      h += '<div class="kw" style="font-size:'+(30+((i+1)%3)*16)+'px;top:'+(9+i*18)+'%;right:-2%;'
+         + (i%2 ? '' : 'writing-mode:vertical-rl;') + '">' + w + '</div>';
+    });
+    $('#kws').innerHTML = h;
+  })();
+
+  /* ── ヒーロー ── */
+  const E = FQ.event;
+  $('#catch').innerHTML = esc(E.catch).replace('「福祉」','<em>「福祉」</em>');
+  const md = E.date.replace(/^\d+年/,'').replace('月','.').replace('日','');
+  $('#when').innerHTML = '<span class="y">'+esc(E.date.slice(0,5))+'</span>'
+                       + '<span class="md">'+esc(md)+'</span>'
+                       + '<span class="yb">'+esc(E.youbi)+'</span>';
+  $('#when2').textContent = E.time;
+  $('#when3').textContent = E.place;
+  // 「広が／る！」のように変なところで折れないよう、読点で区切って語のまとまりを保つ
+  $('#lead').innerHTML = E.lead.split('、').map((x,i,a) =>
+    '<span>'+esc(x)+(i<a.length-1?'、':'')+'</span>').join('');
+  $('#host').textContent  = E.host;
+
+  /* ── カウントダウン ── */
+  (function(){
+    const t = new Date(E.dateISO).getTime();
+    function tick(){
+      const d = t - Date.now();
+      if (d <= 0) { $('#cd').innerHTML = '<div style="min-width:200px"><b>開催中！</b><small>会場でお待ちしています</small></div>'; return; }
+      const day = Math.floor(d/86400000), hh = Math.floor(d%86400000/3600000), mm = Math.floor(d%3600000/60000);
+      $('#cd').innerHTML = '<div><b>'+day+'</b><small>日</small></div>'
+                         + '<div><b>'+hh+'</b><small>時間</small></div>'
+                         + '<div><b>'+mm+'</b><small>分</small></div>';
+    }
+    tick(); setInterval(tick, 30000);
+  })();
+
+  /* ── 写真の丸／四角（写真が無いときは色＋頭文字） ── */
+  function photoStyle(photo, i){
+    return photo ? 'background-image:url('+esc(photo)+')'
+                 : 'background:'+LIGHTS[i%LIGHTS.length]+';color:'+COLORS[i%COLORS.length];
+  }
+  // 写真がまだ無いときの仮表示。名前の1文字目を出す（「（お名前）」のような仮の名前なら「写真」と出す）
+  function initial(name){
+    const t = String(name||'').replace(/^[（(]/,'').trim();
+    const c = t.charAt(0);
+    return (!c || c === '）' || c === ')') ? '' : c;
+  }
+  function phInner(name, i, withHint){
+    const c = initial(name);
+    return c ? (withHint ? '<span class="ini">'+esc(c)+'<small>写真が入ります</small></span>' : esc(c))
+             : '<span class="ini" style="font-size:22px">📷<small>写真が入ります</small></span>';
+  }
+
+  /* ── SPECIAL STAGE ── */
+  $('#acts').innerHTML = FQ.stage.map((a,i) => {
+    const inner = '<div class="t">'+esc(a.time)+'</div>'
+      + '<div class="ph" style="'+photoStyle(a.photo,i)+'">'
+      +   (a.photo ? '' : phInner(a.name, i, true))
+      +   (a.insta ? '<span class="ig">'+IG+'</span>' : '')
+      + '</div>'
+      + '<div class="n">'+esc(a.name)
+      +   (a.note ? '<small>'+esc(a.note)+'</small>' : '')
+      +   (a.insta ? '<span class="link">Instagramを見る →</span>' : '')
+      + '</div>';
+    return a.insta
+      ? '<a class="act" href="'+esc(a.insta)+'" target="_blank" rel="noopener">'+inner+'</a>'
+      : '<div class="act">'+inner+'</div>';
+  }).join('');
+
+  /* ── SPECIAL GUEST ── */
+  (function(){
+    const g = FQ.guest;
+    const ph = '<div class="ph" style="'+(g.photo?'background-image:url('+esc(g.photo)+')':'')+'">'
+             + (g.photo ? '' : '326') + '</div>';
+    $('#guest').innerHTML =
+        (g.insta
+          ? '<a class="ph" style="'+(g.photo?'background-image:url('+esc(g.photo)+')':'')+'" '
+            + 'href="'+esc(g.insta)+'" target="_blank" rel="noopener">'
+            + (g.photo ? '' : '326') + '<span class="ig">'+IG+'</span></a>'
+          : ph)
+      + '<div class="b"><h3>'+esc(g.name)+'</h3>'
+      + '<div class="role">'+esc(g.role)+(g.insta?' ・ <u>Instagram</u>':'')+'</div>'
+      + '<p>'+esc(g.text)+'</p></div>';
+  })();
+
+  /* ── DISCOVER ── */
+  $('#discoverText').textContent = FQ.discover.text;
+  $('#discover').innerHTML = FQ.discover.groups.map(g =>
+    '<div class="grp"><span class="gl" style="background:var(--'+esc(g.color)+')">'+esc(g.label)+'</span>'
+    + '<div class="chips">' + g.items.map(x => '<span class="chip">'+esc(x)+'</span>').join('') + '</div></div>'
+  ).join('');
+
+  /* ── FOOD ── */
+  $('#foodText').textContent = FQ.food.text;
+  $('#foods').innerHTML = FQ.food.items.map(x => '<span>'+esc(x)+'</span>').join('')
+    + '<span style="border-style:solid;background:var(--orange);color:#fff;border-color:var(--orange)">'+esc(FQ.food.note)+'</span>';
+
+  /* ── 協賛・協力 ── */
+  $('#orgs').innerHTML = FQ.sponsors.map(s => {
+    const inner = '<span class="k '+esc(s.kind)+'">'+esc(s.kind)+'</span><span class="nm">'+esc(s.name)+'</span>'
+                + (s.insta ? '<span style="margin-left:2px">'+IG+'</span>' : '');
+    const href = s.insta || s.url;
+    return href ? '<a class="org" href="'+esc(href)+'" target="_blank" rel="noopener">'+inner+'</a>'
+                : '<div class="org">'+inner+'</div>';
+  }).join('');
+
+  /* ── 運営スタッフ ── */
+  $('#staff').innerHTML = FQ.staff.map((p,i) => {
+    const inner = '<div class="av" style="'+photoStyle(p.photo,i)+'">'
+      + (p.photo ? '' : phInner(p.name, i, false))
+      + (p.insta ? '<span class="ig">'+IG+'</span>' : '')
+      + '</div><div class="n">'+esc(p.name)+'</div><div class="r">'+esc(p.role)+'</div>';
+    return p.insta ? '<a class="per" href="'+esc(p.insta)+'" target="_blank" rel="noopener">'+inner+'</a>'
+                   : '<div class="per">'+inner+'</div>';
+  }).join('');
+
+  /* ── アクセス ── */
+  (function(){
+    const A = FQ.access;
+    const map = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(E.mapQuery);
+    $('#acc').innerHTML = '<h3>'+esc(E.place)+'</h3>'
+      + '<div class="ad">'+esc(E.address)+'</div>'
+      + '<div class="st">最寄駅：'+esc(A.station)+'</div>'
+      + '<ul>' + A.notes.map(n => '<li>'+esc(n)+'</li>').join('') + '</ul>'
+      + '<a class="mapbtn" href="'+map+'" target="_blank" rel="noopener">地図をひらく</a>';
+    $('#barMap').href = map;
+  })();
+})();
+</script>
+</body>
+</html>
