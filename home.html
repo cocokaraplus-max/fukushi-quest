@@ -74,6 +74,9 @@ const FQ = {
     role:  'イラストレーター',
     insta: 'https://www.instagram.com/nakamura326/',
     photo: 'img/326.png',
+    /* short … トップページに出す一言（2行くらいまで）。
+       くわしい話は下の text（ステージのタブ）に置いています。 */
+    short: '当日は326さんご本人から、\nお話を伺う時間も予定しています。',
     text:  'フォークデュオ「19」の元メンバーで、人気カードゲーム「ito」を手がけた'
          + 'イラストレーター・326（ナカムラミツル）さんが、イベントに参加します。\n'
          + '今回のイベントでは、イラストのご提供や企画のアイデア出しなどにご協力いただきました。'
@@ -153,6 +156,37 @@ const FQ = {
   .kw{position:absolute;color:#EDE83C;font-weight:900;line-height:1;opacity:.75;
       user-select:none;pointer-events:none;white-space:nowrap;}
   .hero-in{position:relative;z-index:2;text-align:center;}
+
+  /* ══ 歩きまわるキャラクター（fq-walker-v1）══
+     326さんのイラストが、黄色い面の下のほうをピョコピョコ横切ります。
+
+     ★動きは2つ重ねています。
+       外側（.walker）＝ 左右の移動。 内側（img）＝ 上下のはねる動き。
+       分けておくと、片方だけ速さを変えられます。
+     ★z-index:1 ＝ 文字より後ろ。文字の読みやすさは絶対に落とさない。
+     ★pointer-events:none ＝ 指で触っても反応しない。
+       ボタンの上を通ったときに、押せなくなるのを防ぐため。
+     ★動きが苦手な方（端末の「視差効果を減らす」設定）には出しません。
+       福祉のイベントなので、ここは必ず守ること。
+     ★動かす指定は transform だけにしてあります。
+       位置（left など）を毎回変えるやり方より、端末の負担がずっと軽い。 */
+  .walker{position:absolute;left:0;bottom:2px;z-index:1;
+          width:clamp(46px,13vw,72px);pointer-events:none;user-select:none;
+          animation:walkx 22s linear infinite;}
+  .walker img{display:block;width:100%;height:auto;transform-origin:50% 100%;
+              animation:hop .44s ease-in-out infinite alternate;}
+  @keyframes walkx{                      /* 右へ歩く → 向きを変えて左へ帰る → ひと休み */
+      0%   {transform:translateX(-80px)              scaleX(1);}
+     36%   {transform:translateX(calc(100vw - 10px)) scaleX(1);}
+     38%   {transform:translateX(calc(100vw - 10px)) scaleX(-1);}
+     74%   {transform:translateX(-80px)              scaleX(-1);}
+     76%,100%{transform:translateX(-80px)            scaleX(1);}
+  }
+  @keyframes hop{
+    from{transform:translateY(0)     rotate(-4deg);}
+    to  {transform:translateY(-12px) rotate(4deg);}
+  }
+  @media(prefers-reduced-motion:reduce){ .walker{display:none;} }
 
   /* ══ キャッチコピー（fq-hero-flyer-v1）══
      文字の並びは横書き。見た目だけチラシに合わせている。
@@ -342,6 +376,32 @@ const FQ = {
     .ghead{gap:12px;}
   }
 
+  /* ══ トップのゲスト紹介（fq-guest-top-v1）══
+     トップは「顔と名前と一言」だけ。くわしい話はステージのタブに置いてある。
+     ★カード全体が「ステージのタブへ行くボタン」になっている（href="#stage"）。
+       タブの切りかえは #◯◯ で動いているので、ふつうのリンクで飛べる。
+     ★写真は contain（枠いっぱいに切らない）。イラストは全身が見えないと意味がないため。 */
+  .gteaser{background:var(--blue);color:#fff;border-radius:20px;padding:16px 15px;
+           display:flex;gap:14px;align-items:flex-start;text-align:left;text-decoration:none;
+           box-shadow:4px 5px 0 var(--ink);transition:.12s;}
+  .gteaser:active{transform:translate(2px,3px);box-shadow:2px 2px 0 var(--ink);}
+  .gteaser .ph{width:78px;height:107px;border-radius:12px;flex:0 0 auto;border:3px solid #fff;
+               background-color:rgba(255,255,255,.93);background-size:contain;
+               background-repeat:no-repeat;background-position:center;
+               display:flex;align-items:center;justify-content:center;
+               font-size:22px;font-weight:900;}
+  .gteaser .tx{min-width:0;}     /* これが無いと長い名前がはみ出す */
+  .gteaser h3{font-size:clamp(15px,4.2vw,19px);font-weight:900;line-height:1.4;
+              text-wrap:pretty;}
+  .gteaser .role{font-size:11.5px;opacity:.92;margin-top:2px;}
+  .gteaser .s{font-size:12.5px;font-weight:600;line-height:1.75;margin-top:8px;
+              white-space:pre-line;}
+  .gteaser .more{display:inline-block;margin-top:10px;background:#fff;color:var(--blue);
+                 border-radius:999px;padding:6px 15px;font-size:12px;font-weight:900;}
+  @media(max-width:400px){ .gteaser{gap:11px;padding:14px 12px;}
+                           .gteaser .ph{width:66px;height:91px;} }
+  @media(prefers-reduced-motion:reduce){ .gteaser{transition:none;} }
+
   /* ══════════ チップ ══════════ */
   .grp{margin-bottom:16px;}
   .grp .gl{display:inline-block;font-size:11.5px;font-weight:900;color:#fff;
@@ -482,9 +542,16 @@ const FQ = {
     <div class="when3" id="when3"></div>
     <div class="cd" id="cd"></div>
   </div>
+  <!-- ピョコピョコ歩くキャラクター（fq-walker-v1）。飾りなので読み上げ対象外 -->
+  <div class="walker" aria-hidden="true"><img src="img/326.png" alt="" decoding="async"></div>
 </div>
 
 <div class="lead" id="lead"></div>
+
+<section class="wrap">
+  <div class="sec-h"><h2 class="h-green">SPECIAL GUEST</h2><span class="sub">– 1F 大ホール –</span></div>
+  <a class="gteaser" id="gteaser" href="#stage"></a>
+</section>
 
 <section class="wrap">
   <div class="sec-h"><h2 class="h-orange">MENU</h2><span class="sub">– タップでひらきます –</span></div>
@@ -718,7 +785,21 @@ const FQ = {
       : '<div class="act">'+body+'</div>';
   }).join('');
 
-  /* ── SPECIAL GUEST ── */
+  /* ── SPECIAL GUEST ──
+     トップ（#gteaser）は短い紹介、ステージのタブ（#guest）はくわしい紹介。
+     どちらも同じ FQ.guest を見ているので、名前や写真を直せば両方変わります。 */
+  (function(){
+    const g  = FQ.guest;
+    // トップ用（短い紹介）。押すとステージのタブが開く
+    $('#gteaser').innerHTML =
+        '<div class="ph" style="'+(g.photo ? 'background-image:url('+esc(g.photo)+')' : '')+'">'
+      +   (g.photo ? '' : '326') + '</div>'
+      + '<div class="tx"><h3>'+esc(g.name)+'</h3>'
+      +   '<div class="role">'+esc(g.role)+'</div>'
+      +   (g.short ? '<div class="s">'+esc(g.short)+'</div>' : '')
+      +   '<span class="more">くわしく見る →</span></div>';
+  })();
+
   (function(){
     const g  = FQ.guest;
     const st = g.photo ? 'background-image:url('+esc(g.photo)+')' : '';
