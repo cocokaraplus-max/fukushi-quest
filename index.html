@@ -395,6 +395,9 @@ const FQ = {
      ★2行を1枚ずつに分けてあります（img/logo_line1.png ＝ つながる、
        img/logo_line2.png ＝ フェスタ）。分けてあるので、
        「フェスタだけ小さく」のような調節が下の width だけでできます。
+     ★fq-logo-beat-v1 から、表示に使っているのは img/lg_◯◯.png（1文字ずつ）です。
+       上の2枚は使っていませんが、戻したいときのために残してあります。
+       大きさの調節は今までどおり .logo / .logo2 の width で効きます。
      ★大きさは width だけ指定し、height は auto。
        こうしておくと、どんな画面幅でも絵が縦につぶれません。
      ★HTMLの width="960" height="252" は「先に場所を取っておく」ための指定。
@@ -412,6 +415,42 @@ const FQ = {
            --lw:min(58vw,430px);}
   .logo {width:var(--lw);height:auto;display:block;margin:4px 0 0;}
   .logo2{width:calc(var(--lw) * 0.62);height:auto;display:block;margin:2px 0 14px;}
+
+  /* ══ ロゴの鼓動（fq-logo-beat-v1）══
+     つ→な→が→る→フ→ェ→ス→タ の順に、心臓のように「ドクン」と大きくなる。
+
+     ★1文字ずつ別の絵にして、元の1枚絵と同じ位置に重ねてある（HTML側を参照）。
+       止まっているときの見た目は、今までと同じ。
+     ★20秒にひとまわり。1文字ずつ 0.5秒あけて鼓動するので、
+       つ から タ まで渡りきるのに 4.4秒。あとの約15秒は静か。＝「時々」動く。
+     ★鼓動は2拍（ドクン・ドク）。本物の心臓と同じで、2拍目は小さい。
+       1文字ぶんの鼓動そのものは 0.9秒。
+
+     ★直したいときに触る数字はこの3つだけ：
+         20s   … ひとまわりの長さ。長くすると「たまにしか動かない」
+         .5s   … 文字と文字のずれ。大きくすると波がゆっくり流れる
+         1.16  … どれだけ大きくなるか（16%）。1.10 くらいでも十分わかる
+       ★20s を変えたら @keyframes の％も変わってしまう点に注意。
+         1.2% は「ひとまわりの1.2%」＝20秒なら0.24秒。周期を変えるなら、
+         0.24秒・0.46秒・0.64秒・0.9秒 になるよう％を計算し直すこと。
+     ★動きが苦手な方の端末では鼓動しない（いちばん下の指定）。
+       これは他の演出（歩く・飛ぶ）と同じ扱いにしてある。 */
+  .lgline{position:relative;}
+  .lgline.logo {aspect-ratio:960 / 252;}
+  .lgline.logo2{aspect-ratio:960 / 254;}
+  .lgline .lt{position:absolute;display:block;height:auto;
+      transform-origin:50% 55%;
+      animation:lg-beat 20s cubic-bezier(.3,0,.35,1) infinite;
+      animation-delay:calc(var(--i) * .5s);}
+  @keyframes lg-beat{
+      0%      {transform:scale(1);    z-index:1;}
+      1.2%    {transform:scale(1.16); z-index:5;}   /* ドクン（1拍目・0.24秒） */
+      2.3%    {transform:scale(1);    z-index:5;}
+      3.2%    {transform:scale(1.07); z-index:5;}   /* ドク（2拍目・小さめ） */
+      4.5%    {transform:scale(1);    z-index:5;}
+      5%,100% {transform:scale(1);    z-index:1;}
+  }
+  @media(prefers-reduced-motion:reduce){ .lgline .lt{animation:none;} }
   .free{position:absolute;top:calc(var(--lw) * 0.131 - var(--fw) / 2 + 4px);
         right:calc(50% + var(--lw) / 2 + 8px);}
 
@@ -712,10 +751,24 @@ const FQ = {
     <div class="catchbox"><div class="catch" id="catch"></div></div>
     <div class="logorow">
       <div class="free"><b>入場</b><b>無料</b></div>
-      <img class="logo" src="img/logo_line1.png" alt="つながる"
-           width="960" height="252" decoding="async">
-      <img class="logo2" src="img/logo_line2.png" alt="フェスタ"
-           width="960" height="254" decoding="async">
+      <!-- fq-logo-beat-v1: ロゴを1文字ずつの絵に分けて、重ねて並べている。
+           ★止まっているときの見た目は、今までの1枚絵と同じ（実測で確認）。
+           ★left / top / width は「元の1枚絵の中での位置」を％にした数字。
+             ここを手で書き換えると文字がズレる。絵を作り直したときだけ測り直すこと。
+           ★--i は鼓動の順番（つ=0 … タ=7）。0.5秒ずつ遅れて鼓動する。
+           ★元の logo_line1.png / logo_line2.png は img/ に残してある（戻したいとき用）。 -->
+      <div class="logo lgline" role="img" aria-label="つながる">
+        <img class="lt" style="--i:0;left:0%;top:1.5873%;width:30.9375%" src="img/lg_tsu.png" alt="" decoding="async">
+        <img class="lt" style="--i:1;left:29.4792%;top:0%;width:26.875%" src="img/lg_na.png" alt="" decoding="async">
+        <img class="lt" style="--i:2;left:56.25%;top:0.7937%;width:24.4792%" src="img/lg_ga.png" alt="" decoding="async">
+        <img class="lt" style="--i:3;left:78.2292%;top:0.7937%;width:21.7708%" src="img/lg_ru.png" alt="" decoding="async">
+      </div>
+      <div class="logo2 lgline" role="img" aria-label="フェスタ">
+        <img class="lt" style="--i:4;left:0%;top:1.5748%;width:28.125%" src="img/lg_fu.png" alt="" decoding="async">
+        <img class="lt" style="--i:5;left:27.3958%;top:24.0157%;width:19.6875%" src="img/lg_e.png" alt="" decoding="async">
+        <img class="lt" style="--i:6;left:46.875%;top:0%;width:26.25%" src="img/lg_su.png" alt="" decoding="async">
+        <img class="lt" style="--i:7;left:70.5208%;top:0.7874%;width:29.4792%" src="img/lg_ta.png" alt="" decoding="async">
+      </div>
     </div>
     <div class="datewrap">
       <img class="whendate" id="when" src="img/date.png" alt=""
