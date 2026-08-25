@@ -51,6 +51,26 @@ const FQ = {
     keywords: ['交流','くらし','地域','ふくし','未来','笑顔','やさしさ','支え合い',
                '出会い','人','つながり','あんしん','居場所','おもいやり',
                'ぬくもり','いきがい','ともに','しあわせ'],
+
+    /* ── トップの黄色い面に、順番に出てくるキャラクター ──
+       ・move … どう動くか
+           walk   … 下のほうを歩いて横切る（右へ行って、向きを変えて帰る）
+           hop    … その場でぴょんぴょん跳ねる
+           rocket … 煙を出して、斜めに空へ飛んでいく
+       ・at   … 出てくるタイミング（秒）。0〜34 のあいだで散らしてください
+       ・x    … 出てくる横の位置（％）。walk では使いません
+       ★ぜんぶで34秒ひとまわり。1人ずつ順番に出るように at をずらしてあります。
+       ★増やす／減らすのは、この並びを足し引きするだけでできます。
+       ★動きが苦手な方の端末では、この演出は出ません（下のCSSの説明を参照）。 */
+    actors: [
+      { photo:'img/326.png',      move:'walk',   at: 0            },
+      { photo:'img/ch_pink.png',  move:'hop',    at: 5,   x: 16   },
+      { photo:'img/ch_cat.png',   move:'rocket', at: 10,  x: 74   },
+      { photo:'img/ch_robot.png', move:'walk',   at: 14           },
+      { photo:'img/ch_braid.png', move:'hop',    at: 19,  x: 52   },
+      { photo:'img/ch_wood.png',  move:'rocket', at: 24,  x: 26   },
+      { photo:'img/ch_green.png', move:'hop',    at: 29,  x: 84   },
+    ],
   },
 
   /* ── SPECIAL STAGE（1F 大ホール） ──
@@ -149,7 +169,9 @@ const FQ = {
   a{color:inherit;}
 
   /* ══════════ ヒーロー ══════════ */
-  .hero{position:relative;background:var(--yellow);overflow:hidden;padding:26px 0 34px;}
+  /* 下の余白は、キャラクターが歩く「地面」のぶんも見ています（fq-walker-v1）。
+     ここを狭めると、キャラクターがカウントダウンの後ろに隠れてしまいます。 */
+  .hero{position:relative;background:var(--yellow);overflow:hidden;padding:26px 0 66px;}
   /* 背景に散らすキーワード（チラシの雰囲気） */
   /* 背景のキーワード。読ませるものではないので、うっすらと。
      中央は文字が乗るので、左右の端だけに置く（下のJSで位置を決めている） */
@@ -157,36 +179,85 @@ const FQ = {
       user-select:none;pointer-events:none;white-space:nowrap;}
   .hero-in{position:relative;z-index:2;text-align:center;}
 
-  /* ══ 歩きまわるキャラクター（fq-walker-v1）══
-     326さんのイラストが、黄色い面の下のほうをピョコピョコ横切ります。
+  /* ══ 出てくるキャラクターたち（fq-walker-v1）══
+     チラシのキャラクターが、黄色い面で順番に動きます。
+     だれがいつ何をするかは、いちばん上の FQ.event.actors で決めています。
 
+     ★34秒でひとまわり。それぞれ「出てくる時刻（at）」をずらしてあるので、
+       だいたい1人ずつ順番に出てきます。
      ★動きは2つ重ねています。
-       外側（.walker）＝ 左右の移動。 内側（img）＝ 上下のはねる動き。
-       分けておくと、片方だけ速さを変えられます。
+       外側（.actor）＝ 出る・消える・大きく移動する
+       内側（img）  ＝ はねる・ゆれるといった細かい動き
+       分けておくと、片方だけ差し替えられます。
      ★z-index:1 ＝ 文字より後ろ。文字の読みやすさは絶対に落とさない。
      ★pointer-events:none ＝ 指で触っても反応しない。
        ボタンの上を通ったときに、押せなくなるのを防ぐため。
-     ★動きが苦手な方（端末の「視差効果を減らす」設定）には出しません。
-       福祉のイベントなので、ここは必ず守ること。
-     ★動かす指定は transform だけにしてあります。
-       位置（left など）を毎回変えるやり方より、端末の負担がずっと軽い。 */
-  .walker{position:absolute;left:0;bottom:2px;z-index:1;
-          width:clamp(46px,13vw,72px);pointer-events:none;user-select:none;
-          animation:walkx 22s linear infinite;}
-  .walker img{display:block;width:100%;height:auto;transform-origin:50% 100%;
-              animation:hop .44s ease-in-out infinite alternate;}
-  @keyframes walkx{                      /* 右へ歩く → 向きを変えて左へ帰る → ひと休み */
-      0%   {transform:translateX(-80px)              scaleX(1);}
-     36%   {transform:translateX(calc(100vw - 10px)) scaleX(1);}
-     38%   {transform:translateX(calc(100vw - 10px)) scaleX(-1);}
-     74%   {transform:translateX(-80px)              scaleX(-1);}
-     76%,100%{transform:translateX(-80px)            scaleX(1);}
+     ★動かす指定は transform と opacity だけ。
+       位置（left・top）を毎回変えるやり方より、端末の負担がずっと軽い。
+     ★★動きが苦手な方（端末の「視差効果を減らす」設定）には出しません。
+       福祉のイベントなので、ここは必ず守ること。 */
+  .actor{position:absolute;bottom:6px;z-index:1;opacity:0;
+         width:clamp(48px,14vw,80px);pointer-events:none;user-select:none;}
+  .actor img{display:block;width:100%;height:auto;transform-origin:50% 100%;}
+
+  /* ① 歩く … 右へ行って、向きを変えて帰ってくる */
+  .m-walk{left:0;animation:a-walk 34s linear infinite;}
+  .m-walk img{animation:i-step .44s ease-in-out infinite alternate;}
+  @keyframes a-walk{
+      0%     {opacity:0; transform:translateX(-90px)             scaleX(1);}
+      1%,32% {opacity:1;}
+      2%     {           transform:translateX(-90px)             scaleX(1);}
+     16%     {           transform:translateX(calc(100vw - 10px)) scaleX(1);}
+     17%     {           transform:translateX(calc(100vw - 10px)) scaleX(-1);}
+     31%     {           transform:translateX(-90px)             scaleX(-1);}
+     33%,100%{opacity:0; transform:translateX(-90px)             scaleX(1);}
   }
-  @keyframes hop{
+  @keyframes i-step{
     from{transform:translateY(0)     rotate(-4deg);}
     to  {transform:translateY(-12px) rotate(4deg);}
   }
-  @media(prefers-reduced-motion:reduce){ .walker{display:none;} }
+
+  /* ② ぴょんぴょん … その場ではねる。x で出る位置を決める */
+  .m-hop{animation:a-show 34s linear infinite;}
+  .m-hop img{animation:i-jump .58s cubic-bezier(.3,0,.4,1) infinite alternate;}
+  @keyframes a-show{
+      0%     {opacity:0;} 1%,13%{opacity:1;} 14%,100%{opacity:0;}
+  }
+  @keyframes i-jump{
+    from{transform:translateY(0)     scaleY(.94) scaleX(1.05);}
+    to  {transform:translateY(-42px) scaleY(1.06) scaleX(.96);}
+  }
+
+  /* ③ ロケット … 煙を出して斜めに飛んでいく */
+  .m-rocket{animation:a-rocket 34s ease-in infinite;}
+  .m-rocket img{animation:i-tilt 3s ease-in infinite;}
+  @keyframes a-rocket{        /* しゃがむ → 飛び上がる → 空へ消える */
+      0%     {opacity:0; transform:translate(0,10px)      scale(.9);}
+      1%     {opacity:1; transform:translate(0,10px)      scale(.9);}
+      3%     {opacity:1; transform:translate(0,0)         scale(1);}
+     11%     {opacity:1; transform:translate(13vw,-190px) scale(.7);}
+     13%     {opacity:0; transform:translate(18vw,-270px) scale(.56);}
+     14%,100%{opacity:0; transform:translate(0,10px)      scale(.9);}
+  }
+  @keyframes i-tilt{
+      0%,8%  {transform:rotate(0);}
+     14%,100%{transform:rotate(24deg);}
+  }
+  /* 煙。白い丸を box-shadow で何個かに増やして、ふくらみながら消える */
+  .m-rocket .smoke{position:absolute;left:50%;bottom:-16px;width:20px;height:20px;
+      border-radius:50%;background:#fff;
+      box-shadow:-17px 14px 0 -2px rgba(255,255,255,.92),
+                  15px 17px 0 -3px rgba(255,255,255,.88),
+                  -7px 34px 0 -4px rgba(255,255,255,.78),
+                   9px 42px 0 -5px rgba(255,255,255,.62),
+                  -3px 52px 0 -7px rgba(255,255,255,.45);
+      animation:i-puff .5s ease-out infinite;}
+  @keyframes i-puff{
+    from{opacity:.95; transform:translateX(-50%) scale(.65);}
+    to  {opacity:0;   transform:translateX(-50%) scale(1.55);}
+  }
+
+  @media(prefers-reduced-motion:reduce){ .actor{display:none;} }
 
   /* ══ キャッチコピー（fq-hero-flyer-v1）══
      文字の並びは横書き。見た目だけチラシに合わせている。
@@ -542,8 +613,8 @@ const FQ = {
     <div class="when3" id="when3"></div>
     <div class="cd" id="cd"></div>
   </div>
-  <!-- ピョコピョコ歩くキャラクター（fq-walker-v1）。飾りなので読み上げ対象外 -->
-  <div class="walker" aria-hidden="true"><img src="img/326.png" alt="" decoding="async"></div>
+  <!-- 順番に出てくるキャラクター（fq-walker-v1）。飾りなので読み上げ対象外 -->
+  <div id="actors" aria-hidden="true"></div>
 </div>
 
 <div class="lead" id="lead"></div>
@@ -684,6 +755,21 @@ const FQ = {
            + 'font-size:min(' + size + 'vw,' + Math.round(size * 6.2) + 'px);'
            + (vert ? 'writing-mode:vertical-rl;' : '')
            + '">' + esc(w) + '</div>';
+    }).join('');
+  })();
+
+  /* ── 出てくるキャラクター（fq-walker-v1）──
+     並べるだけ。動きはCSSにまかせています（JSで動かすより端末にやさしい）。
+     ★at（秒）を animation-delay にしているので、順番に出てきます。
+     ★ロケットの子だけ、煙の丸をひとつ足しています。 */
+  (function(){
+    const A = FQ.event.actors || [];
+    $('#actors').innerHTML = A.map(c => {
+      const pos = (c.move === 'walk') ? '' : 'left:' + (c.x || 50) + '%;';
+      return '<div class="actor m-' + esc(c.move) + '" '
+           + 'style="' + pos + 'animation-delay:' + (c.at || 0) + 's">'
+           + (c.move === 'rocket' ? '<span class="smoke"></span>' : '')
+           + '<img src="' + esc(c.photo) + '" alt="" decoding="async"></div>';
     }).join('');
   })();
 
