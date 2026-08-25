@@ -16,6 +16,7 @@
    ★ここだけ直せば中身が変わります。HTMLはさわらなくて大丈夫です。
 
    ・insta … インスタのURL。空 "" にすると、その人はリンクになりません
+   ・url  … ホームページのURL（省略可）。インスタと両方あれば両方出ます
    ・photo … 写真のURL（例 "img/walters.jpg"）。空なら色の丸に頭文字が出ます
    ・pos  … 写真のどこを見せるか（省略可）。顔が切れるときだけ使います
             例 'center 20%' … 上のほうを見せる ／ 'center bottom' … 下を見せる
@@ -63,8 +64,8 @@ const FQ = {
     { time:'13:00〜14:00', name:'かすこんねぅ',         note:'ライブ',
       insta:'https://www.instagram.com/kasukonnnnnneu/',   photo:'img/kasukon.jpg',
       pos:'center 18%', credit:'©Stardust Promotion, Inc.' },
-    { time:'15:00〜16:00', name:'TAKUMA',               note:'ライブ',
-      insta:'https://www.instagram.com/takuma_pts/',       photo:'img/takuma.jpg', pos:'center 22%' },
+    { time:'15:00〜16:00', name:'プラタナス',            note:'ライブ',
+      url:'https://platanus.bitfan.id/contents/menu/154141', photo:'img/platanus.jpg' },
   ],
 
   /* ── スペシャルゲスト ── */
@@ -218,31 +219,23 @@ const FQ = {
        届かなくても、太さも大きさもそのままで普通に読めます。
      ★2026 を 12.13 の上に重ねる並びも、白フチも、チラシに合わせています。
      ★時間と会場は、チラシと同じ「白い角丸」の中に入れています。
-     ★書体は Zen Kaku Gothic New の900（いちばん太い角ゴシック）。
-       はじめ Dela Gothic One を使いましたが、あれは飾りの強い見出し用で、
-       チラシの「角ゴシック」とは別物でした。角ゴシックに直しています。
-     ★うしろに並べた書体は、届かなかったときの控え。どれも太字を
-       持っているので、900 と書いておけば太さは変わりません。
+     ★★日付「2026 12.13 日」は文字ではなく、チラシそのものを切り出した絵です
+       （img/date.png）。Webの書体では、あの角ばった形にどうしても届かなかったため、
+       印刷物から高い解像度（500dpi）で取り出し、黄色い地色を透明にしています。
+       ・日付が変わったときは、この絵を作り直す必要があります。
+       ・下の FQ.event.date は、絵の読み上げ文（alt）と、まわりの表示に使います。
+       ・カウントダウンは FQ.event.dateISO を見ているので、絵とは無関係に動きます。
+     ★時間と会場は文字のまま。書体は Zen Kaku Gothic New の900（角ゴシック）。
+       うしろに並べた書体は、届かなかったときの控えです。
      ★font-synthesis:none は「ブラウザが勝手に太らせない」という指定。
        本物の太字があるのに上から太らせると、字がつぶれてしまいます。 */
-  .when,.when2,.when3{
+  .whendate{display:block;width:min(64vw,430px);height:auto;margin:14px auto 0;}
+  .when2,.when3{
     font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Noto Sans JP",
                 "Zen Maru Gothic",sans-serif;
-    font-weight:900; font-synthesis:none; -webkit-font-synthesis:none;}
-  /* ★この3つは「それぞれ1行」にすること。
-     inline のままにすると、日付と時間が同じ行に並んでしまいます。 */
-  .when{display:flex;align-items:flex-end;gap:9px;justify-content:center;
-        margin-top:10px;-webkit-text-stroke:5px #fff;paint-order:stroke fill;}
-  .when .ymd{display:flex;flex-direction:column;align-items:flex-start;line-height:1;}
-  .when .y {font-size:clamp(15px,4.3vw,20px);letter-spacing:.04em;margin-bottom:2px;}
-  .when .md{font-size:clamp(42px,12.6vw,64px);letter-spacing:-.01em;}
-  /* 丸のなかの「日」だけは白フチを消す（フチが丸をはみ出して汚くなるため） */
-  .when .yb{font-size:14px;-webkit-text-stroke:0;background:#fff;color:var(--ink);
-            border:2.5px solid var(--ink);border-radius:50%;
-            width:30px;height:30px;display:inline-flex;align-items:center;
-            justify-content:center;margin-bottom:5px;flex:0 0 auto;}
-  .when2,.when3{display:block;width:fit-content;max-width:92%;margin:9px auto 0;
-                background:#fff;border-radius:999px;padding:5px 18px;}
+    font-weight:900; font-synthesis:none; -webkit-font-synthesis:none;
+    display:block;width:fit-content;max-width:92%;margin:9px auto 0;
+    background:#fff;border-radius:999px;padding:5px 18px;}
   .when2{font-size:clamp(14px,4.2vw,19px);letter-spacing:.02em;}
   .when3{font-size:clamp(13px,3.9vw,18px);}
 
@@ -477,7 +470,8 @@ const FQ = {
       <img class="logo2" src="img/logo_line2.png" alt="フェスタ"
            width="960" height="254" decoding="async">
     </div>
-    <div class="when" id="when"></div>
+    <img class="whendate" id="when" src="img/date.png" alt=""
+         width="900" height="338" decoding="async">
     <div class="when2" id="when2"></div>
     <div class="when3" id="when3"></div>
     <div class="cd" id="cd"></div>
@@ -626,12 +620,8 @@ const FQ = {
      「福祉」の4文字だけ <em> で囲むと、CSSがピンクにしてくれる。 */
   $('#catch').innerHTML = E.catch.split('\n')
       .map(x => '<p>' + esc(x).replace('「福祉」','<em>「福祉」</em>') + '</p>').join('');
-  // チラシと同じ並び：「2026」を「12.13」の上に、曜日は丸のなかに
-  const md = E.date.replace(/^\d+年/,'').replace('月','.').replace('日','');
-  const yr = (E.date.match(/^\d{4}/) || [''])[0];
-  $('#when').innerHTML = '<span class="ymd"><span class="y">'+esc(yr)+'</span>'
-                       + '<span class="md">'+esc(md)+'</span></span>'
-                       + '<span class="yb">'+esc(E.youbi)+'</span>';
+  // 日付はチラシから切り出した絵。読み上げ用の文だけ FQ から入れる
+  $('#when').alt = E.date + '（' + E.youbi + '）';
   $('#when2').textContent = E.time;
   $('#when3').textContent = E.place;
   // 「広が／る！」のように変なところで折れないよう、読点で区切って語のまとまりを保つ
@@ -694,21 +684,32 @@ const FQ = {
              : '<span class="ini" style="font-size:22px">📷<small>写真が入ります</small></span>';
   }
 
-  /* ── SPECIAL STAGE ── */
+  /* ── SPECIAL STAGE ──
+     ★リンクは insta と url の2種類。
+       1つだけのときは、カード全体を押せるようにします（指で押しやすい）。
+       2つあるときは、カードの中に行を2つ並べます。
+       ★リンクの中にリンクは入れられないので、この場合だけカードは <div>。 */
   $('#acts').innerHTML = FQ.stage.map((a,i) => {
-    const inner = '<div class="t">'+esc(a.time)+'</div>'
+    const links = [];
+    if (a.insta) links.push([a.insta, 'Instagramを見る →']);
+    if (a.url)   links.push([a.url,   'ホームページを見る →']);
+    const one = links.length === 1;
+    const body = '<div class="t">'+esc(a.time)+'</div>'
       + '<div class="ph" style="'+photoStyle(a.photo,i,a.pos)+'">'
       +   (a.photo ? '' : phInner(a.name, i, true))
       +   (a.insta ? '<span class="ig">'+IG+'</span>' : '')
       + '</div>'
       + '<div class="n">'+esc(a.name)
       +   (a.note ? '<small>'+esc(a.note)+'</small>' : '')
-      +   (a.insta ? '<span class="link">Instagramを見る →</span>' : '')
+      +   links.map(([href, label]) => one
+            ? '<span class="link">'+label+'</span>'
+            : '<a class="link" href="'+esc(href)+'" target="_blank" rel="noopener">'+label+'</a>'
+          ).join('')
       +   (a.credit ? '<span class="cr">'+esc(a.credit)+'</span>' : '')
       + '</div>';
-    return a.insta
-      ? '<a class="act" href="'+esc(a.insta)+'" target="_blank" rel="noopener">'+inner+'</a>'
-      : '<div class="act">'+inner+'</div>';
+    return one
+      ? '<a class="act" href="'+esc(links[0][0])+'" target="_blank" rel="noopener">'+body+'</a>'
+      : '<div class="act">'+body+'</div>';
   }).join('');
 
   /* ── SPECIAL GUEST ── */
