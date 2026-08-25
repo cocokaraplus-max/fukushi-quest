@@ -40,6 +40,15 @@ const FQ = {
     address:  '〒471-0877 愛知県豊田市錦町1-1-1',
     host:     '豊田市社会福祉協議会 主催',
     mapQuery: '豊田市福祉センター',
+
+    /* トップの黄色い面に、うっすら透かしで流れる言葉。
+       「こんな福祉であってほしい」という言葉を並べています。
+       ★増やしても減らしても大丈夫です（並べ方は自動で決まります）。
+       ★読ませるための文字ではないので、うっすらとしか出ません。
+         濃さを変えたいときは、下のCSSの .kw の opacity を直してください。 */
+    keywords: ['交流','くらし','地域','ふくし','未来','笑顔','やさしさ','支え合い',
+               '出会い','人','つながり','あんしん','居場所','おもいやり',
+               'ぬくもり','いきがい','ともに','しあわせ'],
   },
 
   /* ── SPECIAL STAGE（1F 大ホール） ──
@@ -200,29 +209,51 @@ const FQ = {
   .when2{font-size:17px;font-weight:900;margin-top:2px;}
   .when3{font-size:14px;font-weight:700;margin-top:2px;}
 
-  /* カウントダウン */
-  .cd{display:inline-flex;gap:8px;margin-top:16px;}
+  /* カウントダウン（日・時間・分・秒の4つ）
+     ★tabular-nums ＝ 数字の幅をぜんぶ同じにする指定。
+       これが無いと、1秒ごとに数字の幅が変わって枠がぴくぴく動きます。 */
+  .cd{display:inline-flex;gap:6px;margin-top:16px;}
   .cd div{background:#fff;border:2.5px solid var(--ink);border-radius:12px;
-          min-width:62px;padding:6px 4px;line-height:1.2;}
-  .cd b{display:block;font-size:26px;font-weight:900;}
+          min-width:clamp(54px,15.5vw,68px);padding:6px 3px;line-height:1.2;}
+  .cd b{display:block;font-size:clamp(21px,6.2vw,26px);font-weight:900;
+        font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
   .cd small{font-size:10.5px;color:var(--muted);font-weight:700;}
+  .cd .now{min-width:200px;}
 
   /* ══════════ 共通セクション ══════════ */
-  section{padding:44px 0 8px;}
+  /* ★中身どうしのすき間（fq-hero-flyer-v1 で広げた）
+     ここの padding-top が「前のかたまりとのすき間」になります。
+     せまいと全部つながって見えて、どこが区切りか分からなくなるため広めに。 */
+  section{padding:62px 0 10px;}
+  /* タブを開いていちばん最初に出てくる見出しの上。
+     ここだけは少し詰める（開いた直後に空白ばかり見えると不安になるため） */
+  .pane > section:first-of-type{padding-top:44px;}
+
   .lead{background:var(--ink);color:#fff;text-align:center;padding:22px 20px;
         font-size:clamp(15.5px,4.2vw,22px);font-weight:900;line-height:1.7;
         letter-spacing:.01em;text-wrap:balance;}
   .lead span{display:inline-block;}   /* 変なところで折れないように語のまとまりを保つ */
 
-  .sec-h{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+  /* ★見出しの枠（fq-hero-flyer-v1）
+     チラシのロゴと同じ「シール」の感じ＝白い面＋黒フチ＋右下にずれた黒い影。
+     box-shadow を「ぼかさず」に右下へずらすと、紙が浮いて見えます。
+     ★傾けないこと（前に傾けたら読みにくいと言われたため）。 */
+  .sec-h{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
   .sec-h h2{font-size:clamp(24px,6.5vw,34px);font-weight:900;letter-spacing:.02em;
-            border:3px solid var(--ink);border-radius:10px;padding:4px 14px;background:#fff;}
+            border:3px solid var(--ink);border-radius:12px;padding:5px 16px;background:#fff;
+            box-shadow:5px 6px 0 var(--ink);}
+  .h-pink{color:var(--pink);}  .h-blue{color:var(--blue);}
+  .h-green{color:var(--green);} .h-orange{color:var(--orange);}
   .sec-h .sub{font-size:13.5px;font-weight:700;color:var(--muted);}
   .sec-h .where{margin-left:auto;font-size:12px;font-weight:900;color:#fff;
-                border-radius:7px;padding:4px 11px;white-space:nowrap;}
+                border:2.5px solid var(--ink);border-radius:9px;padding:4px 11px;
+                white-space:nowrap;box-shadow:3px 4px 0 var(--ink);}
   .w-pink{background:var(--pink);} .w-blue{background:var(--blue);}
   .w-green{background:var(--green);} .w-orange{background:var(--orange);}
-  .sec-t{white-space:pre-line;font-size:14.5px;font-weight:700;margin:12px 0 18px;line-height:1.9;}
+  /* 画面がせまいと「1F 大ホール」などが次の行に落ちる。そのとき右端に飛ばすと
+     見出しから切り離されて見えるので、せまいときは左に寄せてくっつける */
+  @media(max-width:620px){ .sec-h{gap:10px;} .sec-h .where{margin-left:0;} }
+  .sec-t{white-space:pre-line;font-size:14.5px;font-weight:700;margin:16px 0 22px;line-height:1.9;}
 
   /* ══════════ ステージ ══════════ */
   .acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
@@ -332,19 +363,66 @@ const FQ = {
   footer .h{font-size:15px;font-weight:900;}
   footer .c{font-size:11.5px;opacity:.7;margin-top:8px;line-height:1.8;}
 
-  /* 下の固定バー（スマホ） */
-  .bar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--ink);
-       display:flex;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:8px;}
-  .bar a{flex:1;text-align:center;text-decoration:none;border-radius:11px;padding:11px 6px;
-         font-size:13px;font-weight:900;}
-  .bar .a1{background:var(--yellow);color:var(--ink);}
-  .bar .a2{background:#fff;color:var(--ink);}
-  body{padding-bottom:76px;}
-  @media(min-width:761px){ .bar{display:none;} body{padding-bottom:0;} }
+  /* ══════════ 下のタブバー（fq-tabs-v1）══════════
+     スマホのアプリと同じ「下に並んだタブ」。押すとページの中身が入れかわります。
+
+     ★指がいちばん届きやすいのが画面の下なので、下に置いています。
+     ★env(safe-area-inset-bottom) ＝ iPhoneの下の黒い横棒のぶんの余白。
+       これを入れないと、いちばん下のタブが横棒に隠れて押せなくなります。
+     ★body の padding-bottom は、タブバーに隠れる高さぶんの逃げ。
+       タブバーの高さを変えたら、こちらも変えてください。 */
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--ink);
+          display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+          box-shadow:0 -2px 10px rgba(0,0,0,.18);}
+  .tabbar button{flex:1;background:none;border:0;cursor:pointer;color:#fff;opacity:.62;
+                 font-family:inherit;font-weight:900;font-size:10.5px;line-height:1.25;
+                 padding:6px 2px 4px;border-radius:12px;
+                 display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .tabbar button .ic{font-size:19px;line-height:1;}
+  .tabbar button[aria-selected="true"]{opacity:1;background:rgba(255,255,255,.13);}
+  .tabbar button[aria-selected="true"] .ic{transform:translateY(-1px);}
+  body{padding-bottom:calc(66px + env(safe-area-inset-bottom));}
+  @media(min-width:761px){
+    .tabbar{max-width:760px;margin:0 auto;border-radius:18px 18px 0 0;}
+    .tabbar button{font-size:12px;} .tabbar button .ic{font-size:21px;}
+  }
+
+  /* タブの中身。表示中のものだけ出す */
+  .pane{display:none;}
+  .pane.on{display:block;}
+
+  /* ホームの大きな入口ボタン（fq-tabs-v1）
+     下のタブバーに気づかない人のために、ホームにも同じ入口を大きく置いています。
+     見た目は見出しと同じ「シール」。押すとそのタブが開きます。 */
+  .short{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+  .short button{background:#fff;border:2.5px solid var(--ink);border-radius:16px;
+                box-shadow:4px 5px 0 var(--ink);padding:15px 13px;cursor:pointer;
+                font-family:inherit;font-weight:900;color:var(--ink);text-align:left;
+                display:flex;flex-direction:column;gap:3px;transition:.12s;}
+  .short button:active{transform:translate(2px,3px);box-shadow:2px 2px 0 var(--ink);}
+  .short .ic{font-size:26px;line-height:1.1;}
+  .short .n{font-size:15.5px;}
+  .short .d{font-size:11.5px;color:var(--muted);font-weight:700;line-height:1.6;}
+  @media(prefers-reduced-motion:reduce){ .short button{transition:none;} }
+
+  /* ══ 上に戻るボタン（fq-tabs-v1）══
+     少し下までスクロールしたときだけ、そっと出てきます。
+     ★タブバーのすぐ上に置く（下に隠れないように bottom を計算している）。 */
+  .totop{position:fixed;right:14px;z-index:55;
+         bottom:calc(78px + env(safe-area-inset-bottom));
+         width:46px;height:46px;border-radius:50%;border:2.5px solid var(--ink);
+         background:#fff;color:var(--ink);font-size:19px;font-weight:900;
+         cursor:pointer;box-shadow:2px 3px 0 var(--ink);
+         display:flex;align-items:center;justify-content:center;
+         opacity:0;pointer-events:none;transition:opacity .18s;}
+  .totop.on{opacity:1;pointer-events:auto;}
+  @media(prefers-reduced-motion:reduce){ .totop{transition:none;} }
 </style>
 </head>
 <body>
 
+<!-- ══ ホーム ══ -->
+<div class="pane on" id="pane-home">
 <div class="hero">
   <div id="kws"></div>
   <div class="wrap hero-in">
@@ -364,30 +442,44 @@ const FQ = {
 <div class="lead" id="lead"></div>
 
 <section class="wrap">
-  <div class="sec-h"><h2>SPECIAL STAGE</h2><span class="sub">– 見る・聞く –</span>
+  <div class="sec-h"><h2 class="h-orange">MENU</h2><span class="sub">– タップでひらきます –</span></div>
+  <div class="short" id="short"></div>
+</section>
+</div><!-- /pane-home -->
+
+<!-- ══ ステージ ══ -->
+<div class="pane" id="pane-stage">
+<section class="wrap">
+  <div class="sec-h"><h2 class="h-pink">SPECIAL STAGE</h2><span class="sub">– 見る・聞く –</span>
     <span class="where w-pink">1F 大ホール</span></div>
   <div class="acts" id="acts"></div>
 </section>
 
 <section class="wrap">
-  <div class="sec-h"><h2>SPECIAL GUEST</h2></div>
+  <div class="sec-h"><h2 class="h-green">SPECIAL GUEST</h2></div>
   <div class="guest" id="guest"></div>
 </section>
+</div><!-- /pane-stage -->
 
+<!-- ══ みどころ ══ -->
+<div class="pane" id="pane-see">
 <section class="wrap">
-  <div class="sec-h"><h2>DISCOVER</h2><span class="sub">– 知る・出会う・相談する・つながる –</span>
+  <div class="sec-h"><h2 class="h-blue">DISCOVER</h2><span class="sub">– 知る・出会う・相談する・つながる –</span>
     <span class="where w-blue">3F・4F フロア</span></div>
   <div class="sec-t" id="discoverText"></div>
   <div id="discover"></div>
 </section>
 
 <section class="wrap">
-  <div class="sec-h"><h2>FOOD</h2><span class="sub">– 食べる・楽しむ –</span>
+  <div class="sec-h"><h2 class="h-orange">FOOD</h2><span class="sub">– 食べる・楽しむ –</span>
     <span class="where w-orange">駐車場・1F・3F</span></div>
   <div class="sec-t" id="foodText"></div>
   <div class="foods" id="foods"></div>
 </section>
+</div><!-- /pane-see -->
 
+<!-- ══ クエスト ══ -->
+<div class="pane" id="pane-quest">
 <section class="wrap">
   <div class="quest">
     <h3>🎁 会場をまわって、ガチャをまわそう</h3>
@@ -396,33 +488,46 @@ const FQ = {
     <a class="qbtn" href="index.html">クエストをはじめる</a>
   </div>
 </section>
+</div><!-- /pane-quest -->
+
+<!-- ══ 会場 ══ -->
+<div class="pane" id="pane-place">
+<section class="wrap">
+  <div class="sec-h"><h2 class="h-green">アクセス</h2></div>
+  <div class="acc" id="acc"></div>
+</section>
 
 <section class="wrap">
-  <div class="sec-h"><h2>協賛・協力</h2></div>
+  <div class="sec-h"><h2 class="h-pink">協賛・協力</h2></div>
   <div class="sec-t">このイベントは、たくさんの企業・団体のみなさまに支えられています。</div>
   <div class="orgs" id="orgs"></div>
 </section>
 
 <section class="wrap">
-  <div class="sec-h"><h2>運営スタッフ</h2></div>
+  <div class="sec-h"><h2 class="h-blue">運営スタッフ</h2></div>
   <div class="sec-t">当日、会場でお待ちしています。困ったことがあれば声をかけてください。</div>
   <div class="people" id="staff"></div>
 </section>
-
-<section class="wrap">
-  <div class="sec-h"><h2>アクセス</h2></div>
-  <div class="acc" id="acc"></div>
-</section>
+</div><!-- /pane-place -->
 
 <footer>
   <div class="h" id="host"></div>
   <div class="c">つながるフェスタ 2026<br>いつもの「福祉」のイメージが、ちょっと変わる一日。</div>
 </footer>
 
-<div class="bar">
-  <a class="a1" href="index.html">🎁 クエスト</a>
-  <a class="a2" href="#" id="barMap">🗺 会場への行き方</a>
-</div>
+<button class="totop" id="toTop" type="button" aria-label="いちばん上に戻る">↑</button>
+
+<!-- ══ 下のタブバー（fq-tabs-v1）══
+     data-tab の名前が、上の pane-◯◯ とページの #◯◯ に対応しています。
+     タブを増やしたいときは、ここに1つ足して、同じ名前の <div class="pane" id="pane-◯◯">
+     を上に作ってください。 -->
+<nav class="tabbar" id="tabbar" role="tablist" aria-label="ページの切りかえ">
+  <button role="tab" data-tab="home"  aria-selected="true"><span class="ic">🏠</span>ホーム</button>
+  <button role="tab" data-tab="stage" aria-selected="false"><span class="ic">🎤</span>ステージ</button>
+  <button role="tab" data-tab="see"   aria-selected="false"><span class="ic">🔍</span>みどころ</button>
+  <button role="tab" data-tab="quest" aria-selected="false"><span class="ic">🎁</span>クエスト</button>
+  <button role="tab" data-tab="place" aria-selected="false"><span class="ic">🗺</span>会場</button>
+</nav>
 
 <script>
 (function(){
@@ -434,21 +539,33 @@ const FQ = {
            + '<rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.4"/>'
            + '<circle cx="17.6" cy="6.4" r="1.3" fill="#36271E" stroke="none"/></svg>';
 
-  /* ── 背景のキーワード ── */
+  /* ── 背景の透かし文字（fq-hero-flyer-v1）──
+     FQ.event.keywords の言葉を、黄色い面いっぱいに散らします。
+
+     ★位置は「決まった計算」で出しています。ランダムを使っていないので、
+       何回開いても同じ配置になります（開くたびに変わると落ち着かないため）。
+
+     ★言葉どうしが重ならないよう、面を横に段（row）で区切り、
+       1段に「左1つ・右1つ」だけ置いています。左右は半段ずらして互い違い。
+       やみくもに散らすと重なって、透かしではなく“汚れ”に見えてしまうため。
+     ★縦書きの言葉は場所を取るので、いちばん小さい大きさに固定しています。
+     ★大きさは vw（画面の幅に対する割合）なので、スマホでもPCでも同じ雰囲気。 */
   (function(){
-    // 左右の端だけに置く（中央はロゴと文字が乗るので空けておく）
-    const L = ['交流','くらし','地域','ふくし','未来'];
-    const R = ['笑顔','やさしさ','支え合い','出会い','人'];
-    let h = '';
-    L.forEach((w,i) => {
-      h += '<div class="kw" style="font-size:'+(30+(i%3)*16)+'px;top:'+(4+i*19)+'%;left:-2%;'
-         + (i%2 ? 'writing-mode:vertical-rl;' : '') + '">' + w + '</div>';
-    });
-    R.forEach((w,i) => {
-      h += '<div class="kw" style="font-size:'+(30+((i+1)%3)*16)+'px;top:'+(9+i*18)+'%;right:-2%;'
-         + (i%2 ? '' : 'writing-mode:vertical-rl;') + '">' + w + '</div>';
-    });
-    $('#kws').innerHTML = h;
+    const W = FQ.event.keywords || [];
+    const rows = Math.max(1, Math.ceil(W.length / 2));
+    $('#kws').innerHTML = W.map((w,i) => {
+      const right = (i % 2) === 1;                        // 左右かわりばんこ
+      const row   = Math.floor(i / 2);
+      const top   = (row + (right ? 0.5 : 0)) * (100 / rows);   // 半段ずらす
+      const off   = ((i * 29) % 22) - 4;                  // 端からの位置 -4〜17%
+      const vert  = (i % 5) === 0;
+      const size  = vert ? 6.5 : 6.5 + ((i * 5) % 3) * 3.2;     // 6.5 / 9.7 / 12.9 vw
+      return '<div class="kw" style="top:' + top.toFixed(1) + '%;'
+           + (right ? 'right:' : 'left:') + off + '%;'
+           + 'font-size:min(' + size + 'vw,' + Math.round(size * 6.2) + 'px);'
+           + (vert ? 'writing-mode:vertical-rl;' : '')
+           + '">' + esc(w) + '</div>';
+    }).join('');
   })();
 
   /* ── ヒーロー ── */
@@ -468,18 +585,41 @@ const FQ = {
     '<span>'+esc(x)+(i<a.length-1?'、':'')+'</span>').join('');
   $('#host').textContent  = E.host;
 
-  /* ── カウントダウン ── */
+  /* ── カウントダウン（fq-hero-flyer-v1 で「秒」を追加）──
+     ★1秒ごとに数字だけを書きかえています。枠ごと作り直すと、
+       1秒ごとに画面がガタッと組み直されて、目にうるさいためです。
+     ★残り時間は毎回「開催日時 − 今」で計算し直しています。
+       スマホを閉じて後で開いても、ずれた数字が残りません。
+     ★画面を見ていないあいだ（別のアプリを見ている・タブが裏）は止めます。
+       電池をむだに使わないため。戻ってきたらすぐ計算し直します。 */
   (function(){
     const t = new Date(E.dateISO).getTime();
+    const UNITS = [['日',86400000],['時間',3600000],['分',60000],['秒',1000]];
+    $('#cd').innerHTML = UNITS.map(u =>
+      '<div><b>-</b><small>'+u[0]+'</small></div>').join('');
+    const nums = [...document.querySelectorAll('#cd b')];
+    let timer = null;
+
     function tick(){
-      const d = t - Date.now();
-      if (d <= 0) { $('#cd').innerHTML = '<div style="min-width:200px"><b>開催中！</b><small>会場でお待ちしています</small></div>'; return; }
-      const day = Math.floor(d/86400000), hh = Math.floor(d%86400000/3600000), mm = Math.floor(d%3600000/60000);
-      $('#cd').innerHTML = '<div><b>'+day+'</b><small>日</small></div>'
-                         + '<div><b>'+hh+'</b><small>時間</small></div>'
-                         + '<div><b>'+mm+'</b><small>分</small></div>';
+      let d = t - Date.now();
+      if (d <= 0) {
+        stop();
+        $('#cd').innerHTML = '<div class="now"><b>開催中！</b><small>会場でお待ちしています</small></div>';
+        return;
+      }
+      UNITS.forEach((u, i) => {
+        const v = Math.floor(d / u[1]);
+        d -= v * u[1];
+        // 日はそのまま、時間・分・秒は2桁にそろえる（数字が動いても幅が変わらない）
+        nums[i].textContent = i === 0 ? v : String(v).padStart(2, '0');
+      });
     }
-    tick(); setInterval(tick, 30000);
+    function start(){ if (!timer) { tick(); timer = setInterval(tick, 1000); } }
+    function stop(){ if (timer) { clearInterval(timer); timer = null; } }
+
+    document.addEventListener('visibilitychange', () =>
+      document.visibilityState === 'visible' ? start() : stop());
+    start();
   })();
 
   /* ── 写真の丸／四角（写真が無いときは色＋頭文字） ── */
@@ -573,7 +713,66 @@ const FQ = {
       + '<div class="st">最寄駅：'+esc(A.station)+'</div>'
       + '<ul>' + A.notes.map(n => '<li>'+esc(n)+'</li>').join('') + '</ul>'
       + '<a class="mapbtn" href="'+map+'" target="_blank" rel="noopener">地図をひらく</a>';
-    $('#barMap').href = map;
+  })();
+
+  /* ── タブの切りかえ（fq-tabs-v1）──
+     ★タブを押すと、URLのうしろに #stage のような目印を付けています。
+       こうしておくと、スマホの「戻る」でひとつ前のタブに戻れます。
+       付けないと、「戻る」でページごと出て行ってしまいます。
+     ★同じタブをもう一度押したときは、いちばん上に戻します（アプリと同じ動き）。
+     ★リンクを人に送るときも #stage を付ければ、そのタブが開いた状態で届きます。 */
+  (function(){
+    const TABS = [...document.querySelectorAll('#tabbar button')];
+    const KEYS = TABS.map(b => b.dataset.tab);
+    const key0 = KEYS[0];
+    const now  = () => { const k = location.hash.slice(1); return KEYS.includes(k) ? k : key0; };
+
+    function show(key, toTop){
+      TABS.forEach(b => {
+        const on = b.dataset.tab === key;
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        const p = $('#pane-' + b.dataset.tab);
+        if (p) p.classList.toggle('on', on);
+      });
+      // タブを変えたら必ず先頭から。ここは「するっと」ではなく一瞬で
+      if (toTop) window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
+    /* ホームの大きな入口ボタン。下のタブバーと同じところへ飛びます。
+       ★文言を変えたいときはここ。data-tab の名前は上のタブと合わせること。 */
+    const MENU = [
+      ['stage', '🎤', 'ステージ',  '出演者とタイムテーブル'],
+      ['see',   '🔍', 'みどころ',  'ブース・相談・フード'],
+      ['quest', '🎁', 'クエスト',  'QRを集めてガチャ'],
+      ['place', '🗺', '会場',      '行き方・協賛・スタッフ'],
+    ];
+    $('#short').innerHTML = MENU.map(m =>
+      '<button type="button" data-tab="'+m[0]+'">'
+      + '<span class="ic">'+m[1]+'</span><span class="n">'+esc(m[2])+'</span>'
+      + '<span class="d">'+esc(m[3])+'</span></button>').join('');
+    $('#short').addEventListener('click', e => {
+      const b = e.target.closest('button[data-tab]');
+      if (b) location.hash = b.dataset.tab;
+    });
+
+    TABS.forEach(b => b.addEventListener('click', () => {
+      const k = b.dataset.tab;
+      if (k === now()) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      location.hash = k;                       // ← hashchange が下で受け取る
+    }));
+
+    addEventListener('hashchange', () => show(now(), true));
+    show(now(), false);                        // 最初の1回（#stage 付きで開かれた場合もここで反映）
+  })();
+
+  /* ── 上に戻るボタン（fq-tabs-v1）──
+     少しスクロールしたときだけ出します。ずっと出ていると中身に重なるため。 */
+  (function(){
+    const btn = $('#toTop');
+    const upd = () => btn.classList.toggle('on', window.scrollY > 380);
+    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    addEventListener('scroll', upd, { passive: true });
+    upd();
   })();
 })();
 </script>
