@@ -8,7 +8,8 @@
 <meta name="theme-color" content="#E7DE01">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- Dela Gothic One … チラシの開催日と同じ「角ばった極太」の書体 -->
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 
 <script>
 /* ══════════════════════════════════════════════════════════════════
@@ -181,21 +182,20 @@ const FQ = {
      ★HTMLの width="960" height="252" は「先に場所を取っておく」ための指定。
        これがないと、絵が届くまでの一瞬だけ下の文字がガクッと動きます。
 
-     ★入場無料の丸とロゴを、横に1列に並べている（flex）。
-       以前は丸をロゴに重ねていたが、「つ」に被って読みにくかった。
-       並べる方式なら、どんな画面幅でも絶対に重ならない。
-     ★「つながる」と「フェスタ」を1つの縦の組（.logostack）にしてから、
-       その左に入場無料の丸を置いています。こうすると、フェスタが
-       「つながる」の真下に来ます（画面の真ん中に置くと、丸のぶんだけ
-       左にずれて見えてしまう）。
+     ★ロゴ（つながる＋フェスタ）は画面のまんなかにそろえています。
+       入場無料の丸は、そのロゴの左どなりに「重ねずに」置いています。
+       ロゴのまんなかをずらさずに丸も置けるよう、丸は浮かせて
+       （position:absolute）、ロゴの左端から 8px 左に来るようにしてあります。
+     ★丸のぶんの場所を空けるため、ロゴの幅は画面の58%までにしてあります。
+       これ以上ロゴを大きくすると、丸が画面の外へはみ出します。
      ★丸の上の余白は「つながるの高さの半分 − 丸の半分」。
        計算で出しているので、画面幅が変わっても丸は必ず「つ」の横に来ます。 */
-  .logorow{display:flex;align-items:flex-start;justify-content:center;gap:6px;
-           --lw:min(66vw,470px);}
-  .logostack{display:flex;flex-direction:column;align-items:center;}
+  .logorow{position:relative;display:flex;flex-direction:column;align-items:center;
+           --lw:min(58vw,430px);}
   .logo {width:var(--lw);height:auto;display:block;margin:4px 0 0;}
   .logo2{width:calc(var(--lw) * 0.62);height:auto;display:block;margin:2px 0 14px;}
-  .free{margin-top:calc(var(--lw) * 0.131 - var(--fw) / 2 + 4px);}
+  .free{position:absolute;top:calc(var(--lw) * 0.131 - var(--fw) / 2 + 4px);
+        right:calc(50% + var(--lw) / 2 + 8px);}
 
   /* 入場無料（fq-hero-flyer-v1）
      チラシと同じ「白い丸に黒文字2行」。ロゴのすぐ左に置く。
@@ -211,13 +211,37 @@ const FQ = {
         line-height:1.1;transform:rotate(-8deg);}
   .free b{display:block;font-weight:900;}
 
-  .when{display:inline-flex;align-items:baseline;gap:6px;justify-content:center;flex-wrap:wrap;
-        font-weight:900;margin-top:6px;}
-  .when .y{font-size:15px;} .when .md{font-size:46px;letter-spacing:-.02em;}
-  .when .yb{font-size:15px;border:2.5px solid var(--ink);border-radius:50%;
-            width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;}
-  .when2{font-size:17px;font-weight:900;margin-top:2px;}
-  .when3{font-size:14px;font-weight:700;margin-top:2px;}
+  /* ══ 開催日（fq-date-flyer-v1）══
+     チラシと同じ、角ばった極太の書体（Google Fonts の Dela Gothic One）。
+
+     ★この書体が届かなかったときのために、うしろに今までの書体を並べてあります。
+       届かなくても、太さも大きさもそのままで普通に読めます。
+     ★2026 を 12.13 の上に重ねる並びも、白フチも、チラシに合わせています。
+     ★時間と会場は、チラシと同じ「白い角丸」の中に入れています。
+     ★font-synthesis:none は「ブラウザが勝手に太らせない」という指定。
+       Dela Gothic One はもともと極太で1種類しかないので、これを付けないと
+       さらに太らせられて字がつぶれます。うしろの控えの書体は本物の極太
+       （900）を持っているので、900 と書いておけば届かないときも太いままです。 */
+  .when,.when2,.when3{
+    font-family:"Dela Gothic One","Zen Maru Gothic","Hiragino Maru Gothic ProN",
+                "Noto Sans JP",sans-serif;
+    font-weight:900; font-synthesis:none; -webkit-font-synthesis:none;}
+  /* ★この3つは「それぞれ1行」にすること。
+     inline のままにすると、日付と時間が同じ行に並んでしまいます。 */
+  .when{display:flex;align-items:flex-end;gap:9px;justify-content:center;
+        margin-top:10px;-webkit-text-stroke:5px #fff;paint-order:stroke fill;}
+  .when .ymd{display:flex;flex-direction:column;align-items:flex-start;line-height:1;}
+  .when .y {font-size:clamp(15px,4.3vw,20px);letter-spacing:.04em;margin-bottom:2px;}
+  .when .md{font-size:clamp(42px,12.6vw,64px);letter-spacing:-.01em;}
+  /* 丸のなかの「日」だけは白フチを消す（フチが丸をはみ出して汚くなるため） */
+  .when .yb{font-size:14px;-webkit-text-stroke:0;background:#fff;color:var(--ink);
+            border:2.5px solid var(--ink);border-radius:50%;
+            width:30px;height:30px;display:inline-flex;align-items:center;
+            justify-content:center;margin-bottom:5px;flex:0 0 auto;}
+  .when2,.when3{display:block;width:fit-content;max-width:92%;margin:9px auto 0;
+                background:#fff;border-radius:999px;padding:5px 18px;}
+  .when2{font-size:clamp(14px,4.2vw,19px);letter-spacing:.02em;}
+  .when3{font-size:clamp(13px,3.9vw,18px);}
 
   /* カウントダウン（日・時間・分・秒の4つ）
      ★tabular-nums ＝ 数字の幅をぜんぶ同じにする指定。
@@ -445,12 +469,10 @@ const FQ = {
     <div class="catchbox"><div class="catch" id="catch"></div></div>
     <div class="logorow">
       <div class="free"><b>入場</b><b>無料</b></div>
-      <div class="logostack">
-        <img class="logo" src="img/logo_line1.png" alt="つながる"
-             width="960" height="252" decoding="async">
-        <img class="logo2" src="img/logo_line2.png" alt="フェスタ"
-             width="960" height="254" decoding="async">
-      </div>
+      <img class="logo" src="img/logo_line1.png" alt="つながる"
+           width="960" height="252" decoding="async">
+      <img class="logo2" src="img/logo_line2.png" alt="フェスタ"
+           width="960" height="254" decoding="async">
     </div>
     <div class="when" id="when"></div>
     <div class="when2" id="when2"></div>
@@ -601,9 +623,11 @@ const FQ = {
      「福祉」の4文字だけ <em> で囲むと、CSSがピンクにしてくれる。 */
   $('#catch').innerHTML = E.catch.split('\n')
       .map(x => '<p>' + esc(x).replace('「福祉」','<em>「福祉」</em>') + '</p>').join('');
+  // チラシと同じ並び：「2026」を「12.13」の上に、曜日は丸のなかに
   const md = E.date.replace(/^\d+年/,'').replace('月','.').replace('日','');
-  $('#when').innerHTML = '<span class="y">'+esc(E.date.slice(0,5))+'</span>'
-                       + '<span class="md">'+esc(md)+'</span>'
+  const yr = (E.date.match(/^\d{4}/) || [''])[0];
+  $('#when').innerHTML = '<span class="ymd"><span class="y">'+esc(yr)+'</span>'
+                       + '<span class="md">'+esc(md)+'</span></span>'
                        + '<span class="yb">'+esc(E.youbi)+'</span>';
   $('#when2').textContent = E.time;
   $('#when3').textContent = E.place;
