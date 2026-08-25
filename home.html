@@ -143,18 +143,37 @@ const FQ = {
       user-select:none;pointer-events:none;white-space:nowrap;}
   .hero-in{position:relative;z-index:2;text-align:center;}
 
-  /* ★チラシは縦書きだが、Webでは横書きにした。
-     縦書き＋文字装飾は、端末やフォントの組み合わせで字が重なることがあるため。
-     1500人がそれぞれ違う端末で見るので、確実に読めるほうを取った。 */
-  .catch{margin:2px auto 20px;font-size:clamp(15px,4.1vw,19px);font-weight:900;
-         letter-spacing:.02em;line-height:2.0;white-space:pre-line;text-wrap:balance;}
-  .catch em{font-style:normal;background:#fff;border-radius:6px;
-            padding:2px 7px;margin:0 1px;display:inline-block;}
+  /* ══ キャッチコピー（fq-hero-flyer-v1）══
+     チラシと同じ「縦書き・白フチの黒文字・『福祉』だけピンク」。
+
+     ★以前ここを横書きに逃がしたのは、縦書きにすると字が重なったから。
+       今回、原因が分かった。ブラウザの縦書き（writing-mode）は、フォントが
+       持っている「縦書き用の字送り情報」に頼っている。この情報が欠けた
+       フォントに当たると、その字の送りが0になり、次の字が真上に重なる。
+       実際に測ったら「福祉」と長音符「ー」の送りが0になっていた。
+       どのフォントに当たるかは端末まかせなので、直しようがない。
+
+     ★そこで writing-mode は使わず、1文字ずつを縦に積んで列を作っている。
+       高さを1文字ぶんずつCSSで決めているので、どのフォントでも重ならない。
+       そのかわり「」ー、。は自分で向きと位置を直す必要がある（.rot / .pt）。
+       文字の並べ方は下のJSの vcol() を見てください。 */
+  .catchbox{display:flex;justify-content:flex-end;padding:2px 2px 16px 0;}
+  .catch{display:flex;flex-direction:row-reverse;gap:.48em;
+         font-size:clamp(16px,4.6vw,21px);font-weight:900;
+         -webkit-text-stroke:4.5px #fff;paint-order:stroke fill;}
+  .catch p{display:flex;flex-direction:column;align-items:center;}
+  .catch i{font-style:normal;display:block;
+           width:1em;height:1.06em;line-height:1.06;text-align:center;}
+  .catch i.rot{transform:rotate(90deg);}      /* 「 」 ー … 90度まわす */
+  .catch i.pt {transform:translate(.32em,-.46em);}  /* 、。… 右上に寄せる */
+  .catch i.pk {color:var(--pink);}            /* 「福祉」だけピンク */
 
   /* ロゴ「つながる」＝白フチ＋黒フチの泡文字 */
+  .logorow{text-align:center;}
+  .logowrap{position:relative;display:inline-block;}
   .logo{margin:6px 0 2px;font-size:clamp(58px,17vw,112px);font-weight:900;
         letter-spacing:.02em;line-height:1.05;}
-  .logo span{display:inline-block;
+  .logo > span{display:inline-block;
     -webkit-text-stroke:9px #fff; paint-order:stroke fill;
     filter:drop-shadow(2px 3px 0 var(--ink)) drop-shadow(-2px -1px 0 var(--ink))
            drop-shadow(2px -1px 0 var(--ink)) drop-shadow(-2px 3px 0 var(--ink));}
@@ -163,8 +182,21 @@ const FQ = {
   .logo2{font-size:clamp(38px,11vw,74px);font-weight:900;color:#fff;letter-spacing:.06em;
          -webkit-text-stroke:8px var(--ink); paint-order:stroke fill; margin-bottom:14px;}
 
-  .free{display:inline-block;background:#fff;border:3px solid var(--ink);border-radius:999px;
-        padding:7px 24px;font-size:17px;font-weight:900;margin:4px 0 16px;transform:rotate(-3deg);}
+  /* 入場無料（fq-hero-flyer-v1）
+     チラシと同じ「白い丸に黒文字2行」。ロゴ「つ」の左上に少し重ねる。
+     ★位置はロゴを基準にしている（画面の端ではなく）。
+       そうしないと、画面が広いときにロゴから離れてぽつんと浮いてしまう。
+     ★--fw が丸の大きさ。文字も位置もこの値から計算しているので、
+       大きさを変えたいときは --fw だけ直せばよい。 */
+  .free{--fw:clamp(58px,19.5vw,88px);
+        position:absolute;z-index:3;
+        left:calc(var(--fw) * -0.54); top:calc(var(--fw) * 0.06);
+        width:var(--fw);height:var(--fw);background:#fff;
+        border-radius:50% 47% 53% 50% / 51% 53% 47% 49%;
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        font-size:calc(var(--fw) * 0.25);font-weight:900;letter-spacing:.02em;
+        line-height:1.1;transform:rotate(-8deg);}
+  .free b{display:block;font-weight:900;}
 
   .when{display:inline-flex;align-items:baseline;gap:6px;justify-content:center;flex-wrap:wrap;
         font-weight:900;margin-top:6px;}
@@ -322,12 +354,12 @@ const FQ = {
 <div class="hero">
   <div id="kws"></div>
   <div class="wrap hero-in">
-    <div class="catch" id="catch"></div>
-    <div class="logo">
-      <span class="c1">つ</span><span class="c2">な</span><span class="c3">が</span><span class="c4">る</span>
-    </div>
+    <div class="catchbox"><div class="catch" id="catch"></div></div>
+    <div class="logorow"><div class="logowrap">
+      <div class="logo"><span class="c1">つ</span><span class="c2">な</span><span class="c3">が</span><span class="c4">る</span></div>
+      <div class="free"><b>入場</b><b>無料</b></div>
+    </div></div>
     <div class="logo2">フェスタ</div>
-    <div class="free">入場無料</div>
     <div class="when" id="when"></div>
     <div class="when2" id="when2"></div>
     <div class="when3" id="when3"></div>
@@ -427,7 +459,22 @@ const FQ = {
 
   /* ── ヒーロー ── */
   const E = FQ.event;
-  $('#catch').innerHTML = esc(E.catch).replace('「福祉」','<em>「福祉」</em>');
+  /* キャッチコピーを縦に組む。改行が「列の区切り」になる。
+     1文字を1個の <i> にして縦に積む（理由は上のCSSのコメント）。
+     ・VROT … 90度まわす字（かぎかっこ・長音符など）
+     ・VPT  … 右上に寄せる字（読点・句点）
+     ・「福祉」の4文字だけピンクにする */
+  const VROT = '「」ー（）〔〕【】〈〉《》…—～';
+  const VPT  = '、。';
+  function vcol(line){
+    const i0 = line.indexOf('「福祉」');
+    return '<p>' + [...line].map((c, i) => {
+      const cls = (VROT.includes(c) ? 'rot ' : VPT.includes(c) ? 'pt ' : '')
+                + (i0 >= 0 && i >= i0 && i < i0 + 4 ? 'pk' : '');
+      return '<i class="' + cls.trim() + '">' + esc(c) + '</i>';
+    }).join('') + '</p>';
+  }
+  $('#catch').innerHTML = E.catch.split('\n').map(vcol).join('');
   const md = E.date.replace(/^\d+年/,'').replace('月','.').replace('日','');
   $('#when').innerHTML = '<span class="y">'+esc(E.date.slice(0,5))+'</span>'
                        + '<span class="md">'+esc(md)+'</span>'
