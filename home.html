@@ -8,8 +8,8 @@
 <meta name="theme-color" content="#E7DE01">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Dela Gothic One … チラシの開催日と同じ「角ばった極太」の書体 -->
-<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- Zen Kaku Gothic New … チラシの開催日と同じ系統の「角ゴシック」の極太 -->
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 
 <script>
 /* ══════════════════════════════════════════════════════════════════
@@ -212,19 +212,22 @@ const FQ = {
   .free b{display:block;font-weight:900;}
 
   /* ══ 開催日（fq-date-flyer-v1）══
-     チラシと同じ、角ばった極太の書体（Google Fonts の Dela Gothic One）。
+     チラシと同じ系統の、角ゴシックの極太（Google Fonts の Zen Kaku Gothic New 900）。
 
      ★この書体が届かなかったときのために、うしろに今までの書体を並べてあります。
        届かなくても、太さも大きさもそのままで普通に読めます。
      ★2026 を 12.13 の上に重ねる並びも、白フチも、チラシに合わせています。
      ★時間と会場は、チラシと同じ「白い角丸」の中に入れています。
+     ★書体は Zen Kaku Gothic New の900（いちばん太い角ゴシック）。
+       はじめ Dela Gothic One を使いましたが、あれは飾りの強い見出し用で、
+       チラシの「角ゴシック」とは別物でした。角ゴシックに直しています。
+     ★うしろに並べた書体は、届かなかったときの控え。どれも太字を
+       持っているので、900 と書いておけば太さは変わりません。
      ★font-synthesis:none は「ブラウザが勝手に太らせない」という指定。
-       Dela Gothic One はもともと極太で1種類しかないので、これを付けないと
-       さらに太らせられて字がつぶれます。うしろの控えの書体は本物の極太
-       （900）を持っているので、900 と書いておけば届かないときも太いままです。 */
+       本物の太字があるのに上から太らせると、字がつぶれてしまいます。 */
   .when,.when2,.when3{
-    font-family:"Dela Gothic One","Zen Maru Gothic","Hiragino Maru Gothic ProN",
-                "Noto Sans JP",sans-serif;
+    font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Noto Sans JP",
+                "Zen Maru Gothic",sans-serif;
     font-weight:900; font-synthesis:none; -webkit-font-synthesis:none;}
   /* ★この3つは「それぞれ1行」にすること。
      inline のままにすると、日付と時間が同じ行に並んでしまいます。 */
