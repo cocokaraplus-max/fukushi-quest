@@ -418,12 +418,16 @@ const FQ = {
        入場無料の丸は、そのロゴの左どなりに「重ねずに」置いています。
        ロゴのまんなかをずらさずに丸も置けるよう、丸は浮かせて
        （position:absolute）、ロゴの左端から 8px 左に来るようにしてあります。
-     ★丸のぶんの場所を空けるため、ロゴの幅は画面の58%までにしてあります。
-       これ以上ロゴを大きくすると、丸が画面の外へはみ出します。
+     ★丸のぶんの場所を空けるため、ロゴの幅は画面の66%までにしてあります
+       （fq-logo-bigger-v1 で 58% から広げた）。
+       そのぶん丸を少し小さくし（14.5vw→13vw）、すき間も 8px→6px にしています。
+       ★横320pxの小さいスマホでも丸がはみ出さないことを実測しました
+         （丸の左はしが +4px 残る）。これ以上ロゴを大きくするなら、
+         丸をロゴの下へ移すなど、並べ方そのものを変える必要があります。
      ★丸の上の余白は「つながるの高さの半分 − 丸の半分」。
        計算で出しているので、画面幅が変わっても丸は必ず「つ」の横に来ます。 */
   .logorow{position:relative;display:flex;flex-direction:column;align-items:center;
-           --lw:min(58vw,430px);}
+           --lw:min(66vw,460px);}   /* fq-logo-bigger-v1: 58vw から広げた */
   .logo {width:var(--lw);height:auto;display:block;margin:4px 0 0;}
   .logo2{width:calc(var(--lw) * 0.62);height:auto;display:block;margin:2px 0 14px;}
 
@@ -463,14 +467,14 @@ const FQ = {
   }
   @media(prefers-reduced-motion:reduce){ .lgline .lt{animation:none;} }
   .free{position:absolute;top:calc(var(--lw) * 0.131 - var(--fw) / 2 + 4px);
-        right:calc(50% + var(--lw) / 2 + 8px);}
+        right:calc(50% + var(--lw) / 2 + 6px);}   /* fq-logo-bigger-v1: 8px→6px */
 
   /* 入場無料（fq-hero-flyer-v1）
      チラシと同じ「白い丸に黒文字2行」。ロゴのすぐ左に置く。
      ★--fw が丸の大きさ。中の文字もこの値から計算しているので、
        大きさを変えたいときは --fw だけ直せばよい。
        ただし大きくするとロゴに使える幅が減る（上の .logorow の説明を参照）。 */
-  .free{--fw:clamp(52px,14.5vw,80px);
+  .free{--fw:clamp(42px,13vw,76px);   /* fq-logo-bigger-v1: ロゴを広げたぶん少し小さく */
         flex:0 0 auto;
         width:var(--fw);height:var(--fw);background:#fff;
         border-radius:50% 47% 53% 50% / 51% 53% 47% 49%;
@@ -478,6 +482,32 @@ const FQ = {
         font-size:calc(var(--fw) * 0.25);font-weight:900;letter-spacing:.02em;
         line-height:1.1;transform:rotate(-8deg);}
   .free b{display:block;font-weight:900;}
+
+  /* ══ 入場無料の丸がはねる（fq-logo-bigger-v1）══
+     ロゴの8文字の鼓動が終わったあと、丸が3回はねる。
+
+     ★出番は 4.4秒。これは「タ の鼓動が終わる時刻」。
+       文字は 0.5秒ずつずれて8文字＝3.5秒、鼓動そのものが 0.9秒なので 4.4秒。
+       ★文字のずれ（.5s）を変えたら、この 4.4秒も変えること。
+         でないと、波が途切れたり、重なったりする。
+     ★ロゴと同じ 20秒ひとまわり。だから毎回きれいにつながる。
+     ★1.1% は「20秒の1.1%」＝0.22秒。3回で 6.75%＝1.35秒。
+
+     ★★.free には最初から rotate(-8deg)（少し傾けてある）が掛かっている。
+        animation の transform はそれを丸ごと上書きするので、
+        **どのコマにも rotate(-8deg) を書いておくこと。**
+        忘れると、はねているあいだだけ丸がまっすぐになる。 */
+  .free{animation:free-beat 20s ease-out infinite; animation-delay:4.4s;}
+  @keyframes free-beat{
+      0%     {transform:rotate(-8deg) scale(1);}
+      1.1%   {transform:rotate(-8deg) scale(1.18);}   /* 1回目 */
+      2.25%  {transform:rotate(-8deg) scale(1);}
+      3.35%  {transform:rotate(-8deg) scale(1.18);}   /* 2回目 */
+      4.5%   {transform:rotate(-8deg) scale(1);}
+      5.6%   {transform:rotate(-8deg) scale(1.18);}   /* 3回目 */
+      6.75%,100%{transform:rotate(-8deg) scale(1);}
+  }
+  @media(prefers-reduced-motion:reduce){ .free{animation:none;} }
 
   /* ══ 開催日（fq-date-flyer-v1）══
      チラシと同じ系統の、角ゴシックの極太（Google Fonts の Zen Kaku Gothic New 900）。
