@@ -104,7 +104,7 @@ const FQ = {
       { photo:'img/ch_braid.png', move:'hop',    at:17.5, x: 82, y: 13  },
       { photo:'img/ch_wood.png',  move:'sit',    at: 21                 },
       { photo:'img/ch_beard.png', move:'hop',    at: 26,  x:  4, y: 17  },
-      { photo:'img/ch_green.png', move:'dash',   at: 30                 },
+      { photo:'img/ch_green.png', move:'dash',   at: 8.5                },
     ],
   },
 
@@ -235,17 +235,25 @@ const FQ = {
          width:clamp(48px,14vw,80px);pointer-events:none;user-select:none;}
   .actor img{display:block;width:100%;height:auto;transform-origin:50% 100%;}
 
-  /* ① 歩く … 右へ行って、向きを変えて帰ってくる */
+  /* ① 歩く … 右へ行って、向きを変えて帰ってくる
+        fq-walk-stroll-v1: 早足だったのを「散歩」の速さに変えた。
+        ★片道 13.7秒（34秒の44%）。前は 4.8秒だった。
+          そのぶん、ほぼずっと画面のどこかを歩いていることになる。
+        ★足の運び（i-step）も .44秒 → .85秒。速さと歩幅が合っていないと、
+          「足だけ速く動いているのに進まない」ように見えるため。
+        ★速さを変えたいときは 46% と 91% の2つを動かす。
+          46% を小さくすると速く、大きくするとゆっくり。
+          91% は「46%＋45%」で決めている（往復を同じ速さにするため）。 */
   .m-walk{left:0;animation:a-walk 34s linear infinite;}
-  .m-walk img{animation:i-step .44s ease-in-out infinite alternate;}
+  .m-walk img{animation:i-step .85s ease-in-out infinite alternate;}
   @keyframes a-walk{
       0%     {opacity:0; transform:translateX(-90px)             scaleX(1);}
-      1%,32% {opacity:1;}
+      1%,92% {opacity:1;}
       2%     {           transform:translateX(-90px)             scaleX(1);}
-     16%     {           transform:translateX(calc(100vw - 10px)) scaleX(1);}
-     17%     {           transform:translateX(calc(100vw - 10px)) scaleX(-1);}
-     31%     {           transform:translateX(-90px)             scaleX(-1);}
-     33%,100%{opacity:0; transform:translateX(-90px)             scaleX(1);}
+     46%     {           transform:translateX(calc(100vw - 10px)) scaleX(1);}
+     47%     {           transform:translateX(calc(100vw - 10px)) scaleX(-1);}
+     91%     {           transform:translateX(-90px)             scaleX(-1);}
+     93%,100%{opacity:0; transform:translateX(-90px)             scaleX(1);}
   }
   @keyframes i-step{
     from{transform:translateY(0)     rotate(-4deg);}
@@ -308,17 +316,20 @@ const FQ = {
 
   /* ⑤ 全力疾走（hero-motion-v1）… 横をすごい速さで走り抜ける。戻ってこない。
         ★歩く子（walk）は「行って帰ってくる」。こちらは走り抜けたら、それきり。
-        ★1%→3.6% で画面を渡りきる。34秒ひとまわりなので、およそ 0.9秒。
-          もっと速くしたいときは 3.6% を小さく、ゆっくりなら大きくする。
-        ★消し方は飛ぶ子と同じ考え方（走りきる→消す→見えないうちに左へ戻す）。 */
+        ★1%→5.7% で画面を渡りきる。34秒ひとまわりなので、およそ 1.7秒。
+          もっと速くしたいときは 5.7% を小さく、ゆっくりなら大きくする。
+          （fq-walk-stroll-v1 で 3.6%＝0.9秒 から、少しゆっくりにした）
+        ★消し方は飛ぶ子と同じ考え方（走りきる→消す→見えないうちに左へ戻す）。
+        ★この子は「歩く子を追い抜く」役。出番（at）を歩く子に合わせてある。
+          歩き 31px/秒 に対して 走り 394px/秒。およそ13倍の差。 */
   .m-dash{left:0;animation:a-dash 34s linear infinite;}
-  .m-dash img{animation:i-dash .13s ease-in-out infinite alternate;}
+  .m-dash img{animation:i-dash .19s ease-in-out infinite alternate;}
   @keyframes a-dash{
       0%      {opacity:0; transform:translateX(-130px) scale(1);}
       1%      {opacity:1; transform:translateX(-130px) scale(1);}
-      3.6%    {opacity:1; transform:translateX(calc(100vw + 150px)) scale(1);}
-      3.7%    {opacity:0; transform:translateX(calc(100vw + 150px)) scale(1);}
-      3.8%,100%{opacity:0; transform:translateX(-130px) scale(1);}
+      5.7%    {opacity:1; transform:translateX(calc(100vw + 150px)) scale(1);}
+      5.8%    {opacity:0; transform:translateX(calc(100vw + 150px)) scale(1);}
+      5.9%,100%{opacity:0; transform:translateX(-130px) scale(1);}
   }
   @keyframes i-dash{
     from{transform:translateY(0)    rotate(-11deg);}
