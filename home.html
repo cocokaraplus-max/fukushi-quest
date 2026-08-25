@@ -144,34 +144,30 @@ const FQ = {
   .hero-in{position:relative;z-index:2;text-align:center;}
 
   /* ══ キャッチコピー（fq-hero-flyer-v1）══
-     チラシと同じ「縦書き・白フチの黒文字・『福祉』だけピンク」。
+     文字の並びは横書き。見た目だけチラシに合わせている。
+       ・黒文字に太い白フチ（チラシと同じ）
+       ・「福祉」の4文字だけピンク（チラシと同じ）
 
-     ★以前ここを横書きに逃がしたのは、縦書きにすると字が重なったから。
-       今回、原因が分かった。ブラウザの縦書き（writing-mode）は、フォントが
-       持っている「縦書き用の字送り情報」に頼っている。この情報が欠けた
-       フォントに当たると、その字の送りが0になり、次の字が真上に重なる。
+     ★縦書きにはしないこと。
+       ブラウザの縦書き（writing-mode）は、フォントが持っている
+       「縦書き用の字送り情報」に頼っている。この情報が欠けたフォントに
+       当たると、その字の送りが0になり、次の字が真上に重なる。
        実際に測ったら「福祉」と長音符「ー」の送りが0になっていた。
-       どのフォントに当たるかは端末まかせなので、直しようがない。
-
-     ★そこで writing-mode は使わず、1文字ずつを縦に積んで列を作っている。
-       高さを1文字ぶんずつCSSで決めているので、どのフォントでも重ならない。
-       そのかわり「」ー、。は自分で向きと位置を直す必要がある（.rot / .pt）。
-       文字の並べ方は下のJSの vcol() を見てください。 */
-  .catchbox{display:flex;justify-content:flex-end;padding:2px 2px 16px 0;}
-  .catch{display:flex;flex-direction:row-reverse;gap:.48em;
-         font-size:clamp(16px,4.6vw,21px);font-weight:900;
+       どのフォントに当たるかは端末まかせなので、こちらでは防げない。
+       1500人がそれぞれ違う端末で見るので、横書きのほうが確実。 */
+  .catchbox{padding:2px 0 14px;}
+  .catch{text-align:center;font-size:clamp(15px,4.3vw,20px);font-weight:900;
+         letter-spacing:.03em;line-height:1.9;
          -webkit-text-stroke:4.5px #fff;paint-order:stroke fill;}
-  .catch p{display:flex;flex-direction:column;align-items:center;}
-  .catch i{font-style:normal;display:block;
-           width:1em;height:1.06em;line-height:1.06;text-align:center;}
-  .catch i.rot{transform:rotate(90deg);}      /* 「 」 ー … 90度まわす */
-  .catch i.pt {transform:translate(.32em,-.46em);}  /* 、。… 右上に寄せる */
-  .catch i.pk {color:var(--pink);}            /* 「福祉」だけピンク */
+  .catch em{font-style:normal;color:var(--pink);}   /* 「福祉」だけピンク */
 
-  /* ロゴ「つながる」＝白フチ＋黒フチの泡文字 */
-  .logorow{text-align:center;}
-  .logowrap{position:relative;display:inline-block;}
-  .logo{margin:6px 0 2px;font-size:clamp(58px,17vw,112px);font-weight:900;
+  /* ロゴ「つながる」＝白フチ＋黒フチの泡文字
+     ★入場無料の丸とロゴを、横に1列に並べている（flex）。
+       以前は丸をロゴに重ねていたが、「つ」に被って読みにくかった。
+       並べる方式なら、どんな画面幅でも絶対に重ならない。
+       そのぶんロゴに使える幅が減るので、文字サイズを少し下げてある。 */
+  .logorow{display:flex;align-items:center;justify-content:center;gap:6px;}
+  .logo{margin:6px 0 2px;font-size:clamp(44px,15.8vw,110px);font-weight:900;
         letter-spacing:.02em;line-height:1.05;}
   .logo > span{display:inline-block;
     -webkit-text-stroke:9px #fff; paint-order:stroke fill;
@@ -183,14 +179,12 @@ const FQ = {
          -webkit-text-stroke:8px var(--ink); paint-order:stroke fill; margin-bottom:14px;}
 
   /* 入場無料（fq-hero-flyer-v1）
-     チラシと同じ「白い丸に黒文字2行」。ロゴ「つ」の左上に少し重ねる。
-     ★位置はロゴを基準にしている（画面の端ではなく）。
-       そうしないと、画面が広いときにロゴから離れてぽつんと浮いてしまう。
-     ★--fw が丸の大きさ。文字も位置もこの値から計算しているので、
-       大きさを変えたいときは --fw だけ直せばよい。 */
-  .free{--fw:clamp(58px,19.5vw,88px);
-        position:absolute;z-index:3;
-        left:calc(var(--fw) * -0.54); top:calc(var(--fw) * 0.06);
+     チラシと同じ「白い丸に黒文字2行」。ロゴのすぐ左に置く。
+     ★--fw が丸の大きさ。中の文字もこの値から計算しているので、
+       大きさを変えたいときは --fw だけ直せばよい。
+       ただし大きくするとロゴに使える幅が減る（上の .logorow の説明を参照）。 */
+  .free{--fw:clamp(52px,14.5vw,80px);
+        flex:0 0 auto;
         width:var(--fw);height:var(--fw);background:#fff;
         border-radius:50% 47% 53% 50% / 51% 53% 47% 49%;
         display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -355,10 +349,10 @@ const FQ = {
   <div id="kws"></div>
   <div class="wrap hero-in">
     <div class="catchbox"><div class="catch" id="catch"></div></div>
-    <div class="logorow"><div class="logowrap">
-      <div class="logo"><span class="c1">つ</span><span class="c2">な</span><span class="c3">が</span><span class="c4">る</span></div>
+    <div class="logorow">
       <div class="free"><b>入場</b><b>無料</b></div>
-    </div></div>
+      <div class="logo"><span class="c1">つ</span><span class="c2">な</span><span class="c3">が</span><span class="c4">る</span></div>
+    </div>
     <div class="logo2">フェスタ</div>
     <div class="when" id="when"></div>
     <div class="when2" id="when2"></div>
@@ -459,22 +453,10 @@ const FQ = {
 
   /* ── ヒーロー ── */
   const E = FQ.event;
-  /* キャッチコピーを縦に組む。改行が「列の区切り」になる。
-     1文字を1個の <i> にして縦に積む（理由は上のCSSのコメント）。
-     ・VROT … 90度まわす字（かぎかっこ・長音符など）
-     ・VPT  … 右上に寄せる字（読点・句点）
-     ・「福祉」の4文字だけピンクにする */
-  const VROT = '「」ー（）〔〕【】〈〉《》…—～';
-  const VPT  = '、。';
-  function vcol(line){
-    const i0 = line.indexOf('「福祉」');
-    return '<p>' + [...line].map((c, i) => {
-      const cls = (VROT.includes(c) ? 'rot ' : VPT.includes(c) ? 'pt ' : '')
-                + (i0 >= 0 && i >= i0 && i < i0 + 4 ? 'pk' : '');
-      return '<i class="' + cls.trim() + '">' + esc(c) + '</i>';
-    }).join('') + '</p>';
-  }
-  $('#catch').innerHTML = E.catch.split('\n').map(vcol).join('');
+  /* キャッチコピー。改行で1行ずつ <p> にする。
+     「福祉」の4文字だけ <em> で囲むと、CSSがピンクにしてくれる。 */
+  $('#catch').innerHTML = E.catch.split('\n')
+      .map(x => '<p>' + esc(x).replace('「福祉」','<em>「福祉」</em>') + '</p>').join('');
   const md = E.date.replace(/^\d+年/,'').replace('月','.').replace('日','');
   $('#when').innerHTML = '<span class="y">'+esc(E.date.slice(0,5))+'</span>'
                        + '<span class="md">'+esc(md)+'</span>'
