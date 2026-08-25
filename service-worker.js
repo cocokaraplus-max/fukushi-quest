@@ -12,8 +12,8 @@
        つながらない時だけキャッシュを出す（＝オフラインでも開ける）。
      - アイコン・manifest だけ「キャッシュ優先」（変わらないので速さ優先）。
    ------------------------------------------------------------------ */
-const CACHE = 'fq326-v3';
-const ASSETS = ['./', './index.html', './config.js', './manifest.webmanifest',
+const CACHE = 'fq326-v4';   // fq-swap-home-v1: トップを入れ替えたので版を上げる
+const ASSETS = ['./', './index.html', './quest.html', './config.js', './manifest.webmanifest',  // fq-swap-home-v1: quest.html も先に保存する
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png'];
 
 self.addEventListener('install', e => {

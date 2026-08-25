@@ -383,19 +383,19 @@ update prizes set stock = initial_stock;</pre>
     row('g5','warn','service-worker.js を読めませんでした','ファイルが無いか、通信できていません。', null);
   });
 
-  fetch('index.html?_=' + Math.random()).then(function(r){ return r.text(); }).then(function(t){
+  fetch('quest.html?_=' + Math.random())   // fq-swap-home-v1: クエスト本体は quest.html に移った.then(function(r){ return r.text(); }).then(function(t){
     var need = ['fq-role-v1','fq-rank-lite-v1','fq-recog-serial-v1','fq-draws3-v1'];
     var miss = need.filter(function(m){ return t.indexOf(m) < 0; });
     if(!miss.length){
-      row('g5','ok','index.html は修正済みの版です',
+      row('g5','ok','quest.html（クエスト本体）は修正済みの版です',
           '1500人むけの修正が全部入っています（'+need.join(' / ')+'）。約 '+Math.round(t.length/1024/1024*10)/10+'MB。');
     } else {
-      row('g5','ng','index.html が古い版です','入っていない修正: <b>'+miss.join(' / ')+'</b>',
-          '2026-08-24 版の index.html を公開し直してください。'
+      row('g5','ng','quest.html（クエスト本体）が古い版です','入っていない修正: <b>'+miss.join(' / ')+'</b>',
+          '2026-08-24 版のクエスト本体を quest.html として公開し直してください。'
           + '古いままだと、認識番号がかぶり、ランキングの通信量で無料枠を超えます。');
     }
   }).catch(function(){
-    row('g5','warn','index.html を読めませんでした','ファイルが無いか、通信できていません。', null);
+    row('g5','warn','quest.html を読めませんでした','ファイルが無いか、通信できていません。', null);
   });
 
   if(location.protocol === 'file:'){
