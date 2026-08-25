@@ -40,6 +40,32 @@
   .pts small{ font-size:12px; color:var(--sub); font-weight:400; }
   .foot{ padding:8px 22px 18px; color:var(--sub); font-size:12px; }
   .demo{ display:inline-block; margin-left:10px; padding:2px 8px; border:1px solid var(--line); border-radius:8px; color:#e0b64a; font-size:12px; }
+  /* fq-reset-button-v1: 大会リセット（?admin=1 のときだけ出る） */
+  .acard{ border-color:#7a3b3b; }
+  .acard h2{ color:#e08a8a; }
+  .astats{ font-size:14px; color:var(--sub); line-height:2; margin-bottom:12px; }
+  .astats b{ color:var(--cream); font-size:18px; }
+  .abtn{ background:#8a3b3b; color:#fff; border:1px solid #b25a5a; border-radius:10px;
+         padding:11px 20px; font-size:16px; font-weight:800; cursor:pointer; }
+  .abtn:disabled{ background:#4a3535; border-color:#5a4444; color:#9b8f8f; cursor:not-allowed; }
+  .anote{ font-size:12px; color:var(--sub); margin:10px 0 0; line-height:1.8; }
+  .amodal{ display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.72);
+           align-items:center; justify-content:center; padding:16px; }
+  .amodal.on{ display:flex; }
+  .abox{ background:var(--panel); border:2px solid #7a3b3b; border-radius:14px;
+         padding:20px 22px; max-width:520px; width:100%; }
+  .abox h3{ margin:0 0 12px; color:#e08a8a; font-size:20px; }
+  .abox label{ display:block; margin:12px 0 4px; font-size:14px; }
+  .abox input[type=password]{ width:100%; padding:10px 12px; border-radius:8px;
+         border:1px solid var(--line); background:#1c180f; color:var(--cream); font-size:16px; }
+  .aack{ display:flex; gap:8px; align-items:flex-start; margin-top:14px; font-size:14px; }
+  .aack input{ width:20px; height:20px; margin-top:2px; flex:0 0 auto; }
+  .amsg{ margin-top:12px; font-size:14px; min-height:22px; }
+  .amsg.ng{ color:#e08a8a; } .amsg.ok{ color:#79c08a; }
+  .arow{ display:flex; gap:10px; margin-top:16px; }
+  .arow button{ flex:1; }
+  .cbtn{ background:#3d3527; color:var(--cream); border:1px solid var(--line);
+         border-radius:10px; padding:11px 20px; font-size:16px; font-weight:700; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -55,6 +81,32 @@
   <div class="card">
     <h2>🏆 ランキング</h2>
     <div id="ranking"></div>
+  </div>
+</div>
+<!-- fq-reset-button-v1: ?admin=1 のときだけ出る -->
+<div class="wrap" id="adminWrap" style="display:none;">
+  <div class="card acard">
+    <h2>⚠ 大会リセット</h2>
+    <div class="astats" id="adminStats">読み込み中…</div>
+    <button class="abtn" id="resetOpen">大会をリセットする</button>
+    <p class="anote">参加者・抽選履歴をすべて消し、認識番号を1番に戻し、景品の残数を最初の数に戻します。
+    <b style="color:#e08a8a;">元に戻せません。</b><br>
+    本番の前日か、テストのあとに使ってください。</p>
+  </div>
+</div>
+<div class="amodal" id="resetModal">
+  <div class="abox">
+    <h3>大会リセット</h3>
+    <div class="astats" id="resetWhat"></div>
+    <label for="resetPass">合言葉</label>
+    <input type="password" id="resetPass" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <label class="aack"><input type="checkbox" id="resetAck">
+      <span>消えたデータは戻せないことを理解しました</span></label>
+    <div class="amsg" id="resetMsg"></div>
+    <div class="arow">
+      <button class="abtn" id="resetGo" disabled>この内容で消す</button>
+      <button class="cbtn" id="resetCancel">やめる</button>
+    </div>
   </div>
 </div>
 <div class="foot">自動更新（リアルタイム）。景品確定ごとに在庫が減り、ポイント獲得でランキングが動きます。<span id="demo"></span></div>
@@ -129,6 +181,97 @@ async function boot(){
   setInterval(safeLoad, 30000); // 保険のポーリング
 }
 boot();
+</script>
+
+<!-- fq-reset-button-v1 -->
+<script>
+/* 本部の画面から大会をリセットする。
+   ★出るのは honbu.html?admin=1 のときだけ。
+   ★守りの本体は合言葉（Supabase の中で照合する。ここには持たせない）。
+   ★先に fq_reset_button.sql を Supabase で Run しておくこと。 */
+(function(){
+  'use strict';
+  var p = new URLSearchParams(location.search);
+  if (p.get('admin') !== '1') return;
+
+  var cfg = window.FQ_CONFIG || {};
+  var real = cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0 && window.supabase;
+  var wrap = document.getElementById('adminWrap');
+  var stats = document.getElementById('adminStats');
+  wrap.style.display = '';
+
+  if (!real) { stats.textContent = 'config.js が未設定なので、リセットは使えません。';
+               document.getElementById('resetOpen').disabled = true; return; }
+
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  var last = null;
+
+  function fmt(s){
+    return '参加者 <b>' + s.participants + '</b> 人　／　抽選の履歴 <b>' + s.draws + '</b> 件<br>'
+         + '合計ポイント <b>' + s.points_total + '</b>　／　次に配る認識番号 <b>'
+         + String(s.next_recog).padStart(4,'0') + '</b><br>'
+         + '残数が減っている景品 <b>' + s.prizes_used + '</b> 種類';
+  }
+  function load(){
+    return sb.rpc('fq_stats').then(function(r){
+      if (r.error) throw r.error;
+      last = r.data;
+      stats.innerHTML = fmt(last);
+      return last;
+    }).catch(function(e){
+      stats.textContent = '件数を取れませんでした（' + (e.message || e) + '）。'
+        + ' fq_reset_button.sql をまだ Run していないかもしれません。';
+      document.getElementById('resetOpen').disabled = true;
+    });
+  }
+  load();
+
+  var modal = document.getElementById('resetModal');
+  var pass  = document.getElementById('resetPass');
+  var ack   = document.getElementById('resetAck');
+  var go    = document.getElementById('resetGo');
+  var msg   = document.getElementById('resetMsg');
+
+  function sync(){ go.disabled = !(pass.value.trim() && ack.checked); }
+  pass.addEventListener('input', sync);
+  ack.addEventListener('change', sync);
+
+  document.getElementById('resetOpen').addEventListener('click', function(){
+    load().then(function(){
+      document.getElementById('resetWhat').innerHTML =
+        'いま消えるのは、この内容です。<br><br>' + (last ? fmt(last) : '');
+      pass.value = ''; ack.checked = false; msg.textContent = ''; msg.className = 'amsg';
+      sync(); modal.classList.add('on'); pass.focus();
+    });
+  });
+  document.getElementById('resetCancel').addEventListener('click', function(){
+    modal.classList.remove('on');
+  });
+
+  go.addEventListener('click', function(){
+    go.disabled = true;
+    msg.className = 'amsg'; msg.textContent = '実行中…';
+    sb.rpc('fq_reset', { p_pass: pass.value }).then(function(r){
+      if (r.error) throw r.error;
+      var d = r.data || {};
+      if (d.ok) {
+        msg.className = 'amsg ok';
+        msg.innerHTML = 'リセットしました（参加者 ' + d.participants + ' 人・抽選 ' + d.draws + ' 件を削除）。';
+        pass.value = ''; ack.checked = false;
+        load();
+        setTimeout(function(){ modal.classList.remove('on'); }, 2500);
+      } else {
+        msg.className = 'amsg ng';
+        msg.textContent = d.message || 'リセットできませんでした。';
+        sync();
+      }
+    }).catch(function(e){
+      msg.className = 'amsg ng';
+      msg.textContent = '通信エラー: ' + (e.message || e);
+      sync();
+    });
+  });
+})();
 </script>
 </body>
 </html>

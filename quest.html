@@ -786,19 +786,19 @@ function resetAll(){if(!confirm('進捗をすべて消して最初からやり�
      ガチャが引け、確率も書き換えられてしまうため。 */
 var ROLEKEY='fukushi_quest_326_role';
 (function(){
+  /* fq-dev-gate-v1: ここでは何も出さない。何も覚えない。
+     旧版は ?dev=1 を一度開くと端末が覚えていたが、
+       ・URLさえ知っていれば誰でも出せた
+       ・貸し出す端末で消し忘れると、来場者に「ポイント+1」が見えた
+     ので、覚えるのをやめた。
+     実際に出すかどうかは、ページの最後にある fq-dev-gate-v1 の枠が決める
+     （登録した端末 かつ 合言葉が合ったときだけ。Supabase で照合する）。
+     ★この2行を消さないこと。消すと、旧版で覚えたままの端末にパネルが残る。 */
+  try{ localStorage.removeItem(ROLEKEY); }catch(e){}
   var role={dev:false,admin:false};
-  try{ var s=localStorage.getItem(ROLEKEY); if(s){ var j=JSON.parse(s); if(j){ role.dev=!!j.dev; role.admin=!!j.admin; } } }catch(e){}
-  try{
-    var p=new URLSearchParams(location.search), touched=false;
-    ['dev','admin'].forEach(function(k){
-      var v=p.get(k);
-      if(v!==null){ role[k]=(v!=='0'&&v!=='false'); touched=true; }
-    });
-    if(touched){ try{ localStorage.setItem(ROLEKEY,JSON.stringify(role)); }catch(e){} }
-  }catch(e){}
-  var dp=document.getElementById('devPanel'); if(dp) dp.style.display=role.dev?'':'none';
-  var rl=document.getElementById('resetLink'); if(rl) rl.style.display=role.dev?'':'none';
-  var al=document.getElementById('admLink');   if(al) al.style.display=role.admin?'':'none';
+  var dp=document.getElementById('devPanel'); if(dp) dp.style.display='none';
+  var rl=document.getElementById('resetLink'); if(rl) rl.style.display='none';
+  var al=document.getElementById('admLink');   if(al) al.style.display='none';
   window.FQ_ROLE=role;
 })();
 (function(){try{var params=new URLSearchParams(location.search);var q=params.get('q');if(q){scan(q);if(history.replaceState)history.replaceState(null,'',location.pathname);}}catch(e){}})();
@@ -1168,6 +1168,97 @@ if ('serviceWorker' in navigator) {
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState==='visible') refreshRanking();
   });
+})();
+</script>
+
+<!-- fq-dev-gate-v1: 開発パネル／主催者設定は、登録した端末で合言葉が合ったときだけ出す -->
+<script>
+(function(){
+  'use strict';
+  var p; try{ p = new URLSearchParams(location.search); }catch(e){ return; }
+  var wantDev = (p.get('dev')   === '1');
+  var wantAdm = (p.get('admin') === '1');
+  if (!wantDev && !wantAdm) return;          /* ★URLに付いていなければ、何も起きない */
+
+  var cfg  = window.FQ_CONFIG || {};
+  var real = !!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0
+                && cfg.SUPABASE_ANON_KEY && window.supabase);
+
+  function open_(){
+    if (wantDev){
+      var dp=document.getElementById('devPanel'); if(dp) dp.style.display='';
+      var rl=document.getElementById('resetLink'); if(rl) rl.style.display='';
+    }
+    if (wantAdm){
+      var al=document.getElementById('admLink'); if(al) al.style.display='';
+    }
+    window.FQ_ROLE = { dev: wantDev, admin: wantAdm };
+  }
+
+  /* 小さな枠を作る（画面の上に重ねる） */
+  var box = document.createElement('div');
+  box.id = 'fqDevGate';
+  box.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);'
+    + 'display:flex;align-items:center;justify-content:center;padding:16px;'
+    + 'font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;';
+  box.innerHTML =
+    '<div style="background:#fff;border-radius:14px;padding:20px 22px;max-width:420px;width:100%;">'
+    + '<div style="font-weight:900;font-size:18px;margin-bottom:10px;">関係者用</div>'
+    + '<div id="fqGateMsg" style="font-size:13px;color:#666;line-height:1.8;margin-bottom:12px;">'
+    + '合言葉を入れてください。</div>'
+    + '<input id="fqGatePass" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"'
+    + ' style="width:100%;padding:11px 12px;font-size:16px;border:2px solid #ddd;border-radius:9px;">'
+    + '<div id="fqGateDid" style="display:none;font-size:12px;color:#444;background:#f4f4f4;'
+    + 'border-radius:9px;padding:10px 12px;margin-top:12px;line-height:1.8;word-break:break-all;"></div>'
+    + '<div style="display:flex;gap:9px;margin-top:14px;">'
+    + '<button id="fqGateGo" style="flex:1;padding:11px;font-size:16px;font-weight:800;border:none;'
+    + 'border-radius:9px;background:#2e7d32;color:#fff;">確認</button>'
+    + '<button id="fqGateNo" style="flex:1;padding:11px;font-size:16px;font-weight:700;border:1px solid #ccc;'
+    + 'border-radius:9px;background:#eee;color:#555;">やめる</button>'
+    + '</div></div>';
+  document.body.appendChild(box);
+
+  var msg = box.querySelector('#fqGateMsg');
+  var pw  = box.querySelector('#fqGatePass');
+  var did = box.querySelector('#fqGateDid');
+  var go  = box.querySelector('#fqGateGo');
+
+  function close_(){ box.remove(); }
+  box.querySelector('#fqGateNo').addEventListener('click', close_);
+
+  if (!real){
+    msg.textContent = '通信の設定(config.js)が無いので、確認できません。';
+    go.disabled = true; pw.disabled = true;
+    return;
+  }
+
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  var myDid = (typeof DID !== 'undefined' && DID) ? String(DID) : '';
+
+  go.addEventListener('click', function(){
+    if (!pw.value.trim()) return;
+    go.disabled = true; msg.style.color = '#666'; msg.textContent = '確認中…';
+    sb.rpc('fq_dev_check', { p_pass: pw.value, p_did: myDid }).then(function(r){
+      if (r.error) throw r.error;
+      var d = r.data || {};
+      if (d.ok){ close_(); open_(); return; }
+      msg.style.color = '#c0392b';
+      msg.textContent = d.message || '確認できませんでした。';
+      if (d.reason === 'device'){
+        /* ★端末の登録は SQL Editor からしかできない。ここでは番号を見せるだけ。 */
+        did.style.display = '';
+        did.innerHTML = 'この端末の番号：<br><b>' + myDid + '</b><br>'
+          + 'Supabase の SQL Editor で fq_dev_devices に登録してください。';
+      }
+      pw.value = ''; go.disabled = false;
+    }).catch(function(e){
+      msg.style.color = '#c0392b';
+      msg.textContent = '通信できませんでした（' + (e.message || e) + '）。';
+      go.disabled = false;
+    });
+  });
+  pw.addEventListener('keydown', function(e){ if (e.key === 'Enter') go.click(); });
+  setTimeout(function(){ try{ pw.focus(); }catch(e){} }, 100);
 })();
 </script>
 </body>
