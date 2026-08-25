@@ -16,6 +16,12 @@
 
    ・insta … インスタのURL。空 "" にすると、その人はリンクになりません
    ・photo … 写真のURL（例 "img/walters.jpg"）。空なら色の丸に頭文字が出ます
+   ・pos  … 写真のどこを見せるか（省略可）。顔が切れるときだけ使います
+            例 'center 20%' … 上のほうを見せる ／ 'center bottom' … 下を見せる
+   ・credit … 写真の著作権表示（省略可）。事務所からもらった写真など、
+            「©…」の表記が必要なときに書くと、名前の下に小さく出ます。
+            ★写真の中に©が焼き込まれていても、枠に収めるときに切れることが
+              あります。その場合は必ずここに書いて、表示を残してください。
    ・写真は fukushi-quest フォルダの中に img という入れ物を作って、
      そこに入れてから "img/ファイル名.jpg" と書いてください
    ══════════════════════════════════════════════════════════════════ */
@@ -41,13 +47,14 @@ const FQ = {
      長いままでも開きますが、短いほうが安全で見やすいです。 */
   stage: [
     { time:'10:00〜10:30', name:'豊田大谷高校ダンス部', note:'ダンス',
-      insta:'https://www.instagram.com/toyotaotani_dance/', photo:'' },
+      insta:'https://www.instagram.com/toyotaotani_dance/', photo:'img/otani_dance.jpg' },
     { time:'11:00〜12:00', name:'ウォルターズ',         note:'ライブ',
-      insta:'https://www.instagram.com/walters0830/',      photo:'' },
+      insta:'https://www.instagram.com/walters0830/',      photo:'img/walters.jpg', pos:'center top' },
     { time:'13:00〜14:00', name:'かすこんねぅ',         note:'ライブ',
-      insta:'https://www.instagram.com/kasukonnnnnneu/',   photo:'' },
-    { time:'15:00〜16:00', name:'プラタナス',           note:'ライブ',
-      insta:'https://www.instagram.com/takuma_pts/',       photo:'' },
+      insta:'https://www.instagram.com/kasukonnnnnneu/',   photo:'img/kasukon.jpg',
+      pos:'center 18%', credit:'©Stardust Promotion, Inc.' },
+    { time:'15:00〜16:00', name:'TAKUMA',               note:'ライブ',
+      insta:'https://www.instagram.com/takuma_pts/',       photo:'img/takuma.jpg', pos:'center 22%' },
   ],
 
   /* ── スペシャルゲスト ── */
@@ -55,7 +62,7 @@ const FQ = {
     name:  '326（ナカムラミツル）さん',
     role:  'イラストレーター',
     insta: 'https://www.instagram.com/nakamura326/',
-    photo: '',
+    photo: 'img/326.png',
     text:  'フォークデュオ「19」の元メンバーで、人気カードゲーム「ito」を手がけた'
          + 'イラストレーター・326（ナカムラミツル）さんが、イベントに参加します。\n'
          + '今回のイベントでは、イラストのご提供や企画のアイデア出しなどにご協力いただきました。'
@@ -198,7 +205,8 @@ const FQ = {
   a.act:active{transform:translateY(2px);}
   .act .t{background:var(--pink);color:#fff;text-align:center;font-size:12.5px;
           font-weight:900;padding:5px 4px;letter-spacing:.02em;}
-  .act .ph{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
+  /* ★正方形だと集合写真の両端が切れる。4:3にして人が入る幅を確保。 */
+  .act .ph{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;
            font-size:40px;font-weight:900;position:relative;background-size:cover;background-position:center;
            border-bottom:2.5px solid var(--ink);}
   .act .ph .ini{display:flex;flex-direction:column;align-items:center;gap:4px;}
@@ -209,21 +217,37 @@ const FQ = {
   .act .n{padding:9px 8px;text-align:center;font-size:13.5px;font-weight:900;line-height:1.45;}
   .act .n small{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:2px;}
   .act .n .link{display:block;font-size:10.5px;color:var(--pink);font-weight:900;margin-top:3px;}
+  .act .n .cr{display:block;font-size:9.5px;color:var(--muted);font-weight:600;margin-top:4px;
+              letter-spacing:.01em;}
 
   /* ══════════ ゲスト ══════════ */
-  .guest{background:var(--blue);color:#fff;border-radius:20px;padding:20px 18px;
-         display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
-  .guest .ph{width:104px;height:104px;border-radius:14px;background:rgba(255,255,255,.22);
+  /* ★スマホで写真と名前が上下に割れないよう、この2つを必ず横並びにする。
+     説明文だけを下に回すと、狭い画面でも読みやすく、見た目も揃う。 */
+  .guest{background:var(--blue);color:#fff;border-radius:20px;padding:20px 18px;}
+  .ghead{display:flex;gap:14px;align-items:center;margin-bottom:14px;}
+  /* ★写真は cover（枠いっぱいに切り取る）だが、ここだけ contain。
+     326さんのイラストは全身が見えないと意味がないため。 */
+  /* 326さんのイラストは縦長なので、枠も縦長にして大きく見せる */
+  .guest .ph{width:100px;height:138px;border-radius:14px;
+             background-color:rgba(255,255,255,.93);
+             background-size:contain;background-repeat:no-repeat;background-position:center;
              flex:0 0 auto;display:flex;align-items:center;justify-content:center;
-             font-size:30px;font-weight:900;background-size:cover;background-position:center;
+             font-size:28px;font-weight:900;
              border:3px solid #fff;position:relative;text-decoration:none;color:#fff;}
   .guest .ph .ig{position:absolute;right:-7px;bottom:-7px;width:28px;height:28px;border-radius:9px;
                  background:#fff;display:flex;align-items:center;justify-content:center;
                  box-shadow:0 2px 6px rgba(0,0,0,.3);}
-  .guest .b{flex:1;min-width:200px;}
-  .guest h3{font-size:19px;font-weight:900;margin-bottom:2px;}
-  .guest .role{font-size:12px;opacity:.9;margin-bottom:8px;}
+  .gname{flex:1;min-width:0;}          /* min-width:0 が無いと、はみ出して折り返してしまう */
+  .guest h3{font-size:clamp(15px,4.3vw,20px);font-weight:900;line-height:1.45;margin-bottom:3px;
+            text-wrap:pretty;}   /* 「ん」だけが次の行に落ちるのを防ぐ */
+  .guest .role{font-size:12.5px;opacity:.92;}
   .guest p{font-size:13.5px;font-weight:500;line-height:1.85;white-space:pre-line;}
+  /* スマホでは写真を少し小さくして、名前が1行に収まる幅を確保する */
+  @media(max-width:430px){
+    .guest .ph{width:88px;height:122px;font-size:23px;}
+    .guest h3{font-size:15px;}
+    .ghead{gap:12px;}
+  }
 
   /* ══════════ チップ ══════════ */
   .grp{margin-bottom:16px;}
@@ -430,8 +454,9 @@ const FQ = {
   })();
 
   /* ── 写真の丸／四角（写真が無いときは色＋頭文字） ── */
-  function photoStyle(photo, i){
+  function photoStyle(photo, i, pos){
     return photo ? 'background-image:url('+esc(photo)+')'
+                   + (pos ? ';background-position:'+esc(pos) : '')
                  : 'background:'+LIGHTS[i%LIGHTS.length]+';color:'+COLORS[i%COLORS.length];
   }
   // 写真がまだ無いときの仮表示。名前の1文字目を出す（「（お名前）」のような仮の名前なら「写真」と出す）
@@ -449,13 +474,14 @@ const FQ = {
   /* ── SPECIAL STAGE ── */
   $('#acts').innerHTML = FQ.stage.map((a,i) => {
     const inner = '<div class="t">'+esc(a.time)+'</div>'
-      + '<div class="ph" style="'+photoStyle(a.photo,i)+'">'
+      + '<div class="ph" style="'+photoStyle(a.photo,i,a.pos)+'">'
       +   (a.photo ? '' : phInner(a.name, i, true))
       +   (a.insta ? '<span class="ig">'+IG+'</span>' : '')
       + '</div>'
       + '<div class="n">'+esc(a.name)
       +   (a.note ? '<small>'+esc(a.note)+'</small>' : '')
       +   (a.insta ? '<span class="link">Instagramを見る →</span>' : '')
+      +   (a.credit ? '<span class="cr">'+esc(a.credit)+'</span>' : '')
       + '</div>';
     return a.insta
       ? '<a class="act" href="'+esc(a.insta)+'" target="_blank" rel="noopener">'+inner+'</a>'
@@ -464,18 +490,18 @@ const FQ = {
 
   /* ── SPECIAL GUEST ── */
   (function(){
-    const g = FQ.guest;
-    const ph = '<div class="ph" style="'+(g.photo?'background-image:url('+esc(g.photo)+')':'')+'">'
-             + (g.photo ? '' : '326') + '</div>';
+    const g  = FQ.guest;
+    const st = g.photo ? 'background-image:url('+esc(g.photo)+')' : '';
+    const in_ = (g.photo ? '' : '326') + (g.insta ? '<span class="ig">'+IG+'</span>' : '');
+    const ph = g.insta
+      ? '<a class="ph" style="'+st+'" href="'+esc(g.insta)+'" target="_blank" rel="noopener">'+in_+'</a>'
+      : '<div class="ph" style="'+st+'">'+in_+'</div>';
+    // 写真＋名前 を横並びにして、説明文はその下に全幅で置く
     $('#guest').innerHTML =
-        (g.insta
-          ? '<a class="ph" style="'+(g.photo?'background-image:url('+esc(g.photo)+')':'')+'" '
-            + 'href="'+esc(g.insta)+'" target="_blank" rel="noopener">'
-            + (g.photo ? '' : '326') + '<span class="ig">'+IG+'</span></a>'
-          : ph)
-      + '<div class="b"><h3>'+esc(g.name)+'</h3>'
-      + '<div class="role">'+esc(g.role)+(g.insta?' ・ <u>Instagram</u>':'')+'</div>'
-      + '<p>'+esc(g.text)+'</p></div>';
+        '<div class="ghead">' + ph
+      + '<div class="gname"><h3>'+esc(g.name)+'</h3>'
+      + '<div class="role">'+esc(g.role)+(g.insta?' ・ <u>Instagram</u>':'')+'</div></div></div>'
+      + '<p>'+esc(g.text)+'</p>';
   })();
 
   /* ── DISCOVER ── */
@@ -501,7 +527,7 @@ const FQ = {
 
   /* ── 運営スタッフ ── */
   $('#staff').innerHTML = FQ.staff.map((p,i) => {
-    const inner = '<div class="av" style="'+photoStyle(p.photo,i)+'">'
+    const inner = '<div class="av" style="'+photoStyle(p.photo,i,p.pos)+'">'
       + (p.photo ? '' : phInner(p.name, i, false))
       + (p.insta ? '<span class="ig">'+IG+'</span>' : '')
       + '</div><div class="n">'+esc(p.name)+'</div><div class="r">'+esc(p.role)+'</div>';
