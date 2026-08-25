@@ -85,10 +85,12 @@ const FQ = {
        ・move … どう動くか
            walk   … 下のほうを歩いて横切る（右へ行って、向きを変えて帰る）
            hop    … その場でぴょんぴょん跳ねる
-           rocket … 煙を出して、斜めに空へ飛んでいく
+           rocket … 煙を出して、斜めに空へ飛んでいく（hero-motion-v1: 戻ってこない）
+           dash   … 横をすごい速さで走り抜ける（hero-motion-v1 で追加。戻ってこない）
            sit    … 開催日の「（日）」の丸に腰かけて、足をぶらぶらさせる
        ・at   … 出てくるタイミング（秒）。0〜34 のあいだで散らしてください
-       ・x    … 出てくる横の位置（％）。walk と sit では使いません
+       ・x    … 出てくる横の位置（％）。walk・dash・sit では使いません
+                （walk と dash は必ず画面の左はしから出てきます）
        ・y    … 下からの高さ（％）。hop だけで使います。
                 0 に近いほど下、大きいほど上。文字の横に来るように決めています
        ★ぜんぶで34秒ひとまわり。1人ずつ順番に出るように at をずらしてあります。
@@ -98,11 +100,11 @@ const FQ = {
       { photo:'img/326.png',      move:'walk',   at: 0                  },
       { photo:'img/ch_pink.png',  move:'hop',    at: 4.5, x:  3, y: 38  },
       { photo:'img/ch_cat.png',   move:'rocket', at: 9,   x: 74         },
-      { photo:'img/ch_robot.png', move:'walk',   at: 13                 },
+      { photo:'img/ch_robot.png', move:'rocket', at: 13,  x: 22         },
       { photo:'img/ch_braid.png', move:'hop',    at:17.5, x: 82, y: 13  },
       { photo:'img/ch_wood.png',  move:'sit',    at: 21                 },
       { photo:'img/ch_beard.png', move:'hop',    at: 26,  x:  4, y: 17  },
-      { photo:'img/ch_green.png', move:'rocket', at: 30,  x: 26         },
+      { photo:'img/ch_green.png', move:'dash',   at: 30                 },
     ],
   },
 
@@ -275,7 +277,16 @@ const FQ = {
       3%     {opacity:1; transform:translate(0,0)         scale(1);}
       8%     {opacity:1; transform:translate(7vw,-230px)  scale(.82);}
      13%     {opacity:1; transform:translate(16vw,-760px) scale(.42);}
-     14%,100%{opacity:0; transform:translate(0,10px)      scale(.95);}
+     /* hero-motion-v1 ここから。
+        ★以前は 13% → 14% で「画面のずっと上」から「足元」へ一気に戻していた。
+          その 0.34秒のあいだ、まだ完全に透明になりきっていないので、
+          スーッと降りてくるのが見えていた（実測：透明度 0.83 のまま降下）。
+        直し方：①最後まで飛ばしきる ②飛んだ先で消す（位置は動かさない）
+                ③透明になってから、次の出番のために足元へ戻す。
+        ★15.1% と 15.2% の 0.1% を詰めないこと。ここが「見えないまま戻す」区間。 */
+     15%     {opacity:1; transform:translate(20vw,-1200px) scale(.28);}
+     15.1%   {opacity:0; transform:translate(20vw,-1200px) scale(.28);}
+     15.2%,100%{opacity:0; transform:translate(0,10px)     scale(.95);}
   }
   @keyframes i-tilt{
       0%,8%  {transform:rotate(0);}
@@ -295,6 +306,34 @@ const FQ = {
     to  {opacity:0;   transform:translateX(-50%) scale(1.55);}
   }
 
+  /* ⑤ 全力疾走（hero-motion-v1）… 横をすごい速さで走り抜ける。戻ってこない。
+        ★歩く子（walk）は「行って帰ってくる」。こちらは走り抜けたら、それきり。
+        ★1%→3.6% で画面を渡りきる。34秒ひとまわりなので、およそ 0.9秒。
+          もっと速くしたいときは 3.6% を小さく、ゆっくりなら大きくする。
+        ★消し方は飛ぶ子と同じ考え方（走りきる→消す→見えないうちに左へ戻す）。 */
+  .m-dash{left:0;animation:a-dash 34s linear infinite;}
+  .m-dash img{animation:i-dash .13s ease-in-out infinite alternate;}
+  @keyframes a-dash{
+      0%      {opacity:0; transform:translateX(-130px) scale(1);}
+      1%      {opacity:1; transform:translateX(-130px) scale(1);}
+      3.6%    {opacity:1; transform:translateX(calc(100vw + 150px)) scale(1);}
+      3.7%    {opacity:0; transform:translateX(calc(100vw + 150px)) scale(1);}
+      3.8%,100%{opacity:0; transform:translateX(-130px) scale(1);}
+  }
+  @keyframes i-dash{
+    from{transform:translateY(0)    rotate(-11deg);}
+    to  {transform:translateY(-7px) rotate(-5deg);}
+  }
+  /* スピード線。白い細長い丸を box-shadow で増やして、左うしろに引く */
+  .m-dash .dashline{position:absolute;right:100%;top:34%;margin-right:7px;
+      width:30px;height:5px;border-radius:3px;background:rgba(255,255,255,.92);
+      box-shadow:-26px 15px 0 -1px rgba(255,255,255,.78),
+                 -10px 30px 0 -1px rgba(255,255,255,.55),
+                 -34px -11px 0 -1px rgba(255,255,255,.68),
+                 -58px  6px 0 -2px rgba(255,255,255,.45);
+      animation:i-line .18s linear infinite;}
+  @keyframes i-line{ from{opacity:.35;} to{opacity:1;} }
+
   /* ④ 腰かけ … 開催日の「（日）」の丸に座って、足をぶらぶらさせる
      ★丸の位置は絵（img/date.png）の中で決まっているので、
        絵を入れた枠（.datewrap）の中に、％で置いています。
@@ -303,14 +342,19 @@ const FQ = {
      ★足だけ別の絵にして（ch_wood_legs.png）、腰のところを軸に振っています。
        体（ch_wood_body.png）を手前に重ねてあるので、つなぎ目は見えません。
        絵を差し替えるときは、この2枚を作り直してください。 */
-  .datewrap{position:relative;--dw:min(64vw,430px);width:var(--dw);
+  /* hero-motion-v1: 日付の絵が「つながる」より大きく見えていたので小さくした。
+     ★--dw だけが日付の大きさ。ロゴ（--lw）には一切さわっていない。
+       64vw → 48vw（スマホ幅390pxで 250px → 187px。つながるは226pxのまま） */
+  .datewrap{position:relative;--dw:min(48vw,320px);width:var(--dw);
             margin:14px auto 0;left:calc(var(--dw) * 0.1078);}
   .whendate{display:block;width:100%;height:auto;}
   /* 90.6% / 48.8% が丸の中心と上端。ただしこの絵は斜めに描かれていて、
      見た目の重さが左下に寄っています。そのぶん右下へ少し寄せて、
      ちゃんと丸に腰かけて見えるようにしています（92% / 54%）。 */
   .sitspot{position:absolute;left:92%;top:54%;height:0;z-index:1;
-           --sw:clamp(38px,10.5vw,62px);width:var(--sw);margin-left:calc(var(--sw) / -2);}
+           /* hero-motion-v1: 日付を小さくしたので、腰かける子も同じ割合で縮める。
+              0.163 ＝ もとの大きさ ÷ もとの日付の幅。日付を変えてもズレない。 */
+           --sw:calc(var(--dw) * 0.163);width:var(--sw);margin-left:calc(var(--sw) / -2);}
   .m-sit{position:absolute;left:0;bottom:1px;width:100%;
          animation:a-sit 34s linear infinite;}
   .m-sit .bd{position:relative;z-index:2;display:block;width:100%;height:auto;}
@@ -840,11 +884,13 @@ const FQ = {
 
     $('#actors').innerHTML = rest.map(c => {
       let pos = '';
-      if (c.move !== 'walk') pos += 'left:' + (c.x || 50) + '%;';
+      /* hero-motion-v1: dash も左はしから走り出すので、x は使わない */
+      if (c.move !== 'walk' && c.move !== 'dash') pos += 'left:' + (c.x || 50) + '%;';
       if (c.y != null)       pos += 'bottom:' + c.y + '%;';   // hop は文字の横まで上げる
       return '<div class="actor m-' + esc(c.move) + '" '
            + 'style="' + pos + 'animation-delay:' + (c.at || 0) + 's">'
            + (c.move === 'rocket' ? '<span class="smoke"></span>' : '')
+           + (c.move === 'dash'   ? '<span class="dashline"></span>' : '')   /* hero-motion-v1 */
            + '<img src="' + esc(c.photo) + '" alt="" decoding="async"></div>';
     }).join('');
 
