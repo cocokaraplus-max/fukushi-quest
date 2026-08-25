@@ -229,7 +229,13 @@ const FQ = {
        うしろに並べた書体は、届かなかったときの控えです。
      ★font-synthesis:none は「ブラウザが勝手に太らせない」という指定。
        本物の太字があるのに上から太らせると、字がつぶれてしまいます。 */
-  .whendate{display:block;width:min(64vw,430px);height:auto;margin:14px auto 0;}
+  /* ★中央ぞろえは「12.13」を基準にする。
+     絵の右はしには曜日の丸が付いているので、絵ごと中央に置くと
+     そのぶん 12.13 が左へずれて見える。丸の幅の半分だけ右へ寄せて直す。
+     0.1078 ＝ 丸の部分（絵の右21.6%）の半分。絵を作り直したら測り直すこと。 */
+  .whendate{display:block;position:relative;height:auto;
+            --dw:min(64vw,430px);width:var(--dw);
+            margin:14px auto 0;left:calc(var(--dw) * 0.1078);}
   .when2,.when3{
     font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Noto Sans JP",
                 "Zen Maru Gothic",sans-serif;
