@@ -85,7 +85,7 @@ const FQ = {
 
        ★長い言葉ほど場所を取ります。減らしたいときは、まず5文字以上のものから。
        ★読ませるための文字ではないので、うっすらとしか出ません。
-         濃さを変えたいときは、下のCSSの @keyframes kw-in の .55 を直してください。 */
+         濃さを変えたいときは、下のCSSの @keyframes kw-in の .8 を直してください。 */
     keywords: [/* 人とのつながり */
                'つながり','出会い','支え合い','助け合い','ともに','なかま',
                'きずな','寄りそう','手をつなぐ','分かち合う','見守る','交流',
@@ -270,10 +270,14 @@ const FQ = {
        日付や会場名と同じもので、41行目ですでに読み込んであります。
        ＝この変更で通信量は1バイトも増えません。
        うしろに並べた書体は、届かなかったときの控えです。
-     ★色（fq-kw-white-v1）。もとは黄色 #EDE83C だったが、地色 #E7DE01 と
+     ★色（fq-kw-white-v1 → fq-kw-white-v2）。もとは黄色 #EDE83C だったが、地色 #E7DE01 と
        ほぼ同じ色のため、濃さを最大にしても差が1.07倍→1.09倍にしかならなかった。
        ＝濃さでは見えるようにならない。色を変える必要があった。
-       いまは クリーム #FFFDF5 の濃さ .55（地色との差 1.19倍）。
+       いまは 純白 #FFFFFF の濃さ .8（地色との差 1.32倍・fq-kw-white-v2）。
+       ★白は地色より「明るい」方向にしか行けないので、濃さ1.0でも1.36倍が上限。
+         それ以上はっきりさせたいときは、影を足すか、暗い色にするしかない。
+       ★text-shadow は地色を暗くした色。輪郭が出るぶん、濃さ以上にはっきり見える。
+         影は文字と一緒に薄くなる（opacity は影にも効くため）。
        ★白を濃くしすぎると「入場無料」の丸や日付の白フチと同じ強さになり、
          どれが主役か分からなくなる。.55 はそれを避けた値。
      ★中央にも出します。ロゴ・日付・カウントダウンは #kws より手前
@@ -288,7 +292,8 @@ const FQ = {
 
      ★★6.25% ＝「同時に見せたい語数 3 ÷ 全部の語数 48」。
        語数を変えたら、ここを計算し直すこと。 */
-  .kw{position:absolute;color:#FFFDF5;line-height:1;opacity:0;
+  .kw{position:absolute;color:#FFFFFF;line-height:1;opacity:0;
+      text-shadow:0 2px 0 rgba(150,142,0,.35);
       font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Noto Sans JP",
                   "Zen Maru Gothic",sans-serif;
       font-weight:900; font-synthesis:none; -webkit-font-synthesis:none;
@@ -297,8 +302,8 @@ const FQ = {
       animation:kw-in 60s linear infinite;}
   @keyframes kw-in{
       0%        {opacity:0;   transform:translate(-50%,-50%) scale(.90);}
-      1.2%      {opacity:.55; transform:translate(-50%,-50%) scale(1);}
-      5%        {opacity:.55; transform:translate(-50%,-50%) scale(1);}
+      1.2%      {opacity:.8;  transform:translate(-50%,-50%) scale(1);}
+      5%        {opacity:.8;  transform:translate(-50%,-50%) scale(1);}
       6.25%     {opacity:0;   transform:translate(-50%,-50%) scale(1.06);}
       100%      {opacity:0;   transform:translate(-50%,-50%) scale(1.06);}
   }
@@ -306,7 +311,7 @@ const FQ = {
      48語ぜんぶを一度に出すと密になりすぎるため。 */
   @media(prefers-reduced-motion:reduce){
     .kw{animation:none;}
-    .kw:nth-child(4n+1){opacity:.55;}
+    .kw:nth-child(4n+1){opacity:.8;}
   }
   .hero-in{position:relative;z-index:2;text-align:center;}
 
