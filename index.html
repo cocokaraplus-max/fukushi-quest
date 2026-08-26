@@ -1287,7 +1287,14 @@ const FQ = {
            落ちる道すじは画面の左はしで、ロゴにも日付にもカウントダウンにも
            重ならないことを確認済み（390pxでも900pxでも）。
          #actors      … それ以外（文字より「うしろ」） */
-    const FRONT = ['bounce'];
+    /* ★fq-cast-v5: 地面を動く子（歩く・滑る・走る）と跳ねる猫を「まえ」に出す。
+       とくに滑る子は、回る高さがカウントダウンの箱とちょうど重なるので、
+       うしろに置くと上半身が隠れて回っているのが分からなかった。
+       ★うしろに残すのは3人：
+         飛ぶ子(rocket) … ロゴや日付の上を通るので、前に出すと文字を隠す
+         落ちる子(drop)  … 入場無料の丸の「うしろ」に隠れてから出てくる役
+         のぞく子(peek)  … 日付の絵のうしろが定位置 */
+    const FRONT = ['bounce', 'skate', 'walk', 'dash'];
     const sit   = A.filter(c => c.move === 'sit');
     const peek  = A.filter(c => c.move === 'peek');
     const front = A.filter(c => FRONT.indexOf(c.move) >= 0);
