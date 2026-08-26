@@ -106,14 +106,30 @@ const FQ = {
        ★増やす／減らすのは、この並びを足し引きするだけでできます。
        ★動きが苦手な方の端末では、この演出は出ません（下のCSSの説明を参照）。 */
     actors: [
+      /* ★fq-cast-v3: 画面に出るのは同時に2人まで。下の時間割で守っている。
+           0.0〜20.0  箱の顔（散歩）
+           5.4〜11.2  白ひげ（落ちる）      ← 箱の顔と2人
+          12.3〜13.8  みどり（走る）        ← 箱の顔と2人・ここで追い抜く
+          15.0〜22.0  黒猫（跳ねる①）      ← 箱の顔と2人
+          23.0〜33.0  女の子（滑る①）
+          25.4〜31.2  白ひげ（落ちる）      ← 女の子と2人
+          33.5〜41.5  三つ編み（のぞく）
+          34.5〜42.5  木の子（腰かけ）      ← 三つ編みと2人
+          43.5〜46.1  うさぎ耳（飛ぶ①）
+          45.4〜51.2  白ひげ（落ちる）      ← うさぎ耳／女の子と2人
+          46.5〜56.5  女の子（滑る②）
+          51.5〜58.5  黒猫（跳ねる②）      ← 女の子と2人
+          56.8〜59.4  うさぎ耳（飛ぶ②）    ← 黒猫と2人
+         ★at を動かすと、この表が崩れて3人になることがある。
+           動かしたら必ず全体を見直すこと。 */
       { photo:'img/326.png',      move:'walk',   at: 0    },
-      { photo:'img/ch_cat.png',   move:'bounce', at: 2    },
       { photo:'img/ch_beard.png', move:'drop',   at: 5.4  },
-      { photo:'img/ch_green.png', move:'dash',   at: 7.5  },
-      { photo:'img/ch_robot.png', move:'rocket', at: 13   },
-      { photo:'img/ch_pink.png',  move:'skate',  at: 15   },
-      { photo:'img/ch_braid.png', move:'peek',   at: 20   },
-      { photo:'img/ch_wood.png',  move:'sit',    at: 21   },
+      { photo:'img/ch_green.png', move:'dash',   at: 12   },
+      { photo:'img/ch_cat.png',   move:'bounce', at: 15   },
+      { photo:'img/ch_pink.png',  move:'skate',  at: 23   },
+      { photo:'img/ch_braid.png', move:'peek',   at: 33.5 },
+      { photo:'img/ch_wood.png',  move:'sit',    at: 34.5 },
+      { photo:'img/ch_robot.png', move:'rocket', at: 43.5 },
     ],
   },
 
@@ -274,16 +290,16 @@ const FQ = {
           65% は「33%＋32%」で決めている（往復を同じ速さにするため）。
         ★★歩きの速さを変えたら、追い抜く子（dash）の at も見直すこと。
           追い抜く場所がずれる。 */
-  .m-walk{left:0;animation:a-walk 34s linear infinite;}
+  .m-walk{left:0;animation:a-walk 60s linear infinite;}
   .m-walk img{animation:i-step .68s ease-in-out infinite alternate;}
   @keyframes a-walk{
-      0%     {opacity:0; transform:translateX(-90px)             scaleX(1);}
-      1%,66% {opacity:1;}
-      2%     {           transform:translateX(-90px)             scaleX(1);}
-     33%     {           transform:translateX(calc(100vw - 10px)) scaleX(1);}
-     34%     {           transform:translateX(calc(100vw - 10px)) scaleX(-1);}
-     65%     {           transform:translateX(-90px)             scaleX(-1);}
-     67%,100%{opacity:0; transform:translateX(-90px)             scaleX(1);}
+      0%      {opacity:0; transform:translateX(-90px)              scaleX(1);}
+      0.5%    {opacity:1; transform:translateX(-90px)              scaleX(1);}
+      1%      {           transform:translateX(-90px)              scaleX(1);}
+     16.5%    {           transform:translateX(calc(100vw - 10px)) scaleX(1);}
+     17.2%    {           transform:translateX(calc(100vw - 10px)) scaleX(-1);}
+     32.5%    {           transform:translateX(-90px)              scaleX(-1);}
+     33.3%,100%{opacity:0; transform:translateX(-90px)             scaleX(1);}
   }
   @keyframes i-step{
     from{transform:translateY(0)     rotate(-4deg);}
@@ -309,36 +325,27 @@ const FQ = {
      ★2回目は scaleX(-1) で絵を反転して、進む向きに合わせている。
      ★どのコマも translate → scaleX → scale の順で3つ書いてある。
        途中で数を変えると、ブラウザが別の計算に切り替わって動きが濁る。 */
-  .m-rocket{left:50%;animation:a-rocket 68s ease-in infinite;}
+  .m-rocket{left:50%;animation:a-rocket 60s ease-in infinite;}
   .m-rocket img{animation:i-tilt 3s ease-in infinite;}
-  @keyframes a-rocket{        /* しゃがむ → 飛び上がる → 画面の上へ突き抜ける
-        ★消えるのは「上まで抜けきったあと」。黄色い面の外へ出れば
-          自動で見えなくなる（.hero が overflow:hidden のため）ので、
-          薄くして消すのではなく、そのまま飛ばしきっています。 */
-      0%     {opacity:0; transform:translate(-40vw,10px) scaleX(1) scale(.95);}
-      0.5%   {opacity:1; transform:translate(-40vw,10px) scaleX(1) scale(.95);}
-      1.5%   {opacity:1; transform:translate(-40vw,0)    scaleX(1) scale(1);}
-      4%     {opacity:1; transform:translate(-33vw,-230px) scaleX(1) scale(.82);}
-      6.5%   {opacity:1; transform:translate(-24vw,-760px) scaleX(1) scale(.42);}
-     /* hero-motion-v1 ここから。
-        ★以前は 13% → 14% で「画面のずっと上」から「足元」へ一気に戻していた。
-          その 0.34秒のあいだ、まだ完全に透明になりきっていないので、
-          スーッと降りてくるのが見えていた（実測：透明度 0.83 のまま降下）。
-        直し方：①最後まで飛ばしきる ②飛んだ先で消す（位置は動かさない）
-                ③透明になってから、次の出番のために足元へ戻す。
-        ★15.1% と 15.2% の 0.1% を詰めないこと。ここが「見えないまま戻す」区間。 */
-      7.5%   {opacity:1; transform:translate(-20vw,-1200px) scaleX(1) scale(.28);}
-      7.6%   {opacity:0; transform:translate(-20vw,-1200px) scaleX(1) scale(.28);}
-      7.7%   {opacity:0; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
-     /* ここから2回目。右下から左上へ。絵は反転 */
-     50%     {opacity:0; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
-     50.5%   {opacity:1; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
-     51.5%   {opacity:1; transform:translate(34vw,0)      scaleX(-1) scale(1);}
-     54%     {opacity:1; transform:translate(27vw,-230px) scaleX(-1) scale(.82);}
-     56.5%   {opacity:1; transform:translate(18vw,-760px) scaleX(-1) scale(.42);}
-     57.5%   {opacity:1; transform:translate(14vw,-1200px) scaleX(-1) scale(.28);}
-     57.6%   {opacity:0; transform:translate(14vw,-1200px) scaleX(-1) scale(.28);}
-     57.7%,100%{opacity:0; transform:translate(-40vw,10px) scaleX(1) scale(.95);}
+  @keyframes a-rocket{
+      /* 1回目：左下から右上へ（出番 43.5秒） */
+      0%      {opacity:0; transform:translate(-40vw,10px)  scaleX(1)  scale(.95);}
+      0.3%    {opacity:1; transform:translate(-40vw,10px)  scaleX(1)  scale(.95);}
+      0.8%    {opacity:1; transform:translate(-40vw,0)     scaleX(1)  scale(1);}
+      2.0%    {opacity:1; transform:translate(-33vw,-230px) scaleX(1) scale(.82);}
+      3.2%    {opacity:1; transform:translate(-24vw,-760px) scaleX(1) scale(.42);}
+      3.9%    {opacity:1; transform:translate(-20vw,-1200px) scaleX(1) scale(.28);}
+      4.0%    {opacity:0; transform:translate(-20vw,-1200px) scaleX(1) scale(.28);}
+      4.1%    {opacity:0; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
+      /* 2回目：右下から左上へ（13.3秒あとの 56.8秒） */
+     22.0%    {opacity:0; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
+     22.3%    {opacity:1; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
+     22.8%    {opacity:1; transform:translate(34vw,0)      scaleX(-1) scale(1);}
+     24.0%    {opacity:1; transform:translate(27vw,-230px) scaleX(-1) scale(.82);}
+     25.2%    {opacity:1; transform:translate(18vw,-760px) scaleX(-1) scale(.42);}
+     25.9%    {opacity:1; transform:translate(14vw,-1200px) scaleX(-1) scale(.28);}
+     26.0%    {opacity:0; transform:translate(14vw,-1200px) scaleX(-1) scale(.28);}
+     26.1%,100%{opacity:0; transform:translate(-40vw,10px) scaleX(1)  scale(.95);}
   }
   @keyframes i-tilt{
       0%,8%  {transform:rotate(0);}
@@ -366,26 +373,30 @@ const FQ = {
         ★消し方は飛ぶ子と同じ考え方（走りきる→消す→見えないうちに左へ戻す）。
         ★この子は「歩く子を追い抜く」役。出番（at）を歩く子に合わせてある。
           歩き 31px/秒 に対して 走り 394px/秒。およそ13倍の差。 */
-  .m-dash{left:0;animation:a-dash 34s linear infinite;}
+  .m-dash{left:0;animation:a-dash 60s linear infinite;}
   .m-dash img{animation:i-dash .19s ease-in-out infinite alternate;}
   @keyframes a-dash{
-      0%      {opacity:0; transform:translateX(-130px) scale(1);}
-      1%      {opacity:1; transform:translateX(-130px) scale(1);}
-      5.7%    {opacity:1; transform:translateX(calc(100vw + 150px)) scale(1);}
-      5.8%    {opacity:0; transform:translateX(calc(100vw + 150px)) scale(1);}
-      5.9%,100%{opacity:0; transform:translateX(-130px) scale(1);}
+      /* ★fq-cast-v3: 右から左へ走るように変えた。
+         この子の絵はもともと左を向いているので、右へ走らせると
+         「後ろ向きに走っている」ように見えていた。
+         絵を反転させるより、走る向きを絵に合わせるほうが自然。 */
+      0%      {opacity:0; transform:translateX(calc(100vw + 130px));}
+      0.3%    {opacity:1; transform:translateX(calc(100vw + 130px));}
+      2.8%    {opacity:1; transform:translateX(-150px);}
+      2.9%    {opacity:0; transform:translateX(-150px);}
+      3.0%,100%{opacity:0; transform:translateX(calc(100vw + 130px));}
   }
   @keyframes i-dash{
     from{transform:translateY(0)    rotate(-11deg);}
     to  {transform:translateY(-7px) rotate(-5deg);}
   }
-  /* スピード線。白い細長い丸を box-shadow で増やして、左うしろに引く */
-  .m-dash .dashline{position:absolute;right:100%;top:34%;margin-right:7px;
+  /* スピード線。左へ走るので、線は右うしろに引く */
+  .m-dash .dashline{position:absolute;left:100%;top:34%;margin-left:7px;
       width:30px;height:5px;border-radius:3px;background:rgba(255,255,255,.92);
-      box-shadow:-26px 15px 0 -1px rgba(255,255,255,.78),
-                 -10px 30px 0 -1px rgba(255,255,255,.55),
-                 -34px -11px 0 -1px rgba(255,255,255,.68),
-                 -58px  6px 0 -2px rgba(255,255,255,.45);
+      box-shadow: 26px 15px 0 -1px rgba(255,255,255,.78),
+                  10px 30px 0 -1px rgba(255,255,255,.55),
+                  34px -11px 0 -1px rgba(255,255,255,.68),
+                  58px  6px 0 -2px rgba(255,255,255,.45);
       animation:i-line .18s linear infinite;}
   @keyframes i-line{ from{opacity:.35;} to{opacity:1;} }
 
@@ -414,64 +425,57 @@ const FQ = {
          2回目 49〜79%   右から入る（絵を反転）→ 8の字を逆回り → 左へ抜ける
      ★高速回転は、8の字の「交差点」（画面のまん中）で止まって行う。
        氷の上で回る所なので、いちばん自然に見える位置。 */
-  .m-skate{left:0;animation:a-skate 34s ease-in-out infinite;}
-  .m-skate img{transform-origin:50% 92%;animation:i-spin 34s ease-in-out infinite;
+  .m-skate{left:0;animation:a-skate 60s ease-in-out infinite;}
+  .m-skate img{transform-origin:50% 92%;animation:i-spin 60s ease-in-out infinite;
                animation-delay:var(--at,0s);}   /* ★滑りと同じ出番に合わせる */
   @keyframes a-skate{
-      /* ── 1回目：左から入って、8の字を1周して右へ抜ける ──
-         ★奥にいるとき  … 小さく(.80)・ほんの少し上(bottom 5%)
-           手前にいるとき… 大きく(1.12)・下(bottom 1%)
+      /* ── 1回目：左から入って8の字を1周し、右へ抜ける（出番23秒／10秒） ──
+         ★奥は 小さく(.80)・ほんの少し上(bottom 5%)、手前は 大きく(1.12)・下(1%)
          ★★奥行きは「大きさ」で出すこと。上下に動かしすぎると、
-           奥へ行ったのではなく **上へ跳んだ** ように見えてしまう。
-           上下の幅は 1%〜5%（スマホで22pxほど）に抑えてある。ここを広げないこと。
-         ★8の字の折り返し（右はし・左はし）で絵を反転する。 */
+           奥へ行ったのではなく **上へ跳んだ** ように見える。ここを広げないこと。 */
       0%      {opacity:0; bottom:2.5%; transform:translateX(-90px) scaleX(1)  scale(1);}
-      1%      {opacity:1; bottom:2.5%; transform:translateX(-90px) scaleX(1)  scale(1);}
-      4%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}
-      6%      {opacity:1; bottom:5%;   transform:translateX(70vw)  scaleX(1)  scale(.80);}  /* 奥 */
-      8%      {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(1)  scale(.90);}  /* 右はし */
-      8.6%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(-1) scale(.90);}  /* 反転 */
-     11%      {opacity:1; bottom:1%;   transform:translateX(70vw)  scaleX(-1) scale(1.12);} /* 手前 */
-     13%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}    /* 交差点 */
-     19%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}    /* 止まってクルクル */
-     22%      {opacity:1; bottom:5%;   transform:translateX(26vw)  scaleX(-1) scale(.80);}  /* 奥 */
-     24%      {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(-1) scale(.90);}  /* 左はし */
-     24.6%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(1)  scale(.90);}  /* 反転 */
-     27%      {opacity:1; bottom:1%;   transform:translateX(26vw)  scaleX(1)  scale(1.12);} /* 手前 */
-     29%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}    /* 交差点に戻る */
-     33%      {opacity:1; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(1) scale(1);}
-     34%      {opacity:0; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(1) scale(1);}
-      /* ── いなくなる時間（約4.8秒） ── */
-     48%      {opacity:0; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(-1) scale(1);}
-      /* ── 2回目：右から入って、8の字を逆回りして左へ抜ける ── */
-     49%      {opacity:1; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(-1) scale(1);}
-     52%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
-     54%      {opacity:1; bottom:5%;   transform:translateX(26vw)  scaleX(-1) scale(.80);}  /* 奥 */
-     56%      {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(-1) scale(.90);}  /* 左はし */
-     56.6%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(1)  scale(.90);}  /* 反転 */
-     59%      {opacity:1; bottom:1%;   transform:translateX(26vw)  scaleX(1)  scale(1.12);} /* 手前 */
-     61%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}    /* 交差点 */
-     67%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}    /* 止まってクルクル */
-     70%      {opacity:1; bottom:5%;   transform:translateX(70vw)  scaleX(1)  scale(.80);}  /* 奥 */
-     72%      {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(1)  scale(.90);}  /* 右はし */
-     72.6%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(-1) scale(.90);}  /* 反転 */
-     75%      {opacity:1; bottom:1%;   transform:translateX(70vw)  scaleX(-1) scale(1.12);} /* 手前 */
-     77%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
-     81%      {opacity:1; bottom:2.5%; transform:translateX(-90px) scaleX(-1) scale(1);}
-     82%,100% {opacity:0; bottom:2.5%; transform:translateX(-90px) scaleX(1)  scale(1);}
+      0.5%    {opacity:1; bottom:2.5%; transform:translateX(-90px) scaleX(1)  scale(1);}
+      2.0%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}
+      3.0%    {opacity:1; bottom:5%;   transform:translateX(70vw)  scaleX(1)  scale(.80);}
+      4.0%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(1)  scale(.90);}
+      4.3%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(-1) scale(.90);}
+      5.5%    {opacity:1; bottom:1%;   transform:translateX(70vw)  scaleX(-1) scale(1.12);}
+      6.5%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
+      9.9%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
+     11.4%    {opacity:1; bottom:5%;   transform:translateX(26vw)  scaleX(-1) scale(.80);}
+     12.4%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(-1) scale(.90);}
+     12.7%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(1)  scale(.90);}
+     13.9%    {opacity:1; bottom:1%;   transform:translateX(26vw)  scaleX(1)  scale(1.12);}
+     14.9%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}
+     16.3%    {opacity:1; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(1) scale(1);}
+     16.7%    {opacity:0; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(1) scale(1);}
+      /* ── 2回目：右から入って逆回り、左へ抜ける（46.5秒／10秒） ── */
+     38.9%    {opacity:0; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(-1) scale(1);}
+     39.4%    {opacity:1; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(-1) scale(1);}
+     40.9%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
+     41.9%    {opacity:1; bottom:5%;   transform:translateX(26vw)  scaleX(-1) scale(.80);}
+     42.9%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(-1) scale(.90);}
+     43.2%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(1)  scale(.90);}
+     44.4%    {opacity:1; bottom:1%;   transform:translateX(26vw)  scaleX(1)  scale(1.12);}
+     45.4%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}
+     48.8%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}
+     50.3%    {opacity:1; bottom:5%;   transform:translateX(70vw)  scaleX(1)  scale(.80);}
+     51.3%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(1)  scale(.90);}
+     51.6%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(-1) scale(.90);}
+     52.8%    {opacity:1; bottom:1%;   transform:translateX(70vw)  scaleX(-1) scale(1.12);}
+     53.8%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
+     55.4%    {opacity:1; bottom:2.5%; transform:translateX(-90px) scaleX(-1) scale(1);}
+     55.8%,100%{opacity:0; bottom:2.5%; transform:translateX(-90px) scaleX(1) scale(1);}
   }
-  /* ★2880deg ＝ 8回転。2.04秒で8回まわる（1秒に約4回）。
-     止まっている区間だけで回る。回りっぱなしにはしない。
+  /* ★2880deg ＝ 8回転。2.04秒で8回まわる（1秒に約4回）。止まっている区間だけで回る。
      ★角度は足していく（0 → 2880 → 5760）。戻すと逆回転して見える。
-     ★もっとクルクルさせたいときは、止まる区間（13〜19% / 61〜67%）を
-       のばしつつ、角度も同じ割合で足すこと。角度だけ足すと速すぎて
-       残像のようになり、かえって回って見えなくなる。 */
+     ★角度だけ足して速くしないこと。コマ落ちして残像になり、かえって回って見えない。 */
   @keyframes i-spin{
-      0%,13%   {transform:rotateY(0);}
-     19%       {transform:rotateY(2880deg);}    /* 1回目・8回転 */
-     22%,61%   {transform:rotateY(2880deg);}
-     67%       {transform:rotateY(5760deg);}    /* 2回目・8回転 */
-     70%,100%  {transform:rotateY(5760deg);}
+      0%,6.5%   {transform:rotateY(0);}
+      9.9%      {transform:rotateY(2880deg);}
+     11.4%,45.4%{transform:rotateY(2880deg);}
+     48.8%      {transform:rotateY(5760deg);}
+     50.3%,100% {transform:rotateY(5760deg);}
   }
 
   /* ⑦ のぞく（三つ編み）… 日付の絵のうしろに隠れていて、脇からそっとのぞく。
@@ -483,20 +487,20 @@ const FQ = {
   /* ★窓の右はしにぴったり寄せて置く（right:0）。
      ★日付の枠の中におさまる大きさにしてある。はみ出すと窓の上下で切れる。 */
   .m-peek{--aw:clamp(38px,10.5vw,58px);
-          left:auto;right:0;bottom:10%;animation:a-peek 34s ease-in-out infinite;}
+          left:auto;right:0;bottom:10%;animation:a-peek 60s ease-in-out infinite;}
   .m-peek img{transform-origin:50% 100%;}
   @keyframes a-peek{
       /* ★translateX(115%) が「窓の外」＝どこにも見えない位置。
          そこから左へ出てくる。2回のぞいて、あいだに一度きちんと引っこむ。
          ★数字を 0 に近づけるほど、たくさん顔を出す。 */
-      0%      {opacity:1; transform:translateX(115%) rotate(0);}
-      4%      {opacity:1; transform:translateX(38%)  rotate(-8deg);}  /* 1回目、そっと */
-     11%      {opacity:1; transform:translateX(38%)  rotate(-8deg);}
-     14%      {opacity:1; transform:translateX(115%) rotate(0);}      /* 引っこむ */
-     17%      {opacity:1; transform:translateX(115%) rotate(0);}      /* ひと呼吸 */
-     20%      {opacity:1; transform:translateX(4%)   rotate(-13deg);} /* 2回目、もう少し */
-     27%      {opacity:1; transform:translateX(4%)   rotate(-13deg);}
-     30%,100% {opacity:1; transform:translateX(115%) rotate(0);}
+      0%       {opacity:1; transform:translateX(115%) rotate(0);}
+      1.7%     {opacity:1; transform:translateX(38%)  rotate(-8deg);}   /* 1回目 */
+      4.7%     {opacity:1; transform:translateX(38%)  rotate(-8deg);}
+      6.0%     {opacity:1; transform:translateX(115%) rotate(0);}       /* 引っこむ */
+      7.3%     {opacity:1; transform:translateX(115%) rotate(0);}
+      8.6%     {opacity:1; transform:translateX(4%)   rotate(-13deg);}  /* 2回目 */
+     11.6%     {opacity:1; transform:translateX(4%)   rotate(-13deg);}
+     13.0%,100%{opacity:1; transform:translateX(115%) rotate(0);}
   }
 
   /* ⑧ 跳ねる（黒猫）… 左下から跳び上がってロゴの文字の上をピョンピョン渡り、
@@ -506,30 +510,27 @@ const FQ = {
           高さが合わなくなる。％なら黄色い面の高さに追従する。
         ★小さい跳ね（ピョンピョン）は中の絵、大きな上下は箱、と分けてある。 */
   /* ★猫だけ少し小さい。文字の上に乗るので、大きいとキャッチコピーにぶつかる */
-  .m-bounce{--aw:clamp(42px,12vw,66px);left:0;animation:a-bounce 34s ease-in-out infinite;}
+  .m-bounce{--aw:clamp(42px,12vw,66px);left:0;animation:a-bounce 60s ease-in-out infinite;}
   .m-bounce img{animation:i-hoplet .46s ease-in-out infinite alternate;}
   @keyframes a-bounce{
-      0%      {opacity:0; bottom:2%;  transform:translateX(-16vw) scaleX(1);}
-      1%      {opacity:1; bottom:2%;  transform:translateX(-16vw) scaleX(1);}
-      5%      {opacity:1; bottom:78%; transform:translateX(8vw)   scaleX(1);}
-     12%      {opacity:1; bottom:78%; transform:translateX(62vw)  scaleX(1);}
-     /* ★ここが着地。画面の中（右から2割くらいの所）できちんと地面に降りる。
-        以前は降りきる前に画面の外へ出ていて、着地が見えなかった。 */
-     15.5%    {opacity:1; bottom:2%;  transform:translateX(78vw)  scaleX(1);}
-     17.5%    {opacity:1; bottom:2%;  transform:translateX(98vw)  scaleX(1);}
-     19.5%    {opacity:1; bottom:2%;  transform:translateX(124vw) scaleX(1);}
-     20.5%    {opacity:0; bottom:2%;  transform:translateX(124vw) scaleX(1);}
-     /* ここから逆向き。scaleX(-1) で絵を反転して、右から左へ */
-     49%      {opacity:0; bottom:2%;  transform:translateX(118vw) scaleX(-1);}
-     50%      {opacity:1; bottom:2%;  transform:translateX(118vw) scaleX(-1);}
-     54%      {opacity:1; bottom:78%; transform:translateX(90vw)  scaleX(-1);}
-     61%      {opacity:1; bottom:78%; transform:translateX(34vw)  scaleX(-1);}
-     /* ★逆向きも同じ。画面の中（左から2割くらいの所）できちんと着地してから、
-        地面を走って左へ消える。 */
-     64.5%    {opacity:1; bottom:2%;  transform:translateX(16vw)  scaleX(-1);}
-     66.5%    {opacity:1; bottom:2%;  transform:translateX(-4vw)  scaleX(-1);}
-     68.5%    {opacity:1; bottom:2%;  transform:translateX(-30vw) scaleX(-1);}
-     69.5%,100%{opacity:0; bottom:2%; transform:translateX(-30vw) scaleX(-1);}
+      /* ── 1回目：左下→文字の上→画面の中で着地→右へ（出番15秒／7秒） ── */
+      0%       {opacity:0; bottom:2%;  transform:translateX(-16vw) scaleX(1);}
+      0.4%     {opacity:1; bottom:2%;  transform:translateX(-16vw) scaleX(1);}
+      2.2%     {opacity:1; bottom:78%; transform:translateX(8vw)   scaleX(1);}
+      6.2%     {opacity:1; bottom:78%; transform:translateX(62vw)  scaleX(1);}
+      8.2%     {opacity:1; bottom:2%;  transform:translateX(78vw)  scaleX(1);}  /* 着地 */
+      9.4%     {opacity:1; bottom:2%;  transform:translateX(98vw)  scaleX(1);}
+     10.6%     {opacity:1; bottom:2%;  transform:translateX(124vw) scaleX(1);}
+     11.4%     {opacity:0; bottom:2%;  transform:translateX(124vw) scaleX(1);}
+      /* ── 2回目：逆向き（36.5秒あとの 51.5秒／7秒） ── */
+     60.4%     {opacity:0; bottom:2%;  transform:translateX(118vw) scaleX(-1);}
+     60.9%     {opacity:1; bottom:2%;  transform:translateX(118vw) scaleX(-1);}
+     63.0%     {opacity:1; bottom:78%; transform:translateX(90vw)  scaleX(-1);}
+     67.0%     {opacity:1; bottom:78%; transform:translateX(34vw)  scaleX(-1);}
+     69.0%     {opacity:1; bottom:2%;  transform:translateX(16vw)  scaleX(-1);}  /* 着地 */
+     70.2%     {opacity:1; bottom:2%;  transform:translateX(-4vw)  scaleX(-1);}
+     71.4%     {opacity:1; bottom:2%;  transform:translateX(-30vw) scaleX(-1);}
+     72.2%,100%{opacity:0; bottom:2%;  transform:translateX(-30vw) scaleX(-1);}
   }
   @keyframes i-hoplet{ from{transform:translateY(0);} to{transform:translateY(-24px);} }
 
@@ -648,16 +649,16 @@ const FQ = {
               0.163 ＝ もとの大きさ ÷ もとの日付の幅。日付を変えてもズレない。 */
            --sw:calc(var(--dw) * 0.163);width:var(--sw);margin-left:calc(var(--sw) / -2);}
   .m-sit{position:absolute;left:0;bottom:1px;width:100%;
-         animation:a-sit 34s linear infinite;}
+         animation:a-sit 60s linear infinite;}
   .m-sit .bd{position:relative;z-index:2;display:block;width:100%;height:auto;}
   .m-sit .lg{position:absolute;left:0;top:0;z-index:1;display:block;width:100%;height:auto;
              transform-origin:45.7% 76.4%;              /* 腰のちょうつがい */
              animation:i-kick 1.15s ease-in-out infinite alternate;}
   @keyframes a-sit{
-      0%     {opacity:0; transform:translateY(-6px);}
-      1%     {opacity:1; transform:translateY(-6px);}
-      3%,20% {opacity:1; transform:translateY(0);}
-     22%,100%{opacity:0; transform:translateY(0);}
+      0%      {opacity:0; transform:translateY(-6px);}
+      0.6%    {opacity:1; transform:translateY(-6px);}
+      1.7%,12%{opacity:1; transform:translateY(0);}
+     13.3%,100%{opacity:0; transform:translateY(0);}
   }
   @keyframes i-kick{ from{transform:rotate(-12deg);} to{transform:rotate(14deg);} }
 
