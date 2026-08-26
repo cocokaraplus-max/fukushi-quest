@@ -12,7 +12,10 @@
        つながらない時だけキャッシュを出す（＝オフラインでも開ける）。
      - アイコン・manifest だけ「キャッシュ優先」（変わらないので速さ優先）。
    ------------------------------------------------------------------ */
-const CACHE = 'fq326-v4';   // fq-swap-home-v1: トップを入れ替えたので版を上げる
+const CACHE = 'fq326-v5';   // fq-logo-daku-v2: ロゴの絵（lg_ga/lg_ru）を差し替えたので版を上げる
+// ★画像は下で「キャッシュ優先」にしている。版を上げないと、
+//   一度端末に取り込まれた古い絵がいつまでも出続ける。
+//   ★img/ の絵を差し替えたら、必ずここの数字を上げること。
 const ASSETS = ['./', './index.html', './quest.html', './config.js', './manifest.webmanifest',  // fq-swap-home-v1: quest.html も先に保存する
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png'];
 
