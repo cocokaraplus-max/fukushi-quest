@@ -107,10 +107,9 @@ const FQ = {
        ★動きが苦手な方の端末では、この演出は出ません（下のCSSの説明を参照）。 */
     actors: [
       /* ★fq-cast-v3: 画面に出るのは同時に2人まで。下の時間割で守っている。
-           0.0〜20.0  箱の顔（散歩）
-           5.4〜11.2  白ひげ（落ちる）      ← 箱の顔と2人
-          12.3〜13.8  みどり（走る）        ← 箱の顔と2人・ここで追い抜く
-          15.0〜22.0  黒猫（跳ねる①）      ← 箱の顔と2人
+           0.0〜20.0  みどり（散歩）        ← fq-cast-v6 で箱の顔から交代
+           5.4〜11.2  白ひげ（落ちる）      ← みどりと2人
+          15.0〜22.0  黒猫（跳ねる①）      ← みどりと2人
           23.0〜33.0  女の子（滑る①）
           25.4〜31.2  白ひげ（落ちる）      ← 女の子と2人
           33.5〜41.5  三つ編み（のぞく）
@@ -122,9 +121,12 @@ const FQ = {
           56.8〜59.4  うさぎ耳（飛ぶ②）    ← 黒猫と2人
          ★at を動かすと、この表が崩れて3人になることがある。
            動かしたら必ず全体を見直すこと。 */
-      { photo:'img/326.png',      move:'walk',   at: 0    },
+      /* fq-cast-v6: 走る(dash)から散歩(walk)へ。箱の顔の出番をそのまま引き継ぐ。
+         ★flip:true … この子の絵は左を向いている。散歩は「まず右へ行って帰る」
+           動きなので、そのまま当てると行きの20秒間ずっと後ろ向きに歩く。
+           絵を反転させるのではなく、動きの向きを絵に合わせている。 */
+      { photo:'img/ch_green.png', move:'walk',   at: 0, flip:true },
       { photo:'img/ch_beard.png', move:'drop',   at: 5.4  },
-      { photo:'img/ch_green.png', move:'dash',   at: 12   },
       { photo:'img/ch_cat.png',   move:'bounce', at: 15   },
       { photo:'img/ch_pink.png',  move:'skate',  at: 23   },
       { photo:'img/ch_braid.png', move:'peek',   at: 33.5 },
@@ -306,6 +308,19 @@ const FQ = {
      32.5%    {opacity:1; transform:translateX(-90px)              scaleX(-1);}
      33.3%,100%{opacity:0; transform:translateX(-90px)             scaleX(1);}
   }
+  /* fq-cast-v6: 左を向いている絵のための散歩。a-walk の scaleX だけを裏返した。
+     ★どのコマにも opacity を書くこと（fq-cast-v4 の失敗を繰り返さない）。
+     ★a-walk を直したら、こちらも同じ数字に直すこと。2つで1組。 */
+  .m-walk.flip{animation-name:a-walk-flip;}
+  @keyframes a-walk-flip{
+      0%      {opacity:0; transform:translateX(-90px)              scaleX(-1);}
+      0.5%    {opacity:1; transform:translateX(-90px)              scaleX(-1);}
+      1%      {opacity:1; transform:translateX(-90px)              scaleX(-1);}
+     16.5%    {opacity:1; transform:translateX(calc(100vw - 10px)) scaleX(-1);}
+     17.2%    {opacity:1; transform:translateX(calc(100vw - 10px)) scaleX(1);}
+     32.5%    {opacity:1; transform:translateX(-90px)              scaleX(1);}
+     33.3%,100%{opacity:0; transform:translateX(-90px)             scaleX(-1);}
+  }
   @keyframes i-step{
     from{transform:translateY(0)     rotate(-4deg);}
     to  {transform:translateY(-12px) rotate(4deg);}
@@ -376,6 +391,9 @@ const FQ = {
           もっと速くしたいときは 5.7% を小さく、ゆっくりなら大きくする。
           （fq-walk-stroll-v1 で 3.6%＝0.9秒 から、少しゆっくりにした）
         ★消し方は飛ぶ子と同じ考え方（走りきる→消す→見えないうちに左へ戻す）。
+        ★★fq-cast-v6 以降、この動きは誰も使っていません。
+          （みどりの子が散歩に変わり、追い抜く役がいなくなったため。）
+          消していないのは、また使いたくなったときのため。
         ★この子は「歩く子を追い抜く」役。出番（at）を歩く子に合わせてある。
           歩き 31px/秒 に対して 走り 394px/秒。およそ13倍の差。 */
   .m-dash{left:0;animation:a-dash 60s linear infinite;}
@@ -1307,7 +1325,8 @@ const FQ = {
       let pos = '';
       if (c.x != null) pos += 'left:' + c.x + '%;';
       if (c.y != null) pos += 'bottom:' + c.y + '%;';
-      return '<div class="actor m-' + esc(c.move) + '" '
+      /* fq-cast-v6: flip:true の子は、動きの左右を裏返す（絵が左向きのため） */
+      return '<div class="actor m-' + esc(c.move) + (c.flip ? ' flip' : '') + '" '
            /* ★--at は「出番の秒数」。中の絵にも同じ遅れを伝えるために置いている。
               animation-delay は親から子へ受けつがれないので、
               変数にして子から var(--at) で読ませる。
