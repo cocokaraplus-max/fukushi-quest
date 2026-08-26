@@ -83,28 +83,37 @@ const FQ = {
 
     /* ── トップの黄色い面に、順番に出てくるキャラクター ──
        ・move … どう動くか
+       ★★fq-cast-v2 の決め事：ひとつの動きは、ひとりだけ。
+         同じ動きが2人いると「またこれか」に見えるため、重ねないこと。
+
            walk   … 下のほうを歩いて横切る（右へ行って、向きを変えて帰る）
-           hop    … その場でぴょんぴょん跳ねる
-           rocket … 煙を出して、斜めに空へ飛んでいく（hero-motion-v1: 戻ってこない）
-           dash   … 横をすごい速さで走り抜ける（hero-motion-v1 で追加。戻ってこない）
+           skate  … 回りながら地面を滑る。walk と同じ高さを通る
+           rocket … 斜めに空へ飛んでいく。左下→右上、次は右下→左上と交互
+                    （68秒ひとまわり。ほかは34秒なので注意）
+           bounce … 左下から跳び上がってロゴの文字の上を渡り、右下へはける。
+                    しばらくして逆向き。文字より「まえ」に出る
+           peek   … 日付の絵のうしろに隠れ、脇からそっとのぞく
+           drop   … 入場無料の丸から落ちてくる。着地で画面がゆれて煙が出る
+                    （20秒ひとまわり。丸の鼓動に合わせてあるため）
+           dash   … 横を走り抜ける。歩く子を追い抜く役
            sit    … 開催日の「（日）」の丸に腰かけて、足をぶらぶらさせる
-       ・at   … 出てくるタイミング（秒）。0〜34 のあいだで散らしてください
-       ・x    … 出てくる横の位置（％）。walk・dash・sit では使いません
-                （walk と dash は必ず画面の左はしから出てきます）
+       ・at   … 出てくるタイミング（秒）
+       ・x/y  … 使うのは、位置を自分で決めたいときだけ。
+                上の8つの動きは、位置をCSS側で決めているので x/y は要りません
        ・y    … 下からの高さ（％）。hop だけで使います。
                 0 に近いほど下、大きいほど上。文字の横に来るように決めています
        ★ぜんぶで34秒ひとまわり。1人ずつ順番に出るように at をずらしてあります。
        ★増やす／減らすのは、この並びを足し引きするだけでできます。
        ★動きが苦手な方の端末では、この演出は出ません（下のCSSの説明を参照）。 */
     actors: [
-      { photo:'img/326.png',      move:'walk',   at: 0                  },
-      { photo:'img/ch_pink.png',  move:'hop',    at: 4.5, x:  3, y: 38  },
-      { photo:'img/ch_cat.png',   move:'rocket', at: 9,   x: 74         },
-      { photo:'img/ch_robot.png', move:'rocket', at: 13,  x: 22         },
-      { photo:'img/ch_braid.png', move:'hop',    at:17.5, x: 82, y: 13  },
-      { photo:'img/ch_wood.png',  move:'sit',    at: 21                 },
-      { photo:'img/ch_beard.png', move:'hop',    at: 26,  x:  4, y: 17  },
-      { photo:'img/ch_green.png', move:'dash',   at: 8.5                },
+      { photo:'img/326.png',      move:'walk',   at: 0    },
+      { photo:'img/ch_cat.png',   move:'bounce', at: 2    },
+      { photo:'img/ch_beard.png', move:'drop',   at: 5.4  },
+      { photo:'img/ch_green.png', move:'dash',   at: 7.5  },
+      { photo:'img/ch_robot.png', move:'rocket', at: 13   },
+      { photo:'img/ch_pink.png',  move:'skate',  at: 15   },
+      { photo:'img/ch_braid.png', move:'peek',   at: 20   },
+      { photo:'img/ch_wood.png',  move:'sit',    at: 21   },
     ],
   },
 
@@ -206,7 +215,18 @@ const FQ = {
   /* ══════════ ヒーロー ══════════ */
   /* 下の余白は、キャラクターが歩く「地面」のぶんも見ています（fq-walker-v1）。
      ここを狭めると、キャラクターがカウントダウンの後ろに隠れてしまいます。 */
-  .hero{position:relative;background:var(--yellow);overflow:hidden;padding:26px 0 66px;}
+  /* fq-cast-v2: --lw（ロゴの幅）と --fw（入場無料の丸）を .hero に置いた。
+     キャラクター側（髭の子が丸から落ちる演出）からも同じ値を使うため。 */
+  .hero{position:relative;background:var(--yellow);overflow:hidden;padding:26px 0 66px;
+        --lw:min(66vw,460px); --fw:clamp(48px,16vw,88px);
+        /* fq-cast-v2: 入場無料の丸を「左斜め上」へ逃がすための2つ。
+           --fup … 上へどれだけ持ち上げるか（丸の大きさに対する割合）
+           --fin … ロゴ側へどれだけ寄せるか（同じく割合）
+           ★この2つがあるおかげで、丸とロゴが横一列を取り合わなくなり、
+             ロゴを小さくせずに丸を大きくできる。
+           ★落ちる子（髭）の立ち位置もこの2つから計算している。
+             どちらかを変えたら、落ちる子は自動でついてくる。 */
+        --fup:.66; --fin:.16;}
   /* 背景に散らすキーワード（チラシの雰囲気） */
   /* 背景のキーワード。読ませるものではないので、うっすらと。
      中央は文字が乗るので、左右の端だけに置く（下のJSで位置を決めている） */
@@ -231,29 +251,39 @@ const FQ = {
        位置（left・top）を毎回変えるやり方より、端末の負担がずっと軽い。
      ★★動きが苦手な方（端末の「視差効果を減らす」設定）には出しません。
        福祉のイベントなので、ここは必ず守ること。 */
-  .actor{position:absolute;bottom:6px;z-index:1;opacity:0;
-         width:clamp(48px,14vw,80px);pointer-events:none;user-select:none;}
+  /* fq-cast-v2: 重なりの順番。数字が大きいほど手前。
+     ★#actors と #actorsfront には、着地のゆれで transform が掛かる。
+       transform が掛かった箱は「重なりのまとまり」になるので、
+       前後は中の z-index ではなく、この2つの箱の z-index で決まる。
+       ここの 1 と 3 を触らないこと。 */
+  #kws{position:absolute;inset:0;z-index:0;}
+  #actors{position:absolute;inset:0;z-index:1;pointer-events:none;}
+  #actorsfront{position:absolute;inset:0;z-index:3;pointer-events:none;}
+  .actor{position:absolute;bottom:6px;opacity:0;
+         --aw:clamp(48px,14vw,80px);   /* fq-cast-v2: 自分の幅。落ちる子の位置計算に使う */
+         width:var(--aw);pointer-events:none;user-select:none;}
   .actor img{display:block;width:100%;height:auto;transform-origin:50% 100%;}
 
   /* ① 歩く … 右へ行って、向きを変えて帰ってくる
         fq-walk-stroll-v1: 早足だったのを「散歩」の速さに変えた。
-        ★片道 13.7秒（34秒の44%）。前は 4.8秒だった。
-          そのぶん、ほぼずっと画面のどこかを歩いていることになる。
-        ★足の運び（i-step）も .44秒 → .85秒。速さと歩幅が合っていないと、
+        ★片道 10.5秒（34秒の31%）。4.8秒→13.7秒→10.5秒と直してきた。
+        ★足の運び（i-step）も速さに合わせる（.85秒→.68秒）。合っていないと
           「足だけ速く動いているのに進まない」ように見えるため。
-        ★速さを変えたいときは 46% と 91% の2つを動かす。
-          46% を小さくすると速く、大きくするとゆっくり。
-          91% は「46%＋45%」で決めている（往復を同じ速さにするため）。 */
+        ★速さを変えたいときは 33% と 65% の2つを動かす。
+          33% を小さくすると速く、大きくするとゆっくり。
+          65% は「33%＋32%」で決めている（往復を同じ速さにするため）。
+        ★★歩きの速さを変えたら、追い抜く子（dash）の at も見直すこと。
+          追い抜く場所がずれる。 */
   .m-walk{left:0;animation:a-walk 34s linear infinite;}
-  .m-walk img{animation:i-step .85s ease-in-out infinite alternate;}
+  .m-walk img{animation:i-step .68s ease-in-out infinite alternate;}
   @keyframes a-walk{
       0%     {opacity:0; transform:translateX(-90px)             scaleX(1);}
-      1%,92% {opacity:1;}
+      1%,66% {opacity:1;}
       2%     {           transform:translateX(-90px)             scaleX(1);}
-     46%     {           transform:translateX(calc(100vw - 10px)) scaleX(1);}
-     47%     {           transform:translateX(calc(100vw - 10px)) scaleX(-1);}
-     91%     {           transform:translateX(-90px)             scaleX(-1);}
-     93%,100%{opacity:0; transform:translateX(-90px)             scaleX(1);}
+     33%     {           transform:translateX(calc(100vw - 10px)) scaleX(1);}
+     34%     {           transform:translateX(calc(100vw - 10px)) scaleX(-1);}
+     65%     {           transform:translateX(-90px)             scaleX(-1);}
+     67%,100%{opacity:0; transform:translateX(-90px)             scaleX(1);}
   }
   @keyframes i-step{
     from{transform:translateY(0)     rotate(-4deg);}
@@ -274,17 +304,22 @@ const FQ = {
   }
 
   /* ③ ロケット … 煙を出して斜めに飛んでいく */
-  .m-rocket{animation:a-rocket 34s ease-in infinite;}
+  /* fq-cast-v2: 68秒（34秒の2倍）でひとまわりし、
+     1回目は左下から右上へ、2回目は右下から左上へ打ち上がる。
+     ★2回目は scaleX(-1) で絵を反転して、進む向きに合わせている。
+     ★どのコマも translate → scaleX → scale の順で3つ書いてある。
+       途中で数を変えると、ブラウザが別の計算に切り替わって動きが濁る。 */
+  .m-rocket{left:50%;animation:a-rocket 68s ease-in infinite;}
   .m-rocket img{animation:i-tilt 3s ease-in infinite;}
   @keyframes a-rocket{        /* しゃがむ → 飛び上がる → 画面の上へ突き抜ける
         ★消えるのは「上まで抜けきったあと」。黄色い面の外へ出れば
           自動で見えなくなる（.hero が overflow:hidden のため）ので、
           薄くして消すのではなく、そのまま飛ばしきっています。 */
-      0%     {opacity:0; transform:translate(0,10px)      scale(.95);}
-      1%     {opacity:1; transform:translate(0,10px)      scale(.95);}
-      3%     {opacity:1; transform:translate(0,0)         scale(1);}
-      8%     {opacity:1; transform:translate(7vw,-230px)  scale(.82);}
-     13%     {opacity:1; transform:translate(16vw,-760px) scale(.42);}
+      0%     {opacity:0; transform:translate(-40vw,10px) scaleX(1) scale(.95);}
+      0.5%   {opacity:1; transform:translate(-40vw,10px) scaleX(1) scale(.95);}
+      1.5%   {opacity:1; transform:translate(-40vw,0)    scaleX(1) scale(1);}
+      4%     {opacity:1; transform:translate(-33vw,-230px) scaleX(1) scale(.82);}
+      6.5%   {opacity:1; transform:translate(-24vw,-760px) scaleX(1) scale(.42);}
      /* hero-motion-v1 ここから。
         ★以前は 13% → 14% で「画面のずっと上」から「足元」へ一気に戻していた。
           その 0.34秒のあいだ、まだ完全に透明になりきっていないので、
@@ -292,9 +327,18 @@ const FQ = {
         直し方：①最後まで飛ばしきる ②飛んだ先で消す（位置は動かさない）
                 ③透明になってから、次の出番のために足元へ戻す。
         ★15.1% と 15.2% の 0.1% を詰めないこと。ここが「見えないまま戻す」区間。 */
-     15%     {opacity:1; transform:translate(20vw,-1200px) scale(.28);}
-     15.1%   {opacity:0; transform:translate(20vw,-1200px) scale(.28);}
-     15.2%,100%{opacity:0; transform:translate(0,10px)     scale(.95);}
+      7.5%   {opacity:1; transform:translate(-20vw,-1200px) scaleX(1) scale(.28);}
+      7.6%   {opacity:0; transform:translate(-20vw,-1200px) scaleX(1) scale(.28);}
+      7.7%   {opacity:0; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
+     /* ここから2回目。右下から左上へ。絵は反転 */
+     50%     {opacity:0; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
+     50.5%   {opacity:1; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
+     51.5%   {opacity:1; transform:translate(34vw,0)      scaleX(-1) scale(1);}
+     54%     {opacity:1; transform:translate(27vw,-230px) scaleX(-1) scale(.82);}
+     56.5%   {opacity:1; transform:translate(18vw,-760px) scaleX(-1) scale(.42);}
+     57.5%   {opacity:1; transform:translate(14vw,-1200px) scaleX(-1) scale(.28);}
+     57.6%   {opacity:0; transform:translate(14vw,-1200px) scaleX(-1) scale(.28);}
+     57.7%,100%{opacity:0; transform:translate(-40vw,10px) scaleX(1) scale(.95);}
   }
   @keyframes i-tilt{
       0%,8%  {transform:rotate(0);}
@@ -345,6 +389,228 @@ const FQ = {
       animation:i-line .18s linear infinite;}
   @keyframes i-line{ from{opacity:.35;} to{opacity:1;} }
 
+  /* ══════════ fq-cast-v2 ここから ══════════
+     ★決め事：ひとつの動きは、ひとりだけ。
+       同じ動きが2人いると「またこれか」に見えるため。
+       walk=箱の顔 / skate=女の子 / rocket=うさぎ耳 / bounce=黒猫
+       peek=三つ編み / drop=白ひげ / dash=みどり / sit=木の子
+     ★向きの決まり：進む向きに合わせて scaleX(-1) で絵を反転する。
+       反転は「箱（.actor）」に掛ける。中の絵には別の動き（跳ね・回転）が
+       掛かっているので、混ぜるとどちらかが効かなくなる。 */
+
+  /* ⑥ 滑る（女の子）… フィギュアスケートのように回りながら、
+        箱の顔の子と同じ地面を滑る。右へ行って、向きを変えて左へ帰る。
+        ★回転は中の絵に rotateY（縦の軸まわり）で掛けている。
+          90度のところで紙のように消えるが、それらしく見えるのでこのまま。
+        ★軸は足もと（50% 92%）。まん中にすると頭が大きく振れて酔う。 */
+  /* ★滑りと回転を「別々の時計」にせず、どちらも34秒にそろえてある。
+     そうしないと、滑っている途中で回ったり、止まっているのに回らなかったりする。
+     ★★出番（--at）は中の絵にも渡すこと。渡さないと回転だけ出番とズレる。
+        （実際にこれで「回っていない」状態になった）
+
+     ★2回に分けて登場する。あいだに約5.8秒、いなくなる時間を置いてある。
+         1回目  1〜31%   左から入る → 8の字を1周 → 右へ抜ける
+        （31〜48% は画面に居ない）
+         2回目 49〜79%   右から入る（絵を反転）→ 8の字を逆回り → 左へ抜ける
+     ★高速回転は、8の字の「交差点」（画面のまん中）で止まって行う。
+       氷の上で回る所なので、いちばん自然に見える位置。 */
+  .m-skate{left:0;animation:a-skate 34s ease-in-out infinite;}
+  .m-skate img{transform-origin:50% 92%;animation:i-spin 34s ease-in-out infinite;
+               animation-delay:var(--at,0s);}   /* ★滑りと同じ出番に合わせる */
+  @keyframes a-skate{
+      /* ── 1回目：左から入って、8の字を1周して右へ抜ける ──
+         ★奥にいるとき  … 小さく(.80)・ほんの少し上(bottom 5%)
+           手前にいるとき… 大きく(1.12)・下(bottom 1%)
+         ★★奥行きは「大きさ」で出すこと。上下に動かしすぎると、
+           奥へ行ったのではなく **上へ跳んだ** ように見えてしまう。
+           上下の幅は 1%〜5%（スマホで22pxほど）に抑えてある。ここを広げないこと。
+         ★8の字の折り返し（右はし・左はし）で絵を反転する。 */
+      0%      {opacity:0; bottom:2.5%; transform:translateX(-90px) scaleX(1)  scale(1);}
+      1%      {opacity:1; bottom:2.5%; transform:translateX(-90px) scaleX(1)  scale(1);}
+      4%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}
+      6%      {opacity:1; bottom:5%;   transform:translateX(70vw)  scaleX(1)  scale(.80);}  /* 奥 */
+      8%      {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(1)  scale(.90);}  /* 右はし */
+      8.6%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(-1) scale(.90);}  /* 反転 */
+     11%      {opacity:1; bottom:1%;   transform:translateX(70vw)  scaleX(-1) scale(1.12);} /* 手前 */
+     13%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}    /* 交差点 */
+     19%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}    /* 止まってクルクル */
+     22%      {opacity:1; bottom:5%;   transform:translateX(26vw)  scaleX(-1) scale(.80);}  /* 奥 */
+     24%      {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(-1) scale(.90);}  /* 左はし */
+     24.6%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(1)  scale(.90);}  /* 反転 */
+     27%      {opacity:1; bottom:1%;   transform:translateX(26vw)  scaleX(1)  scale(1.12);} /* 手前 */
+     29%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}    /* 交差点に戻る */
+     33%      {opacity:1; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(1) scale(1);}
+     34%      {opacity:0; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(1) scale(1);}
+      /* ── いなくなる時間（約4.8秒） ── */
+     48%      {opacity:0; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(-1) scale(1);}
+      /* ── 2回目：右から入って、8の字を逆回りして左へ抜ける ── */
+     49%      {opacity:1; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(-1) scale(1);}
+     52%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
+     54%      {opacity:1; bottom:5%;   transform:translateX(26vw)  scaleX(-1) scale(.80);}  /* 奥 */
+     56%      {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(-1) scale(.90);}  /* 左はし */
+     56.6%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(1)  scale(.90);}  /* 反転 */
+     59%      {opacity:1; bottom:1%;   transform:translateX(26vw)  scaleX(1)  scale(1.12);} /* 手前 */
+     61%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}    /* 交差点 */
+     67%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}    /* 止まってクルクル */
+     70%      {opacity:1; bottom:5%;   transform:translateX(70vw)  scaleX(1)  scale(.80);}  /* 奥 */
+     72%      {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(1)  scale(.90);}  /* 右はし */
+     72.6%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(-1) scale(.90);}  /* 反転 */
+     75%      {opacity:1; bottom:1%;   transform:translateX(70vw)  scaleX(-1) scale(1.12);} /* 手前 */
+     77%      {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
+     81%      {opacity:1; bottom:2.5%; transform:translateX(-90px) scaleX(-1) scale(1);}
+     82%,100% {opacity:0; bottom:2.5%; transform:translateX(-90px) scaleX(1)  scale(1);}
+  }
+  /* ★2880deg ＝ 8回転。2.04秒で8回まわる（1秒に約4回）。
+     止まっている区間だけで回る。回りっぱなしにはしない。
+     ★角度は足していく（0 → 2880 → 5760）。戻すと逆回転して見える。
+     ★もっとクルクルさせたいときは、止まる区間（13〜19% / 61〜67%）を
+       のばしつつ、角度も同じ割合で足すこと。角度だけ足すと速すぎて
+       残像のようになり、かえって回って見えなくなる。 */
+  @keyframes i-spin{
+      0%,13%   {transform:rotateY(0);}
+     19%       {transform:rotateY(2880deg);}    /* 1回目・8回転 */
+     22%,61%   {transform:rotateY(2880deg);}
+     67%       {transform:rotateY(5760deg);}    /* 2回目・8回転 */
+     70%,100%  {transform:rotateY(5760deg);}
+  }
+
+  /* ⑦ のぞく（三つ編み）… 日付の絵のうしろに隠れていて、脇からそっとのぞく。
+        ★置き場所は日付の枠の中（#peekspot）。日付と一緒に動くので、
+          画面幅が変わってもズレない。
+        ★#peekspot は z-index:-1。日付の絵より奥、でもキャラクター置き場より手前。
+        ★translateX は「自分の幅」に対する％。だから画面幅が変わっても
+          のぞく量が同じに見える。px で書かないこと。 */
+  /* ★窓の右はしにぴったり寄せて置く（right:0）。
+     ★日付の枠の中におさまる大きさにしてある。はみ出すと窓の上下で切れる。 */
+  .m-peek{--aw:clamp(38px,10.5vw,58px);
+          left:auto;right:0;bottom:10%;animation:a-peek 34s ease-in-out infinite;}
+  .m-peek img{transform-origin:50% 100%;}
+  @keyframes a-peek{
+      /* ★translateX(115%) が「窓の外」＝どこにも見えない位置。
+         そこから左へ出てくる。2回のぞいて、あいだに一度きちんと引っこむ。
+         ★数字を 0 に近づけるほど、たくさん顔を出す。 */
+      0%      {opacity:1; transform:translateX(115%) rotate(0);}
+      4%      {opacity:1; transform:translateX(38%)  rotate(-8deg);}  /* 1回目、そっと */
+     11%      {opacity:1; transform:translateX(38%)  rotate(-8deg);}
+     14%      {opacity:1; transform:translateX(115%) rotate(0);}      /* 引っこむ */
+     17%      {opacity:1; transform:translateX(115%) rotate(0);}      /* ひと呼吸 */
+     20%      {opacity:1; transform:translateX(4%)   rotate(-13deg);} /* 2回目、もう少し */
+     27%      {opacity:1; transform:translateX(4%)   rotate(-13deg);}
+     30%,100% {opacity:1; transform:translateX(115%) rotate(0);}
+  }
+
+  /* ⑧ 跳ねる（黒猫）… 左下から跳び上がってロゴの文字の上をピョンピョン渡り、
+        右下へ降りて右へはける。しばらくしてから逆向きに同じことをする。
+        ★文字より「まえ」に出る（#actorsfront）。うしろだと文字の上で消える。
+        ★上下は bottom（％）で動かす。translateY(px) だと画面の大きさで
+          高さが合わなくなる。％なら黄色い面の高さに追従する。
+        ★小さい跳ね（ピョンピョン）は中の絵、大きな上下は箱、と分けてある。 */
+  /* ★猫だけ少し小さい。文字の上に乗るので、大きいとキャッチコピーにぶつかる */
+  .m-bounce{--aw:clamp(42px,12vw,66px);left:0;animation:a-bounce 34s ease-in-out infinite;}
+  .m-bounce img{animation:i-hoplet .46s ease-in-out infinite alternate;}
+  @keyframes a-bounce{
+      0%      {opacity:0; bottom:2%;  transform:translateX(-16vw) scaleX(1);}
+      1%      {opacity:1; bottom:2%;  transform:translateX(-16vw) scaleX(1);}
+      5%      {opacity:1; bottom:78%; transform:translateX(8vw)   scaleX(1);}
+     12%      {opacity:1; bottom:78%; transform:translateX(62vw)  scaleX(1);}
+     /* ★ここが着地。画面の中（右から2割くらいの所）できちんと地面に降りる。
+        以前は降りきる前に画面の外へ出ていて、着地が見えなかった。 */
+     15.5%    {opacity:1; bottom:2%;  transform:translateX(78vw)  scaleX(1);}
+     17.5%    {opacity:1; bottom:2%;  transform:translateX(98vw)  scaleX(1);}
+     19.5%    {opacity:1; bottom:2%;  transform:translateX(124vw) scaleX(1);}
+     20.5%    {opacity:0; bottom:2%;  transform:translateX(124vw) scaleX(1);}
+     /* ここから逆向き。scaleX(-1) で絵を反転して、右から左へ */
+     49%      {opacity:0; bottom:2%;  transform:translateX(118vw) scaleX(-1);}
+     50%      {opacity:1; bottom:2%;  transform:translateX(118vw) scaleX(-1);}
+     54%      {opacity:1; bottom:78%; transform:translateX(90vw)  scaleX(-1);}
+     61%      {opacity:1; bottom:78%; transform:translateX(34vw)  scaleX(-1);}
+     /* ★逆向きも同じ。画面の中（左から2割くらいの所）できちんと着地してから、
+        地面を走って左へ消える。 */
+     64.5%    {opacity:1; bottom:2%;  transform:translateX(16vw)  scaleX(-1);}
+     66.5%    {opacity:1; bottom:2%;  transform:translateX(-4vw)  scaleX(-1);}
+     68.5%    {opacity:1; bottom:2%;  transform:translateX(-30vw) scaleX(-1);}
+     69.5%,100%{opacity:0; bottom:2%; transform:translateX(-30vw) scaleX(-1);}
+  }
+  @keyframes i-hoplet{ from{transform:translateY(0);} to{transform:translateY(-24px);} }
+
+  /* ⑨ 落ちる（白ひげ）… 入場無料の丸が3回はねた、その3回目に丸から出て落ちる。
+        着地で画面が少し揺れ、足もとから煙が上がる。
+
+        ★★時計が2つある点に注意。
+          キャラクターは34秒ひとまわり、ロゴと丸の鼓動は20秒ひとまわり。
+          この子は「丸」に合わせるので **20秒** で回す。
+          出番 5.4秒 ＝ 丸の3回目のはねる時刻（4.4秒 ＋ 1.0秒）。
+          ★丸の鼓動（animation-delay:4.4s）を変えたら、ここも直すこと。
+        ★横の位置は丸のまん中に合わせて計算している（--lw と --fw から）。
+          だから丸の大きさを変えても勝手についてくる。
+        ★上下は bottom（％）。75.4% が丸の高さ、1% が地面。
+          75.4% は7種類の画面幅で実測した値（75.2〜75.8% にそろう）。 */
+  .m-drop{left:calc(50% - var(--lw)/2 + var(--fw)*var(--fin) - var(--fw)/2 - var(--aw)/2);
+          bottom:75.4%;animation:a-drop 20s linear infinite;}
+  @keyframes a-drop{
+      /* ★丸の中にいるあいだは小さいまま。落ちながら大きくなる。
+         先に大きくすると、丸からはみ出して体が見えてしまう。 */
+      0%      {opacity:1; bottom:75.4%; transform:scale(.30);
+               animation-timing-function:ease-in;}
+      1.6%    {opacity:1; bottom:64%; transform:scale(.46);}     /* 丸を出たあたり */
+      3%      {opacity:1; bottom:44%; transform:scale(.68);}
+      6%      {opacity:1; bottom:1%;  transform:scale(1);}       /* 落ちる（1.2秒） */
+      6.5%    {opacity:1; bottom:1%;  transform:scale(1.24,.74);} /* ぐしゃっとつぶれる＝重い */
+      7.3%    {opacity:1; bottom:1%;  transform:scale(1.16,.82);} /* すぐには戻らない */
+      8.3%    {opacity:1; bottom:2.5%;  transform:scale(.95,1.06);} /* 小さく1回だけはねる */
+      9.3%    {opacity:1; bottom:1%;  transform:scale(1.06,.94);}
+     10.3%    {opacity:1; bottom:1%;  transform:scale(1);}
+     26%      {opacity:1; bottom:1%;  transform:scale(1);}
+     29%,100% {opacity:0; bottom:1%;  transform:scale(1);}
+  }
+  /* 着地の煙（fq-cast-v2）。
+     ★白い丸を box-shadow で9個に増やして、ひとかたまりの雲にしてある。
+       ばらばらの丸に見えないよう、となり同士が必ず重なる位置に置いている。
+     ★一瞬で広がってキャラクターを覆い隠し、そのあとゆっくり消える。
+       ＝「ドスンと落ちて土ぼこりが上がった」に見せるため。
+     ★煙は絵より手前に出る。position:absolute のものは、
+       ふつうの img より必ず手前に描かれるため（順番を書かなくてよい）。
+     ★出番 6.5秒 は「落ちきる時刻」。落ちる動き（a-drop）の 6% と合わせてある。
+       どちらかを動かしたら、もう一方も合わせること。 */
+  .m-drop .thud{position:absolute;left:50%;bottom:6%;width:40px;height:40px;
+      border-radius:50%;background:#fff;opacity:0;
+      box-shadow:-28px   3px 0  0px #fff,
+                  28px   4px 0  0px #fff,
+                 -15px -18px 0 -1px #fff,
+                  15px -17px 0 -1px #fff,
+                   0px -31px 0 -3px #fff,
+                 -34px -20px 0 -4px #fff,
+                  34px -19px 0 -4px #fff,
+                 -50px  -4px 0 -5px rgba(255,255,255,.95),
+                  50px  -3px 0 -5px rgba(255,255,255,.95),
+                 -30px  20px 0 -6px rgba(255,255,255,.88),
+                  30px  21px 0 -6px rgba(255,255,255,.88);
+      animation:i-thud 20s linear infinite;animation-delay:6.5s;}
+  @keyframes i-thud{
+      0%      {opacity:0; transform:translateX(-50%) scale(.28);}
+      0.5%    {opacity:1; transform:translateX(-50%) scale(1.35);}  /* 一瞬で覆い隠す */
+      2%      {opacity:1; transform:translateX(-50%) scale(1.62);}
+      3%      {opacity:.8;transform:translateX(-50%) scale(1.85);}
+      5.5%    {opacity:0; transform:translateX(-50%) scale(2.4);}   /* すうっと消える */
+    100%      {opacity:0; transform:translateX(-50%) scale(2.4);}
+  }
+  /* ⑩ 着地のゆれ。黄色い面の中身をまとめて数ピクセル動かす。
+        ★.hero そのものを動かすと、黄色い地色ごとズレて外に白いすき間が出る。
+          だから「中身の箱4つ」を同じ動きで揺らす。
+        ★出番は落ちる子の着地（6.5秒）。落ちる子と同じ20秒ひとまわり。 */
+  #kws, .hero-in, #actors, #actorsfront{
+      animation:hero-shake 20s linear infinite;animation-delay:6.5s;}
+  @keyframes hero-shake{
+      0%      {transform:translate(0,0);}
+      0.4%    {transform:translate(0,7px);}
+      0.8%    {transform:translate(-5px,-4px);}
+      1.2%    {transform:translate(5px,4px);}
+      1.6%    {transform:translate(-3px,-2px);}
+      2%      {transform:translate(2px,1px);}
+      2.4%,100%{transform:translate(0,0);}
+  }
+  /* ══════════ fq-cast-v2 ここまで ══════════ */
+
   /* ④ 腰かけ … 開催日の「（日）」の丸に座って、足をぶらぶらさせる
      ★丸の位置は絵（img/date.png）の中で決まっているので、
        絵を入れた枠（.datewrap）の中に、％で置いています。
@@ -358,7 +624,22 @@ const FQ = {
        64vw → 48vw（スマホ幅390pxで 250px → 187px。つながるは226pxのまま） */
   .datewrap{position:relative;--dw:min(48vw,320px);width:var(--dw);
             margin:14px auto 0;left:calc(var(--dw) * 0.1078);}
-  .whendate{display:block;width:100%;height:auto;}
+  .whendate{display:block;width:100%;height:auto;position:relative;z-index:0;}
+  /* ══ のぞく子の「窓」（fq-cast-v2）══
+     ★はじめ黄色い板で隠していたが、板は
+        ・のぞいたとき板の輪郭が見えてしまう
+        ・板のうしろを通る他の子まで消してしまう
+       ので、やめた。代わりに **窓で切り抜く** 方式にした。
+
+     ★窓は「日付の左はしより外側」だけ。窓からはみ出した部分は描かれない。
+       だから引っこんでいるときは、どこにも1ドットも出ない。
+     ★窓の右はしは、日付の左から 4.5% の位置。
+       ここは日付の絵が縦にびっしり詰まっている場所（実測で 94〜99%）なので、
+       切れ目がちょうど「12」の黒い線の下に隠れる。
+       ★date.png を作り直したら、この 4.5% は測り直すこと。
+     ★z-index:-1 で日付の絵より奥。重なった部分は絵が覆ってくれる。 */
+  .peekspot{position:absolute;top:0;bottom:0;right:95.5%;width:70%;
+            overflow:hidden;z-index:-1;pointer-events:none;}
   /* 90.6% / 48.8% が丸の中心と上端。ただしこの絵は斜めに描かれていて、
      見た目の重さが左下に寄っています。そのぶん右下へ少し寄せて、
      ちゃんと丸に腰かけて見えるようにしています（92% / 54%）。 */
@@ -427,7 +708,7 @@ const FQ = {
      ★丸の上の余白は「つながるの高さの半分 − 丸の半分」。
        計算で出しているので、画面幅が変わっても丸は必ず「つ」の横に来ます。 */
   .logorow{position:relative;display:flex;flex-direction:column;align-items:center;
-           --lw:min(66vw,460px);}   /* fq-logo-bigger-v1: 58vw から広げた */
+           }   /* fq-cast-v2: --lw は .hero へ移した */
   .logo {width:var(--lw);height:auto;display:block;margin:4px 0 0;}
   .logo2{width:calc(var(--lw) * 0.62);height:auto;display:block;margin:2px 0 14px;}
 
@@ -466,15 +747,16 @@ const FQ = {
       5%,100% {transform:scale(1);    z-index:1;}
   }
   @media(prefers-reduced-motion:reduce){ .lgline .lt{animation:none;} }
-  .free{position:absolute;top:calc(var(--lw) * 0.131 - var(--fw) / 2 + 4px);
-        right:calc(50% + var(--lw) / 2 + 6px);}   /* fq-logo-bigger-v1: 8px→6px */
+  .free{position:absolute;
+        top:calc(var(--lw) * 0.131 - var(--fw) / 2 + 4px - var(--fw) * var(--fup));
+        right:calc(50% + var(--lw) / 2 - var(--fw) * var(--fin));}   /* fq-logo-bigger-v1: 8px→6px */
 
   /* 入場無料（fq-hero-flyer-v1）
      チラシと同じ「白い丸に黒文字2行」。ロゴのすぐ左に置く。
      ★--fw が丸の大きさ。中の文字もこの値から計算しているので、
        大きさを変えたいときは --fw だけ直せばよい。
        ただし大きくするとロゴに使える幅が減る（上の .logorow の説明を参照）。 */
-  .free{--fw:clamp(42px,13vw,76px);   /* fq-logo-bigger-v1: ロゴを広げたぶん少し小さく */
+  .free{   /* fq-cast-v2: --fw は .hero へ移した */
         flex:0 0 auto;
         width:var(--fw);height:var(--fw);background:#fff;
         border-radius:50% 47% 53% 50% / 51% 53% 47% 49%;
@@ -812,6 +1094,9 @@ const FQ = {
       </div>
     </div>
     <div class="datewrap">
+      <!-- fq-cast-v2: 日付の「うしろ」にいる子の置き場。z-index:-1 なので日付の絵より奥。
+           日付の枠の中にあるので、画面幅が変わっても日付と一緒に動く。 -->
+      <div class="peekspot" id="peekspot" aria-hidden="true"></div>
       <img class="whendate" id="when" src="img/date.png" alt=""
            width="900" height="338" decoding="async">
       <!-- 「（日）」の丸に腰かける子が、ここに入ります -->
@@ -823,6 +1108,9 @@ const FQ = {
   </div>
   <!-- 順番に出てくるキャラクター（fq-walker-v1）。飾りなので読み上げ対象外 -->
   <div id="actors" aria-hidden="true"></div>
+  <!-- fq-cast-v2: 文字より「まえ」に出る子（ロゴの上を跳ねる猫／丸から落ちる髭）専用。
+       うしろ(#actors)に置くと、文字の上を通るときに消えてしまうため分けている。 -->
+  <div id="actorsfront" aria-hidden="true"></div>
 </div>
 
 <div class="lead" id="lead"></div>
@@ -973,20 +1261,43 @@ const FQ = {
   (function(){
     const A = FQ.event.actors || [];
     // 「腰かけ」だけは日付の絵の中（.sitspot）へ、それ以外は黄色い面の上へ
-    const sit = A.filter(c => c.move === 'sit');
-    const rest = A.filter(c => c.move !== 'sit');
+    /* fq-cast-v2: 置き場が3つある。
+         #sitspot     … 日付の丸に腰かける子（日付の枠の中）
+         #peekspot    … 日付のうしろからのぞく子（日付の枠の中・奥）
+         #actorsfront … 文字より「まえ」に出る子（跳ねる猫）
+         ★落ちる髭の子は「うしろ」。入場無料の丸（白）の後ろに完全に隠れてから
+           出てくるため。前に置くと、出る前から丸の上に見えてしまう。
+           落ちる道すじは画面の左はしで、ロゴにも日付にもカウントダウンにも
+           重ならないことを確認済み（390pxでも900pxでも）。
+         #actors      … それ以外（文字より「うしろ」） */
+    const FRONT = ['bounce'];
+    const sit   = A.filter(c => c.move === 'sit');
+    const peek  = A.filter(c => c.move === 'peek');
+    const front = A.filter(c => FRONT.indexOf(c.move) >= 0);
+    const back  = A.filter(c => c.move !== 'sit' && c.move !== 'peek'
+                                && FRONT.indexOf(c.move) < 0);
 
-    $('#actors').innerHTML = rest.map(c => {
+    function build(c){
+      /* ★x/y を書いたときだけ位置を上書きする。
+         fq-cast-v2 の8つの動きは、位置をCSS側で決めているので普通は書かない。 */
       let pos = '';
-      /* hero-motion-v1: dash も左はしから走り出すので、x は使わない */
-      if (c.move !== 'walk' && c.move !== 'dash') pos += 'left:' + (c.x || 50) + '%;';
-      if (c.y != null)       pos += 'bottom:' + c.y + '%;';   // hop は文字の横まで上げる
+      if (c.x != null) pos += 'left:' + c.x + '%;';
+      if (c.y != null) pos += 'bottom:' + c.y + '%;';
       return '<div class="actor m-' + esc(c.move) + '" '
-           + 'style="' + pos + 'animation-delay:' + (c.at || 0) + 's">'
+           /* ★--at は「出番の秒数」。中の絵にも同じ遅れを伝えるために置いている。
+              animation-delay は親から子へ受けつがれないので、
+              変数にして子から var(--at) で読ませる。
+              これが無いと、女の子の回転だけ出番とズレて動いてしまう。 */
+           + 'style="' + pos + 'animation-delay:' + (c.at || 0) + 's;'
+           + '--at:' + (c.at || 0) + 's">'
            + (c.move === 'rocket' ? '<span class="smoke"></span>' : '')
-           + (c.move === 'dash'   ? '<span class="dashline"></span>' : '')   /* hero-motion-v1 */
+           + (c.move === 'dash'   ? '<span class="dashline"></span>' : '')
+           + (c.move === 'drop'   ? '<span class="thud"></span>' : '')
            + '<img src="' + esc(c.photo) + '" alt="" decoding="async"></div>';
-    }).join('');
+    }
+    $('#actors').innerHTML      = back.map(build).join('');
+    $('#actorsfront').innerHTML = front.map(build).join('');
+    $('#peekspot').innerHTML    = peek.map(build).join('');
 
     // 腰かける子は、体と足を別々の絵にして重ねる（足だけを振るため）
     $('#sitspot').innerHTML = sit.map(c => {
