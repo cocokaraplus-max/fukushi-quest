@@ -292,13 +292,18 @@ const FQ = {
           追い抜く場所がずれる。 */
   .m-walk{left:0;animation:a-walk 60s linear infinite;}
   .m-walk img{animation:i-step .68s ease-in-out infinite alternate;}
+  /* ★★どのコマにも opacity を書くこと。
+     途中のコマで opacity を書かないと、ブラウザは
+     「0.5%の1」と「33.3%の0」のあいだをなめらかにつないでしまい、
+     歩いているあいだじゅう **だんだん透明になっていく**。
+     （fq-cast-v4 で実際にこれをやってしまった） */
   @keyframes a-walk{
       0%      {opacity:0; transform:translateX(-90px)              scaleX(1);}
       0.5%    {opacity:1; transform:translateX(-90px)              scaleX(1);}
-      1%      {           transform:translateX(-90px)              scaleX(1);}
-     16.5%    {           transform:translateX(calc(100vw - 10px)) scaleX(1);}
-     17.2%    {           transform:translateX(calc(100vw - 10px)) scaleX(-1);}
-     32.5%    {           transform:translateX(-90px)              scaleX(-1);}
+      1%      {opacity:1; transform:translateX(-90px)              scaleX(1);}
+     16.5%    {opacity:1; transform:translateX(calc(100vw - 10px)) scaleX(1);}
+     17.2%    {opacity:1; transform:translateX(calc(100vw - 10px)) scaleX(-1);}
+     32.5%    {opacity:1; transform:translateX(-90px)              scaleX(-1);}
      33.3%,100%{opacity:0; transform:translateX(-90px)             scaleX(1);}
   }
   @keyframes i-step{
@@ -380,11 +385,14 @@ const FQ = {
          この子の絵はもともと左を向いているので、右へ走らせると
          「後ろ向きに走っている」ように見えていた。
          絵を反転させるより、走る向きを絵に合わせるほうが自然。 */
+      /* ★0.3%→3.8% で渡りきる。60秒ひとまわりなので、およそ 2.1秒。
+         3.8% を小さくすると速く、大きくするとゆっくり。
+         ★ただし 15.1秒から黒猫が出るので、これ以上のばすと3人になる。 */
       0%      {opacity:0; transform:translateX(calc(100vw + 130px));}
       0.3%    {opacity:1; transform:translateX(calc(100vw + 130px));}
-      2.8%    {opacity:1; transform:translateX(-150px);}
-      2.9%    {opacity:0; transform:translateX(-150px);}
-      3.0%,100%{opacity:0; transform:translateX(calc(100vw + 130px));}
+      3.8%    {opacity:1; transform:translateX(-150px);}
+      3.9%    {opacity:0; transform:translateX(-150px);}
+      4.0%,100%{opacity:0; transform:translateX(calc(100vw + 130px));}
   }
   @keyframes i-dash{
     from{transform:translateY(0)    rotate(-11deg);}
@@ -601,14 +609,22 @@ const FQ = {
         ★出番は落ちる子の着地（6.5秒）。落ちる子と同じ20秒ひとまわり。 */
   #kws, .hero-in, #actors, #actorsfront{
       animation:hero-shake 20s linear infinite;animation-delay:6.5s;}
+  /* ★ゆれの強さを変えるときは、下の px の数字をまとめて増減する。
+     いちばん大きいのが 13px（fq-cast-v4 で 7px から強めた）。
+     ★ゆれは 3.5%＝0.7秒で必ず 0 に戻すこと。戻さないと画面がずれたままになる。
+     ★.hero そのものではなく「中身の箱4つ」を揺らしている。
+       .hero を揺らすと黄色い地色ごとズレて、外に白いすき間が出るため。 */
   @keyframes hero-shake{
       0%      {transform:translate(0,0);}
-      0.4%    {transform:translate(0,7px);}
-      0.8%    {transform:translate(-5px,-4px);}
-      1.2%    {transform:translate(5px,4px);}
-      1.6%    {transform:translate(-3px,-2px);}
-      2%      {transform:translate(2px,1px);}
-      2.4%,100%{transform:translate(0,0);}
+      0.3%    {transform:translate(0,13px);}      /* ドスン */
+      0.7%    {transform:translate(-10px,-8px);}
+      1.1%    {transform:translate(10px,7px);}
+      1.5%    {transform:translate(-8px,-6px);}
+      1.9%    {transform:translate(7px,5px);}
+      2.3%    {transform:translate(-5px,-4px);}
+      2.7%    {transform:translate(4px,3px);}
+      3.1%    {transform:translate(-2px,-1px);}
+      3.5%,100%{transform:translate(0,0);}
   }
   /* ══════════ fq-cast-v2 ここまで ══════════ */
 
