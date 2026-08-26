@@ -72,14 +72,32 @@ const FQ = {
     host:     '豊田市社会福祉協議会 主催',
     mapQuery: '豊田市福祉センター',
 
-    /* トップの黄色い面に、うっすら透かしで流れる言葉。
-       「こんな福祉であってほしい」という言葉を並べています。
-       ★増やしても減らしても大丈夫です（並べ方は自動で決まります）。
+    /* トップの黄色い面に、うっすら現れて消える言葉（fq-kw-cycle-v1）。
+       「福祉から連想される、前向きなことば」を並べています。
+
+       ★順番に1つずつ出ます。60秒でひとまわり。
+         いまは48語なので 60 ÷ 48 ＝ 1.25秒ごとに1語。
+         1語が見えているのは3.75秒なので、いつも3語くらいが同時に見えます。
+
+       ★★語数を変えたら、CSSの @keyframes kw-in の％を計算し直すこと。
+         いまの 6.25% ＝「同時に見せたい語数 3 ÷ 全部の語数 48」。
+         60語にするなら 3÷60＝5%。ここを直さないと同時に見える語数が変わります。
+
+       ★長い言葉ほど場所を取ります。減らしたいときは、まず5文字以上のものから。
        ★読ませるための文字ではないので、うっすらとしか出ません。
-         濃さを変えたいときは、下のCSSの .kw の opacity を直してください。 */
-    keywords: ['交流','くらし','地域','ふくし','未来','笑顔','やさしさ','支え合い',
-               '出会い','人','つながり','あんしん','居場所','おもいやり',
-               'ぬくもり','いきがい','ともに','しあわせ'],
+         濃さを変えたいときは、下のCSSの @keyframes kw-in の .75 を直してください。 */
+    keywords: [/* 人とのつながり */
+               'つながり','出会い','支え合い','助け合い','ともに','なかま',
+               'きずな','寄りそう','手をつなぐ','分かち合う','見守る','交流',
+               /* 気持ち */
+               'やさしさ','おもいやり','ぬくもり','あんしん','しあわせ','笑顔',
+               'ありがとう','うれしい','あたたかい','おだやか','たのしい','ほほえみ',
+               /* 暮らしと居場所 */
+               'くらし','地域','居場所','まち','おかえり','ただいま',
+               'となり','家族','ふれあい','手だすけ','だいじょうぶ','そばに',
+               /* 生きる・これから */
+               'いきがい','自分らしく','誇り','元気','できる','学び',
+               '育つ','一歩','希望','ゆめ','未来','ふくし'],
 
     /* ── トップの黄色い面に、順番に出てくるキャラクター ──
        ・move … どう動くか
@@ -245,11 +263,46 @@ const FQ = {
            ★落ちる子（髭）の立ち位置もこの2つから計算している。
              どちらかを変えたら、落ちる子は自動でついてくる。 */
         --fup:.66; --fin:.16;}
-  /* 背景に散らすキーワード（チラシの雰囲気） */
-  /* 背景のキーワード。読ませるものではないので、うっすらと。
-     中央は文字が乗るので、左右の端だけに置く（下のJSで位置を決めている） */
-  .kw{position:absolute;color:#EDE83C;font-weight:900;line-height:1;opacity:.75;
-      user-select:none;pointer-events:none;white-space:nowrap;}
+  /* ══ 背景の透かし文字（fq-kw-cycle-v1）══
+     言葉が順番に1つずつ、ふわっと現れて消えます。位置は下のJSで決めています。
+
+     ★書体は角ゴシックの極太（Zen Kaku Gothic New 900）。
+       日付や会場名と同じもので、41行目ですでに読み込んであります。
+       ＝この変更で通信量は1バイトも増えません。
+       うしろに並べた書体は、届かなかったときの控えです。
+     ★色と濃さは今まで通り（#EDE83C ／ .75）。
+     ★中央にも出します。ロゴ・日付・カウントダウンは #kws より手前
+       （.hero-in が z-index:2、#kws は z-index:0）なので、読みやすさは落ちません。
+
+     ★★どのコマにも opacity と transform を書くこと。
+       途中のコマで書かないと、ブラウザが勝手に間をつないでしまいます
+       （fq-cast-v4 で歩く子が透明になったのと同じ失敗）。
+     ★★transform には毎回 translate(-50%,-50%) を書くこと。
+       これは「言葉の中心を left/top の位置に合わせる」ための指定で、
+       animation の transform が上書きするため、書かないと右下へずれます。
+
+     ★★6.25% ＝「同時に見せたい語数 3 ÷ 全部の語数 48」。
+       語数を変えたら、ここを計算し直すこと。 */
+  .kw{position:absolute;color:#EDE83C;line-height:1;opacity:0;
+      font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Noto Sans JP",
+                  "Zen Maru Gothic",sans-serif;
+      font-weight:900; font-synthesis:none; -webkit-font-synthesis:none;
+      user-select:none;pointer-events:none;white-space:nowrap;
+      transform:translate(-50%,-50%);
+      animation:kw-in 60s linear infinite;}
+  @keyframes kw-in{
+      0%        {opacity:0;   transform:translate(-50%,-50%) scale(.90);}
+      1.2%      {opacity:.75; transform:translate(-50%,-50%) scale(1);}
+      5%        {opacity:.75; transform:translate(-50%,-50%) scale(1);}
+      6.25%     {opacity:0;   transform:translate(-50%,-50%) scale(1.06);}
+      100%      {opacity:0;   transform:translate(-50%,-50%) scale(1.06);}
+  }
+  /* ★動きが苦手な方の端末では、動かさずに「4語に1語」だけ静かに置きます。
+     48語ぜんぶを一度に出すと密になりすぎるため。 */
+  @media(prefers-reduced-motion:reduce){
+    .kw{animation:none;}
+    .kw:nth-child(4n+1){opacity:.75;}
+  }
   .hero-in{position:relative;z-index:2;text-align:center;}
 
   /* ══ 出てくるキャラクターたち（fq-walker-v1）══
@@ -1273,33 +1326,40 @@ const FQ = {
            + '<rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.4"/>'
            + '<circle cx="17.6" cy="6.4" r="1.3" fill="#36271E" stroke="none"/></svg>';
 
-  /* ── 背景の透かし文字（fq-hero-flyer-v1）──
-     FQ.event.keywords の言葉を、黄色い面いっぱいに散らします。
+  /* ── 背景の透かし文字（fq-kw-cycle-v1）──
+     FQ.event.keywords の言葉を、順番に1つずつ出します。
+
+     ★出る順番と間隔は animation-delay で決めています。動かすのはCSSの仕事。
+       60秒 ÷ 語数 が1語あたりの間隔。48語なら1.25秒ごと。
 
      ★位置は「決まった計算」で出しています。ランダムを使っていないので、
        何回開いても同じ配置になります（開くたびに変わると落ち着かないため）。
+     ★続けて出る語どうしが近づかないよう、0.618 と 0.4142 を足していく形で
+       散らしています。この2つは、何度足しても同じ場所に戻ってこない数です。
+       ★ここを 0.5 のようなきりのいい数にすると、2語ごとに同じ場所に戻ります。
 
-     ★言葉どうしが重ならないよう、面を横に段（row）で区切り、
-       1段に「左1つ・右1つ」だけ置いています。左右は半段ずらして互い違い。
-       やみくもに散らすと重なって、透かしではなく“汚れ”に見えてしまうため。
-     ★縦書きの言葉は場所を取るので、いちばん小さい大きさに固定しています。
-     ★大きさは vw（画面の幅に対する割合）なので、スマホでもPCでも同じ雰囲気。 */
+     ★画面のはしで言葉が切れないよう、言葉の幅の半分だけ内側に寄せています
+       （言葉は中心を基準に置いているため）。
+     ★縦書きは7語に1語だけ。場所を取るので、いちばん小さい大きさに固定。 */
   (function(){
     const W = FQ.event.keywords || [];
-    const rows = Math.max(1, Math.ceil(W.length / 2));
+    const N = Math.max(1, W.length);
+    const STEP = 60 / N;                                  // 1語あたりの間隔（秒）
     $('#kws').innerHTML = W.map((w,i) => {
-      const right = (i % 2) === 1;                        // 左右かわりばんこ
-      const row   = Math.floor(i / 2);
-      const top   = (row + (right ? 0.5 : 0)) * (100 / rows);   // 半段ずらす
-      const off   = ((i * 29) % 22) - 4;                  // 端からの位置 -4〜17%
-      const vert  = (i % 5) === 0;
-      // 6.5 / 9.7 / 12.9 vw の3段階。ただし長い言葉は、画面の44%より
-      // 横に広がらないところまで小さくする（左右の言葉がぶつかるのを防ぐため）
-      const tier  = vert ? 6.5 : 6.5 + ((i * 5) % 3) * 3.2;
-      const size  = vert ? tier : Math.min(tier, 44 / w.length);
-      return '<div class="kw" style="top:' + top.toFixed(1) + '%;'
-           + (right ? 'right:' : 'left:') + off + '%;'
-           + 'font-size:min(' + size + 'vw,' + Math.round(size * 6.2) + 'px);'
+      const vert = (i % 7) === 3;                         // 7語に1語だけ縦書き
+      // 7.5 / 10.5 / 13.5 vw の3段階。長い言葉は画面の86%に収まるまで小さくする
+      const tier = 7.5 + ((i * 5) % 3) * 3;
+      const size = vert ? 7.5 : Math.min(tier, 86 / w.length);
+      // はしで切れないように内側へ寄せる（vw ＝ 画面の幅に対する割合なので % と同じ尺度）
+      const halfW = (vert ? size : size * w.length) / 2;
+      const lo = 3 + halfW, hi = 97 - halfW;
+      const raw = 7 + ((i * 0.6180339887) % 1) * 86;
+      const x   = (lo >= hi) ? 50 : Math.min(hi, Math.max(lo, raw));
+      const y   = vert ? (18 + ((i * 0.4142135624) % 1) * 60)
+                       : ( 9 + ((i * 0.4142135624) % 1) * 80);
+      return '<div class="kw" style="left:' + x.toFixed(2) + '%;top:' + y.toFixed(2) + '%;'
+           + 'font-size:min(' + size.toFixed(2) + 'vw,' + Math.round(size * 6.2) + 'px);'
+           + 'animation-delay:' + (i * STEP).toFixed(3) + 's;'
            + (vert ? 'writing-mode:vertical-rl;' : '')
            + '">' + esc(w) + '</div>';
     }).join('');
