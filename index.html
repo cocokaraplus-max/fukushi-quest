@@ -86,6 +86,15 @@ const FQ = {
        ★長い言葉ほど場所を取ります。減らしたいときは、まず5文字以上のものから。
        ★読ませるための文字ではないので、うっすらとしか出ません。
          濃さを変えたいときは、下のCSSの @keyframes kw-in の .8 を直してください。 */
+    /* ★★fq-kw-off-v1: 背景の言葉を「出さない」ようにしています（2026-08-26）。
+         見にくかったため、いったん取りやめました。
+
+       ★消してはいません。**この1行を true に戻すだけで、また出ます。**
+         48語のリストも、CSS（.kw ／ @keyframes kw-in）も、そのまま残してあります。
+       ★戻したくなったときの調整は README の
+         fq-kw-cycle-v1 ／ fq-kw-white-v1 ／ fq-kw-white-v2 の節に書いてあります。 */
+    showKeywords: false,
+
     keywords: [/* 人とのつながり */
                'つながり','出会い','支え合い','助け合い','ともに','なかま',
                'きずな','寄りそう','手をつなぐ','分かち合う','見守る','交流',
@@ -1352,7 +1361,8 @@ const FQ = {
        （言葉は中心を基準に置いているため）。
      ★縦書きは7語に1語だけ。場所を取るので、いちばん小さい大きさに固定。 */
   (function(){
-    const W = FQ.event.keywords || [];
+    // ★fq-kw-off-v1: showKeywords が false のときは1語も出さない（いまはこちら）
+    const W = (FQ.event.showKeywords === false) ? [] : (FQ.event.keywords || []);
     const N = Math.max(1, W.length);
     const STEP = 60 / N;                                  // 1語あたりの間隔（秒）
     $('#kws').innerHTML = W.map((w,i) => {
