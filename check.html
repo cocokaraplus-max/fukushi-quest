@@ -371,8 +371,14 @@ update prizes set stock = initial_stock;</pre>
 
   // ============================================================ ⑤ ファイル
   fetch('service-worker.js?_=' + Math.random()).then(function(r){ return r.text(); }).then(function(t){
-    if(/fq326-v3/.test(t) && /url\.origin\s*!==\s*self\.location\.origin/.test(t)){
-      row('g5','ok','service-worker.js は修正済みの版です','キャッシュ名 fq326-v3。Supabase への通信を横取りしません。');
+    /* == fq-check-swver-v1 ==
+       もとは版名の文字列 'fq326-v3' そのものを探していた。
+       キャッシュ名は絵を差し替えるたびに上がる（v3 → v7）ので、
+       中身が正しくても「古い版です」と赤が出てしまっていた。
+       版の数字を読んで 3 以上かで見るように変えた。中身の判定は今までどおり。 */
+    var swv = (t.match(/fq326-v(\d+)/) || [])[1];
+    if(swv && +swv >= 3 && /url\.origin\s*!==\s*self\.location\.origin/.test(t)){
+      row('g5','ok','service-worker.js は修正済みの版です','キャッシュ名 fq326-v'+swv+'。Supabase への通信を横取りしません。');
     } else {
       row('g5','ng','service-worker.js が古い版です',
           '公開されているのは修正前のファイルです。',
