@@ -1261,6 +1261,26 @@ if ('serviceWorker' in navigator) {
       rows.sort(function(a,b){ return (a.sort-b.sort) || String(a.name).localeCompare(b.name); });
       try{
         CFG.prizes = rows.map(function(r){ var m=prizeMeta(r.name, r.rarity); return {kind:m.kind, name:r.name, em:m.em, r:r.rarity, count:(r.stock||0)}; });
+
+        /* == fq-lose-auto-v1 : ハズレの個数をサーバーの数字から計算する ==
+           ★もとは端末ごとの設定で、初期値は35個だった。
+           景品320個 ＋ ハズレ35個 ＝ 当たる確率 約90%。1人3回引けるので
+           355回（＝約118人）で在庫が空になり、あとから来た人は全部ハズレになる。
+           ⚙️主催者用の設定で直しても、その端末のブラウザにしか保存されないので
+           参加者のスマホには届かなかった（サーバーから同期していたのは在庫だけ）。
+           ここで initial_stock から計算すれば、全端末が同じ確率になる。
+           ★ハズレを変えたいときは、この下の想定来場者数か、
+             prizes テーブルの initial_stock を変えること。
+             ⚙️の画面で手で変えても、次に開いた時にここで計算し直される。 */
+        var FQ_EXPECTED_ATTENDEES = 1500;   /* ←想定来場者数。変えるならここ */
+        var initTotal = 0;
+        rows.forEach(function(r){ initTotal += Math.max(0, +r.initial_stock || 0); });
+        var perPerson = (typeof DRAWS_PER_PERSON === 'number' && DRAWS_PER_PERSON > 0)
+                          ? DRAWS_PER_PERSON : 3;
+        if(initTotal > 0){
+          CFG.lose = Math.max(0, FQ_EXPECTED_ATTENDEES * perPerson - initTotal);
+        }
+
         if(typeof saveCfg==='function') saveCfg();
       }catch(e){ console.warn(e); }
     });
