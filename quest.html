@@ -240,6 +240,40 @@
   .pinfo-id b{font-size:20px;color:var(--ink);letter-spacing:.04em;}
   .pinfo-note{font-size:10.5px;color:var(--muted);margin:8px 0 0;line-height:1.5;}
 </style>
+<style>/* == fq-shindan-v1 : 福祉タイプ診断。演出の正本のスタイル定義には足さず、別ブロックにしてある == */
+  #shindanSec .sd-lead{color:var(--muted);font-size:12.5px;line-height:1.7;font-weight:500;margin:0 0 12px;}
+  .sd-cta{display:block;width:100%;border-radius:16px;padding:14px;font-size:16px;font-weight:900;cursor:pointer;
+    font-family:inherit;background:linear-gradient(135deg,#7fc4b0,var(--teal));color:#fff;
+    box-shadow:0 5px 0 #3b8271;border:2px solid #fff;}
+  .sd-cta:active{transform:translateY(2px);box-shadow:0 2px 0 #3b8271;}
+  .sd-locked{background:#fbf6ea;border:2px dashed var(--line);border-radius:13px;padding:12px 13px;
+    font-size:12.5px;color:var(--muted);font-weight:700;line-height:1.8;text-align:center;}
+  .sd-locked b{color:var(--ink);}
+  .sd-card{border:2px solid var(--line);border-radius:18px;background:#fbf6ea;padding:14px;position:relative;overflow:hidden;}
+  .sd-top{display:flex;align-items:center;gap:11px;}
+  .sd-em{font-size:40px;line-height:1;flex:0 0 auto;}
+  .sd-ttl{flex:1;min-width:0;}
+  .sd-no{font-size:11px;font-weight:900;color:var(--muted);}
+  .sd-name{font-size:21px;font-weight:900;color:var(--ink);line-height:1.3;}
+  .sd-num{flex:0 0 auto;text-align:center;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:5px 9px;}
+  .sd-num b{display:block;font-size:21px;color:var(--red);line-height:1.15;}
+  .sd-num span{font-size:9.5px;color:var(--muted);font-weight:700;}
+  .sd-catch{margin:12px 0 0;font-size:15.5px;font-weight:900;color:var(--teal);}
+  .sd-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
+  .sd-chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:800;}
+  .sd-blk{margin-top:11px;background:var(--card);border:2px solid var(--line);border-radius:13px;padding:10px 12px;}
+  .sd-blk h5{margin:0 0 4px;font-size:11.5px;font-weight:900;color:var(--mustard);letter-spacing:.02em;}
+  .sd-blk p{margin:0;font-size:12.5px;line-height:1.85;color:var(--ink);font-weight:600;}
+  .sd-blk p.sd-ask{color:var(--red);font-weight:800;}
+  .sd-again{margin-top:10px;text-align:center;}
+  .sd-modal .modal-card{max-width:340px;}
+  .sd-bd{display:block;margin:12px 0 0;font-size:13px;font-weight:900;text-align:left;}
+  .sd-bd input{width:100%;margin-top:6px;font-family:inherit;font-size:17px;font-weight:800;color:var(--ink);
+    background:#fbf6ea;border:2px solid var(--line);border-radius:12px;padding:11px 12px;}
+  .sd-err{color:var(--red);font-size:12.5px;font-weight:800;margin:8px 0 0;min-height:18px;}
+  .sd-note{font-size:11.5px;color:var(--muted);line-height:1.7;font-weight:600;margin:12px 0 0;}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -265,6 +299,13 @@
     <div class="sec-h hand"><span class="em">📜</span>クエスト</div>
     <p class="sec-sub">会場のQRコードを読み取ってミッションを達成しよう。1つ達成ごとに1ポイント！</p>
     <div id="quests"></div>
+  </section>
+
+  <!-- == fq-shindan-v1 == -->
+  <section id="shindanSec">
+    <div class="sec-h hand"><span class="em">🔮</span>福祉タイプ診断</div>
+    <p class="sd-lead">生年月日から、あなたが福祉の現場で力を出しやすい「7つのタイプ」を見つけます。どのタイプにも、活躍できる場所があります。</p>
+    <div id="shindanBody"></div>
   </section>
 
   <section class="gacha-box">
@@ -393,6 +434,19 @@
   <div class="fx-swarm" id="fxswarm"></div>
   <div class="fx-crt" id="fxcrt"><div class="beam"></div></div>
   <div class="fx-flash" id="fxflash"></div>
+</div>
+
+<!-- == fq-shindan-v1 modal == -->
+<div class="modal sd-modal" id="shindanModal">
+  <div class="modal-card">
+    <div class="big">🔮</div>
+    <h3 class="hand">福祉タイプ診断</h3>
+    <label class="sd-bd">生年月日<input type="date" id="sdBirth" min="1900-01-01"></label>
+    <div class="sd-err" id="sdErr"></div>
+    <button class="btn" data-act="sdRun">診断する</button>
+    <p class="sd-note">入力した生年月日は、この端末の中で計算に使うだけです。サーバーには送りませんし、保存もしません（残るのは結果のタイプだけ）。</p>
+    <div class="sd-again"><button class="linkbtn" data-act="sdClose">あとにする</button></div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -971,6 +1025,149 @@ document.addEventListener('click', function(ev){
   else if(act==='lose'){ previewLose(); }
   else if(act==='fxconfirm'){ if(pendingConfirm){ var f=pendingConfirm; pendingConfirm=null; f(); } }
 });
+</script>
+<script>
+/* == fq-shindan-v1 : 福祉タイプ診断 ==
+   数秘（ライフパスナンバー）を7分類に対応させる。
+   元の分類案は 1 が①と⑤、5 が③と⑤に重複していて型が一つに決まらなかったので、
+   特徴の濃い方に寄せて重複をなくしてある。詳細は README の fq-shindan-v1 を参照。 */
+(function(){
+  var T={
+    leader:{no:'①',name:'リーダー型',em:'🔥',
+      cat:'決めて、前に出せる人',
+      chips:['行動力','決断力','やりきる'],
+      work:'迷う場面で判断して、まわりを動かしていく仕事に力が出ます。現場をまとめる管理者やサービス提供責任者、リーダー職。',
+      ask:'「ここでは誰が、何を決めているんですか？」'},
+    supporter:{no:'②',name:'サポーター型',em:'🌿',
+      cat:'となりに居られる人',
+      chips:['優しさ','協調性','世話好き'],
+      work:'毎日のちいさな関わりが、そのまま仕事になります。介護職や生活支援員など、人のそばに立ち続ける現場。',
+      ask:'「利用者さんと、いちばん嬉しかった瞬間は？」'},
+    creator:{no:'③',name:'クリエイター型',em:'🎨',
+      cat:'場を明るくする人',
+      chips:['表現力','自由','楽しさ'],
+      work:'レクや行事、日々の暮らしに楽しみを作る役割。あなたが居るだけで空気が変わる現場は多いです。',
+      ask:'「どんなレクリエーションをやっていますか？」'},
+    takumi:{no:'④',name:'職人気質型',em:'🔍',
+      cat:'とことん突きつめる人',
+      chips:['分析','探究','専門性'],
+      work:'体の動きを見立てたり、記録から根拠を組み立てる仕事。機能訓練指導員やリハビリ職、専門職の道。',
+      ask:'「その人に合わせて、どこを見て決めていますか？」'},
+    challenger:{no:'⑤',name:'チャレンジャー型',em:'⚡',
+      cat:'動きながら考える人',
+      chips:['変化','冒険','突破力'],
+      work:'新しい取り組みを立ち上げたり、地域に出ていく仕事。訪問系や、これから作っていく事業と相性が良いです。',
+      ask:'「最近はじめた新しいこと、ありますか？」'},
+    visionary:{no:'⑥',name:'ビジョナリー型',em:'🌙',
+      cat:'先を見て、想いで動く人',
+      chips:['理想','直感','影響力'],
+      work:'その人の暮らし全体を描いて組み立てる仕事。相談支援専門員やケアマネジャーなど、絵を描く側の役割。',
+      ask:'「この仕事で、いちばん大事にしていることは？」'},
+    messenger:{no:'⑦',name:'メッセンジャー型',em:'🌈',
+      cat:'人と人をつなぐ人',
+      chips:['導く力','社会への貢献','伝える'],
+      work:'事業所と地域をつなぎ、福祉の面白さを外に伝えていく役割。地域連携や広報、これから福祉を広げる側。',
+      ask:'「この仕事の面白さを、どう伝えていますか？」'}
+  };
+  /* 重複なし・1〜9と11/22/33の12個を全てカバー */
+  var N2K={1:'leader',8:'leader',2:'supporter',6:'supporter',3:'creator',
+           4:'takumi',7:'takumi',5:'challenger',9:'visionary',11:'visionary',
+           22:'messenger',33:'messenger'};
+
+  function digitSum(v){ var t=0,s=String(v),c; for(var i=0;i<s.length;i++){ c=parseInt(s.charAt(i),10); if(!isNaN(c)) t+=c; } return t; }
+  function lifePath(y,m,d){
+    var s=digitSum(String(y)+(m<10?'0':'')+m+(d<10?'0':'')+d);
+    while(s>9 && s!==11 && s!==22 && s!==33){ s=digitSum(s); }   /* 11/22/33 は残す */
+    return s;
+  }
+  function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function res(){ return (window.S && S.shindan && T[S.shindan.key]) ? S.shindan : null; }
+
+  function renderShindan(){
+    var box=document.getElementById('shindanBody'); if(!box) return;
+    var r=res();
+    if(!r){
+      var got = (window.S && S.scanned && S.scanned.indexOf('check')!==-1);
+      box.innerHTML = got
+        ? '<button class="sd-cta" data-act="sdOpen">🔮 診断をはじめる</button>'
+        : '<div class="sd-locked">会場の<b>「適性診断」ブースのQR</b>を読み取ると診断できます。<br>ブースの人に声をかけてみてください。</div>';
+      return;
+    }
+    var t=T[r.key];
+    box.innerHTML =
+      '<div class="sd-card">'
+      + '<div class="sd-top"><div class="sd-em">'+t.em+'</div>'
+      + '<div class="sd-ttl"><div class="sd-no">'+t.no+' あなたのタイプ</div>'
+      + '<div class="sd-name">'+esc(t.name)+'</div></div>'
+      + '<div class="sd-num"><b>'+r.num+'</b><span>あなたの数</span></div></div>'
+      + '<p class="sd-catch">「'+esc(t.cat)+'」</p>'
+      + '<div class="sd-chips">'+t.chips.map(function(c){return '<span class="sd-chip">'+esc(c)+'</span>';}).join('')+'</div>'
+      + '<div class="sd-blk"><h5>福祉の現場では</h5><p>'+esc(t.work)+'</p></div>'
+      + '<div class="sd-blk"><h5>ブースで聞いてみよう</h5><p class="sd-ask">'+esc(t.ask)+'</p></div>'
+      + '</div>'
+      + '<div class="sd-again"><button class="linkbtn" data-act="sdOpen">生年月日を入れ直す</button></div>';
+  }
+
+  function openShindan(){
+    var m=document.getElementById('shindanModal'); if(!m) return;
+    var e=document.getElementById('sdErr'); if(e) e.textContent='';
+    var inp=document.getElementById('sdBirth');
+    if(inp){ try{ inp.max=new Date().toISOString().slice(0,10); }catch(err){} }
+    m.classList.add('show');
+  }
+  function closeShindan(){
+    var m=document.getElementById('shindanModal'); if(m) m.classList.remove('show');
+    if(window.S){ S.shindanSkip=true; if(typeof save==='function') save(); }
+  }
+  function runShindan(){
+    var inp=document.getElementById('sdBirth'), err=document.getElementById('sdErr');
+    var v=(inp&&inp.value)||'';
+    var mm=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+    if(!mm){ if(err) err.textContent='生年月日を入れてください'; return; }
+    var y=+mm[1], m=+mm[2], d=+mm[3], dt=new Date(y,m-1,d);
+    if(y<1900 || dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d || dt>new Date()){
+      if(err) err.textContent='その日付は使えません'; return;
+    }
+    /* ★生年月日は保存しない。残すのは結果だけ */
+    var num=lifePath(y,m,d), key=N2K[num]||'supporter';
+    S.shindan={num:num,key:key}; S.shindanSkip=true;
+    if(typeof save==='function') save();
+    var mo=document.getElementById('shindanModal'); if(mo) mo.classList.remove('show');
+    renderShindan();
+    var sec=document.getElementById('shindanSec');
+    if(sec && sec.scrollIntoView) sec.scrollIntoView({behavior:'smooth',block:'center'});
+    if(typeof confetti==='function') confetti(3);
+    if(typeof toast==='function') toast('🔮 あなたは <b>'+T[key].name+'</b>！');
+  }
+
+  document.addEventListener('click', function(ev){
+    var el=(ev.target && ev.target.closest) ? ev.target.closest('[data-act]') : null;
+    if(!el) return;
+    var a=el.getAttribute('data-act');
+    if(a==='sdOpen'){ openShindan(); }
+    else if(a==='sdClose'){ closeShindan(); }
+    else if(a==='sdRun'){ runShindan(); }
+  });
+
+  /* 既存の「適性診断」QR（?q=check）と連動。scan は後から Supabase 配線側でも
+     包まれるので、こちらが先に包んで両方が動くようにしておく。 */
+  if(typeof scan==='function'){
+    var _scan=scan;
+    window.scan=function(c){
+      _scan(c); renderShindan();
+      if(c==='check' && !res()){ setTimeout(openShindan, 800); }
+    };
+  }
+  if(typeof render==='function'){ var _render=render; window.render=function(){ _render(); renderShindan(); }; }
+  if(typeof resetAll==='function'){ var _reset=resetAll; window.resetAll=function(){ _reset(); renderShindan(); }; }
+
+  renderShindan();
+  /* ?q=check で入った直後は自動で開く。「あとにする」を押したら二度と開かない */
+  if(window.S && S.scanned && S.scanned.indexOf('check')!==-1 && !res() && !S.shindanSkip){
+    setTimeout(openShindan, 900);
+  }
+})();
+
 </script>
 <script>
 /* PWA登録: HTTPS/localhostでのみ有効。static hosting(無料枠)で動作 */
