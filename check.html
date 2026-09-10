@@ -383,7 +383,12 @@ update prizes set stock = initial_stock;</pre>
     row('g5','warn','service-worker.js を読めませんでした','ファイルが無いか、通信できていません。', null);
   });
 
-  fetch('quest.html?_=' + Math.random())   // fq-swap-home-v1: クエスト本体は quest.html に移った.then(function(r){ return r.text(); }).then(function(t){
+  /* == fq-check-fix-v1 ==
+     ★下のコメントは必ず「行の頭」に置くこと。
+     もとは fetch(...) と同じ行の途中に書かれていて、後ろの .then(...) を
+     まるごとコメントにしてしまい、check.html 全体が構文エラーで動かなかった。 */
+  // fq-swap-home-v1: クエスト本体は quest.html に移った
+  fetch('quest.html?_=' + Math.random()).then(function(r){ return r.text(); }).then(function(t){
     var need = ['fq-role-v1','fq-rank-lite-v1','fq-recog-serial-v1','fq-draws3-v1'];
     var miss = need.filter(function(m){ return t.indexOf(m) < 0; });
     if(!miss.length){

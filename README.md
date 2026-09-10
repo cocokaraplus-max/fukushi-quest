@@ -2768,3 +2768,75 @@ var sfx=           dfbb640fe6c15307      var FX=            ad50e0cf5c3f07ea
 `quest.html` を `fq-shindan-v1` で検索すると、**CSS・セクション・モーダル・JS の4か所**が出る。
 型と数の対応は JS の `N2K`、7型の文言は `T` にまとまっている。
 出現率を測り直すときは、`lifePath()` を全日付に回して数えれば同じ表が出る。
+
+---
+
+## `fq-check-fix-v1` — `check.html` が2週間ずっと動いていなかった（2026-09-10）
+
+### 何が起きていたか
+
+公開URLで `check.html` を開くと、**「調べています…」のまま止まり、
+①設定と接続 も ③景品の中身 も空のまま**だった。
+Supabase が落ちているようにも、通信が遅いようにも見えた。
+
+実際は通信の話ですらなく、**`check.html` の JavaScript が構文エラーで
+一行も動いていなかった。**
+
+### 原因
+
+`fq-swap-home-v1`（2026-08-25）で「クエスト本体は quest.html に移った」という
+コメントを足したとき、**`fetch(...)` と同じ行の途中**に書いてしまった。
+
+```js
+fetch('quest.html?_=' + Math.random())   // …quest.html に移った.then(function(r){ … }).then(function(t){
+                                         ^^^ ここから行末まで、全部コメント
+```
+
+`//` は**その行の終わりまで**を消す。つまり後ろに続く
+`.then(function(r){ return r.text(); }).then(function(t){` が丸ごと消え、
+開いていない `{` の分だけ閉じ括弧が余り、**スクリプト全体が落ちていた。**
+
+★**静かに死ぬので気づけない。** 画面には何も出ず、「調べています…」が
+残るだけ。エラーは開発者コンソールにしか出ない。
+
+### やったこと
+
+コメントを**行の頭**に移した。それだけ。
+
+### ★他のファイルも全部調べた（2026-09-10）
+
+同じ壊れ方が他にないか、全HTMLのインラインJSを構文チェックした。
+
+| ファイル | ブロック数 | 結果 |
+|---|---|---|
+| `check.html` | 1 | ★構文エラー（これを直した） |
+| `index.html` | 3 | OK |
+| `quest.html` | 5 | OK |
+| `honbu.html` | 2 | OK |
+
+行の途中に `//` が入って `.then` を飲み込んでいる箇所も全ファイル走査したが、
+**この1か所だけ**だった。
+
+### 残件
+
+- `check.html` が動くようになったので、**②追加SQLが入っているか はまだ未確認**。
+  ボタンを押して確かめること（認識番号を1つ消費する。後片づけSQLで戻る）
+
+### 次に同じことがあったときの調べ方
+
+**画面が「調べています…」で止まったら、まず構文エラーを疑う。**
+通信の問題なら、たいてい「読めませんでした」の行が出る。**何も出ない**なら、
+スクリプトがそもそも動いていない。
+
+手元で調べるなら、HTMLからインラインJSを取り出して構文チェックするのが速い。
+
+```bash
+python3 - <<'EOF'
+import io,re
+for f in ['check.html','index.html','quest.html','honbu.html']:
+    s=io.open(f,encoding='utf-8').read()
+    for n,m in enumerate(re.finditer(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>', s),1):
+        io.open('/tmp/%s.%d.js'%(f,n),'w',encoding='utf-8').write(m.group(1))
+EOF
+for f in /tmp/*.html.*.js; do printf '%-28s ' "$(basename $f)"; node --check "$f" 2>/dev/null && echo OK || echo NG; done
+```
