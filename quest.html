@@ -240,7 +240,7 @@
   .pinfo-id b{font-size:20px;color:var(--ink);letter-spacing:.04em;}
   .pinfo-note{font-size:10.5px;color:var(--muted);margin:8px 0 0;line-height:1.5;}
 </style>
-<style>/* == fq-shindan-v1 : 福祉タイプ診断。演出の正本のスタイル定義には足さず、別ブロックにしてある == */
+<style>/* == fq-shindan-v1 / fq-shindan-mon-v1 : 福祉タイプ診断。演出の正本のスタイル定義には足さず、別ブロックにしてある == */
   #shindanSec .sd-lead{color:var(--muted);font-size:12.5px;line-height:1.7;font-weight:500;margin:0 0 12px;}
   .sd-cta{display:block;width:100%;border-radius:16px;padding:14px;font-size:16px;font-weight:900;cursor:pointer;
     font-family:inherit;background:linear-gradient(135deg,#7fc4b0,var(--teal));color:#fff;
@@ -249,17 +249,18 @@
   .sd-locked{background:#fbf6ea;border:2px dashed var(--line);border-radius:13px;padding:12px 13px;
     font-size:12.5px;color:var(--muted);font-weight:700;line-height:1.8;text-align:center;}
   .sd-locked b{color:var(--ink);}
-  .sd-card{border:2px solid var(--line);border-radius:18px;background:#fbf6ea;padding:14px;position:relative;overflow:hidden;}
-  .sd-top{display:flex;align-items:center;gap:11px;}
-  .sd-em{font-size:40px;line-height:1;flex:0 0 auto;}
-  .sd-ttl{flex:1;min-width:0;}
-  .sd-no{font-size:11px;font-weight:900;color:var(--muted);}
-  .sd-name{font-size:21px;font-weight:900;color:var(--ink);line-height:1.3;}
-  .sd-num{flex:0 0 auto;text-align:center;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:5px 9px;}
-  .sd-num b{display:block;font-size:21px;color:var(--red);line-height:1.15;}
-  .sd-num span{font-size:9.5px;color:var(--muted);font-weight:700;}
-  .sd-catch{margin:12px 0 0;font-size:15.5px;font-weight:900;color:var(--teal);}
-  .sd-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
+  .sd-card{border:2px solid var(--line);border-radius:18px;background:#fbf6ea;padding:16px 14px 14px;position:relative;overflow:hidden;}
+  /* == fq-shindan-mon-v1 : モンスターの絵を中央に大きく出す ==
+     絵が無い型は .sd-img が読み込みに失敗するので、JS側で絵文字に切り替える。 */
+  .sd-hero{text-align:center;margin-bottom:2px;}
+  .sd-img{width:150px;height:150px;object-fit:contain;display:block;margin:0 auto;
+    filter:drop-shadow(0 4px 4px rgba(70,58,44,.16));}
+  .sd-em{font-size:76px;line-height:1.15;display:block;}
+  .sd-name{font-size:23px;font-weight:900;color:var(--ink);line-height:1.3;text-align:center;margin-top:6px;}
+  .sd-role{font-size:12px;font-weight:800;color:var(--muted);text-align:center;margin-top:3px;}
+  .sd-role b{color:var(--red);font-size:13px;}
+  .sd-catch{margin:12px 0 0;font-size:15.5px;font-weight:900;color:var(--teal);text-align:center;}
+  .sd-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-content:center;}
   .sd-chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:800;}
   .sd-blk{margin-top:11px;background:var(--card);border:2px solid var(--line);border-radius:13px;padding:10px 12px;}
   .sd-blk h5{margin:0 0 4px;font-size:11.5px;font-weight:900;color:var(--mustard);letter-spacing:.02em;}
@@ -1032,38 +1033,40 @@ document.addEventListener('click', function(ev){
    元の分類案は 1 が①と⑤、5 が③と⑤に重複していて型が一つに決まらなかったので、
    特徴の濃い方に寄せて重複をなくしてある。詳細は README の fq-shindan-v1 を参照。 */
 (function(){
+  /* == fq-shindan-mon-v1 : 型はモンスター。名前はモンスター名、role が福祉の仕事のタイプ ==
+     絵は img/mon_1.png 〜 img/mon_7.png（tno の番号）。無い型は em の絵文字が出る。 */
   var T={
-    leader:{no:'①',name:'リーダー型',em:'🔥',
+    leader:{no:'①',name:'ガツガツモンスター',role:'リーダー型',em:'🔥',
       cat:'決めて、前に出せる人',
       chips:['行動力','決断力','やりきる'],
       work:'迷う場面で判断して、まわりを動かしていく仕事に力が出ます。現場をまとめる管理者やサービス提供責任者、リーダー職。',
       ask:'「ここでは誰が、何を決めているんですか？」'},
-    supporter:{no:'②',name:'サポーター型',em:'🌿',
+    supporter:{no:'②',name:'ヨシヨシモンスター',role:'サポーター型',em:'🌿',
       cat:'となりに居られる人',
       chips:['優しさ','協調性','世話好き'],
       work:'毎日のちいさな関わりが、そのまま仕事になります。介護職や生活支援員など、人のそばに立ち続ける現場。',
       ask:'「利用者さんと、いちばん嬉しかった瞬間は？」'},
-    creator:{no:'③',name:'クリエイター型',em:'🎨',
+    creator:{no:'③',name:'ウキウキモンスター',role:'クリエイター型',em:'🎨',
       cat:'場を明るくする人',
       chips:['表現力','自由','楽しさ'],
       work:'レクや行事、日々の暮らしに楽しみを作る役割。あなたが居るだけで空気が変わる現場は多いです。',
       ask:'「どんなレクリエーションをやっていますか？」'},
-    takumi:{no:'④',name:'職人気質型',em:'🔍',
+    takumi:{no:'④',name:'コツコツモンスター',role:'職人気質型',em:'🔍',
       cat:'とことん突きつめる人',
       chips:['分析','探究','専門性'],
       work:'体の動きを見立てたり、記録から根拠を組み立てる仕事。機能訓練指導員やリハビリ職、専門職の道。',
       ask:'「その人に合わせて、どこを見て決めていますか？」'},
-    challenger:{no:'⑤',name:'チャレンジャー型',em:'⚡',
+    challenger:{no:'⑤',name:'イケイケモンスター',role:'チャレンジャー型',em:'⚡',
       cat:'動きながら考える人',
       chips:['変化','冒険','突破力'],
       work:'新しい取り組みを立ち上げたり、地域に出ていく仕事。訪問系や、これから作っていく事業と相性が良いです。',
       ask:'「最近はじめた新しいこと、ありますか？」'},
-    visionary:{no:'⑥',name:'ビジョナリー型',em:'🌙',
+    visionary:{no:'⑥',name:'フワフワモンスター',role:'ビジョナリー型',em:'🌙',
       cat:'先を見て、想いで動く人',
       chips:['理想','直感','影響力'],
       work:'その人の暮らし全体を描いて組み立てる仕事。相談支援専門員やケアマネジャーなど、絵を描く側の役割。',
       ask:'「この仕事で、いちばん大事にしていることは？」'},
-    messenger:{no:'⑦',name:'メッセンジャー型',em:'🌈',
+    messenger:{no:'⑦',name:'ハピハピモンスター',role:'メッセンジャー型',em:'🌈',
       cat:'人と人をつなぐ人',
       chips:['導く力','社会への貢献','伝える'],
       work:'事業所と地域をつなぎ、福祉の面白さを外に伝えていく役割。地域連携や広報、これから福祉を広げる側。',
@@ -1094,18 +1097,35 @@ document.addEventListener('click', function(ev){
       return;
     }
     var t=T[r.key];
+    /* == fq-shindan-mon-v1 ==
+       画面に出す数字はタイプ番号（1〜7）。数秘の数（33 など）は出さない。
+       参加者に意味が分からないし、占いに寄るため。計算と保存は今までどおり。
+       タイプ番号は T の no（①〜⑦）から起こしているので、T に項目を足していない。 */
+    var tno = '①②③④⑤⑥⑦'.indexOf(t.no) + 1;
     box.innerHTML =
       '<div class="sd-card">'
-      + '<div class="sd-top"><div class="sd-em">'+t.em+'</div>'
-      + '<div class="sd-ttl"><div class="sd-no">'+t.no+' あなたのタイプ</div>'
-      + '<div class="sd-name">'+esc(t.name)+'</div></div>'
-      + '<div class="sd-num"><b>'+r.num+'</b><span>あなたの数</span></div></div>'
+      + '<div class="sd-hero">'
+      +   '<img class="sd-img" alt="" src="img/mon_'+tno+'.png">'
+      +   '<span class="sd-em" style="display:none">'+t.em+'</span>'
+      + '</div>'
+      + '<div class="sd-name">'+esc(t.name)+'</div>'
+      + '<div class="sd-role">タイプ<b>'+tno+'</b>　'+esc(t.role)+'</div>'
       + '<p class="sd-catch">「'+esc(t.cat)+'」</p>'
       + '<div class="sd-chips">'+t.chips.map(function(c){return '<span class="sd-chip">'+esc(c)+'</span>';}).join('')+'</div>'
       + '<div class="sd-blk"><h5>福祉の現場では</h5><p>'+esc(t.work)+'</p></div>'
       + '<div class="sd-blk"><h5>ブースで聞いてみよう</h5><p class="sd-ask">'+esc(t.ask)+'</p></div>'
       + '</div>'
       + '<div class="sd-again"><button class="linkbtn" data-act="sdOpen">生年月日を入れ直す</button></div>';
+    /* 絵がまだ無い型は、読み込みに失敗したら絵文字に切り替える。
+       ★インラインの onerror は使わない（このファイルはCSPセーフの方針） */
+    var im = box.querySelector('.sd-img');
+    if(im){
+      im.addEventListener('error', function(){
+        im.style.display='none';
+        var e = box.querySelector('.sd-em');
+        if(e) e.style.display='block';
+      });
+    }
   }
 
   function openShindan(){
