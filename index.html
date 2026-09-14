@@ -371,9 +371,28 @@ const FQ = {
        そろえてしまうと2人が同じ動きになり、人形が2つ滑っていくように見える。
      ★向きが変わるとき（scaleX(-1)）は並び順も入れかわる。
        2人が向きを変えて帰ってくる形になるので、これでよい。 */
-  .m-walk.duo{--aw:clamp(88px,26vw,150px);display:flex;align-items:flex-end;}
+  .m-walk.duo{--aw:clamp(88px,26vw,150px);display:flex;align-items:flex-end;
+              animation-name:a-walk-duo;}
   .m-walk.duo img{width:50%;height:auto;}
   .m-walk.duo img:last-child{animation-delay:.34s;}
+  /* == fq-cast-fix-v2 : 294の2人だけ、絵を裏返さない ==
+     ★ふつうの散歩（a-walk）は、帰り道で scaleX(-1) をかけて絵を裏返す。
+       「向きを変えて帰ってきた」に見せるための作り。
+     ★けれど294の2人は **正面を向いた絵** で、おなかに「ふ」「つ」の字がある。
+       裏返すと **字が鏡文字になり、2人の並び順まで入れかわる**。
+     ★なので、この2人のためだけに scaleX を抜いた動きを用意した。
+       中身は a-walk とまったく同じ。scaleX が無いだけ。
+     ★a-walk の数字を直したら、こちらも同じ数字に直すこと。2つで1組。
+     ★おなかに字や左右で違う模様がある子は、ぜんぶこの扱いにすること。 */
+  @keyframes a-walk-duo{
+      0%      {opacity:0; transform:translateX(-90px);}
+      0.5%    {opacity:1; transform:translateX(-90px);}
+      1%      {opacity:1; transform:translateX(-90px);}
+     16.5%    {opacity:1; transform:translateX(calc(100vw - 10px));}
+     17.2%    {opacity:1; transform:translateX(calc(100vw - 10px));}
+     32.5%    {opacity:1; transform:translateX(-90px);}
+     33.3%,100%{opacity:0; transform:translateX(-90px);}
+  }
 
   /* ① 歩く … 右へ行って、向きを変えて帰ってくる
         fq-walk-stroll-v1: 早足だったのを「散歩」の速さに変えた。
@@ -637,7 +656,15 @@ const FQ = {
           高さが合わなくなる。％なら黄色い面の高さに追従する。
         ★小さい跳ね（ピョンピョン）は中の絵、大きな上下は箱、と分けてある。 */
   /* ★猫だけ少し小さい。文字の上に乗るので、大きいとキャッチコピーにぶつかる */
-  .m-bounce{--aw:clamp(42px,12vw,66px);left:0;animation:a-bounce 60s ease-in-out infinite;}
+  /* == fq-cast-fix-v2 ==
+     ★ペガサスに変えたので、横幅を 66px → 96px（上限）に広げた。
+       大きさは「横幅」で決まる。ペガサスは横長なので、猫と同じ横幅だと
+       背が低く見えてしまう。背の高さが猫のころと同じくらいになる幅にした。
+     ★絵のほうも左右を反転してある（元は左向き、跳ねる動きは「まず右へ」）。
+       ペガサスには文字が入っていないので、裏返しても問題ない。
+       ★おなかに字がある子は、絵を裏返してはいけない（294の2人を参照）。
+     ★これ以上大きくすると、文字の上を渡るときキャッチコピーにぶつかる。 */
+  .m-bounce{--aw:clamp(58px,17vw,96px);left:0;animation:a-bounce 60s ease-in-out infinite;}
   .m-bounce img{animation:i-hoplet .46s ease-in-out infinite alternate;}
   @keyframes a-bounce{
       /* ── 1回目：左下→文字の上→画面の中で着地→右へ（出番15秒／7秒） ── */
