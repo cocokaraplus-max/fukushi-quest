@@ -1245,179 +1245,6 @@ document.addEventListener('click', function(ev){
 
 </script>
 <script>
-/* == fq-zukan-v1 : キャラクター図鑑 ==
-   会場のQR（?z=場所の名前）を読むと、キャラが1体ずつ増える。
-   ★5分の判定はサーバー（zukan_scan）でやる。端末の履歴を消しても回避できない。
-   ★ポイントとは別勘定。participants にも draws にも触らない。
-   先に fq_zukan.sql を Supabase で Run しておくこと。 */
-(function(){
-  'use strict';
-  var TOTAL = 72;                       /* img/zukan/z_01.png 〜 z_72.png */
-  var KEY   = 'fukushi_quest_326_zukan';/* 通信できない時の控え（表示用だけ） */
-
-  var cfg = window.FQ_CONFIG || {};
-  var REAL = !!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0
-             && cfg.SUPABASE_ANON_KEY && cfg.SUPABASE_ANON_KEY.indexOf('YOUR-ANON') < 0
-             && window.supabase);
-  var sb = REAL ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
-
-  var owned = {};
-  try{ (JSON.parse(localStorage.getItem(KEY)||'[]')||[]).forEach(function(n){ owned[n]=1; }); }catch(e){}
-  function saveLocal(){
-    try{ localStorage.setItem(KEY, JSON.stringify(Object.keys(owned).map(Number))); }catch(e){}
-  }
-  function pad(n){ return (n<10?'0':'')+n; }
-  function src(n){ return 'img/zukan/z_'+pad(n)+'.png'; }
-
-  /* ---- 升目を作る ---- */
-  var grid = document.getElementById('zkGrid');
-  var cells = [];
-  if(grid){
-    for(var i=1;i<=TOTAL;i++){
-      var c=document.createElement('div'); c.className='zk-cell';
-      var im=document.createElement('img'); im.loading='lazy'; im.alt=''; im.src=src(i);
-      c.appendChild(im); grid.appendChild(c); cells.push(c);
-    }
-  }
-  function paint(justGot){
-    var n=0;
-    cells.forEach(function(c,i){
-      var has=!!owned[i+1];
-      if(has) n++;
-      c.classList.toggle('got', has);
-      c.classList.toggle('justgot', (i+1)===justGot);
-    });
-    var o=document.getElementById('zkOwned'), t=document.getElementById('zkTotal'),
-        b=document.getElementById('zkBar');
-    if(o) o.textContent=n;
-    if(t) t.textContent=TOTAL;
-    if(b) b.style.width=Math.round(n/TOTAL*100)+'%';
-    return n;
-  }
-
-  /* ---- 画面下のお知らせ ---- */
-  function msg(html, cool){
-    var m=document.getElementById('zkMsg'); if(!m) return;
-    m.innerHTML = html ? ('<div class="'+(cool?'zk-cool':'zk-note')+'">'+html+'</div>') : '';
-  }
-  function mmss(sec){
-    sec=Math.max(0,Math.round(sec));
-    var m=Math.floor(sec/60), s=sec%60;
-    return m>0 ? (m+'分'+(s<10?'0':'')+s+'秒') : (s+'秒');
-  }
-
-  /* ---- 登場のモーダル ---- */
-  function show(n, isNew, got){
-    var mo=document.getElementById('zukanModal'); if(!mo) return;
-    document.getElementById('zkImg').src = src(n);
-    document.getElementById('zkEm').textContent  = isNew ? 'なかまが ふえた！' : 'もう会ったことがあるね';
-    document.getElementById('zkTtl').textContent = isNew ? 'ゲット！' : 'また会えたね';
-    document.getElementById('zkNo').textContent  = 'No.'+pad(n);
-    document.getElementById('zkProg').textContent = got+' / '+TOTAL+' 体';
-    mo.classList.add('show');
-    if(isNew && typeof confetti==='function') confetti(2);
-  }
-
-  /* ---- サーバーとやりとり ---- */
-  function refresh(){
-    if(!sb || !window.DID) return;
-    sb.rpc('zukan_list', {p_recog: String(window.DID)}).then(function(r){
-      if(!r || r.error || !r.data) return;
-      var d = r.data;
-      if(d.total) TOTAL = d.total;
-      owned = {};
-      (d.chars||[]).forEach(function(n){ owned[n]=1; });
-      saveLocal(); paint(0);
-    }).catch(function(){});
-  }
-
-  var busyZk=false;
-  function doScan(spot){
-    if(busyZk) return;
-    if(!sb){ msg('図鑑をつかうには通信が必要です。電波の良い場所でもう一度ひらいてください。', true); return; }
-    if(!window.DID){ setTimeout(function(){ doScan(spot); }, 800); return; }
-    busyZk=true;
-    msg('よみとり中…');
-    sb.rpc('zukan_scan', {p_recog: String(window.DID), p_spot: String(spot)}).then(function(r){
-      busyZk=false;
-      if(!r || r.error || !r.data){ msg('うまく読み取れませんでした。もう一度ためしてください。', true); return; }
-      var d=r.data;
-      if(d.total) TOTAL=d.total;
-      if(d.ok){
-        owned[d.char]=1; saveLocal();
-        var n=paint(d.char);
-        show(d.char, d.is_new !== false, d.owned || n);
-        msg('');
-        var el=document.getElementById('zukanSec');
-        if(el && el.scrollIntoView) el.scrollIntoView({behavior:'smooth', block:'center'});
-      } else if(d.reason==='cooldown'){
-        paint(0);
-        countdown(d.wait);
-      } else {
-        msg('このQRは読み取れませんでした。', true);
-      }
-    }).catch(function(){
-      busyZk=false;
-      msg('通信できませんでした。電波の良い場所でもう一度ためしてください。', true);
-    });
-  }
-
-  /* ---- クールダウンの残り時間を数える ---- */
-  var coolTimer=null;
-  function countdown(sec){
-    if(coolTimer) clearInterval(coolTimer);
-    var end = Date.now() + sec*1000;
-    function tick(){
-      var left = (end - Date.now())/1000;
-      if(left<=0){
-        clearInterval(coolTimer); coolTimer=null;
-        msg('もう一度このQRを読み取れます！', true);
-        return;
-      }
-      msg('このQRは、さっき読んだばかりです。<br>あと <b>'+mmss(left)+'</b> でまた読めます。<br>'
-        + 'そのあいだに <b>ほかの場所のQR</b> をさがしてみよう。', true);
-    }
-    tick(); coolTimer=setInterval(tick, 1000);
-  }
-
-  /* ---- 閉じるボタン ---- */
-  document.addEventListener('click', function(ev){
-    var el=(ev.target && ev.target.closest) ? ev.target.closest('[data-act]') : null;
-    if(!el) return;
-    if(el.getAttribute('data-act')==='zkClose'){
-      var mo=document.getElementById('zukanModal'); if(mo) mo.classList.remove('show');
-    }
-  });
-
-  /* ---- 起動 ---- */
-  paint(0);
-
-  /* URLの ?z= を拾う。
-     ★本体の ?q= ハンドラは q があるときだけ URL を書き換えるので、
-       ?z= 単独ならこの時点でも残っている。 */
-  var spot=null;
-  try{ spot = new URLSearchParams(location.search).get('z'); }catch(e){}
-
-  /* 認識番号はサーバー発行を待つ（fq-recog-serial-v1）。
-     待ちすぎないよう、最大4秒であきらめて手元の番号で進む。 */
-  var waited=0;
-  (function waitId(){
-    var srv=false;
-    try{ srv = localStorage.getItem('fukushi_quest_326_did_srv')==='1'; }catch(e){}
-    if(srv || waited>=4000 || !sb){
-      refresh();
-      if(spot){
-        if(history.replaceState) history.replaceState(null,'',location.pathname);
-        setTimeout(function(){ doScan(spot); }, 300);
-      }
-      return;
-    }
-    waited+=300; setTimeout(waitId, 300);
-  })();
-})();
-
-</script>
-<script>
 /* PWA登録: HTTPS/localhostでのみ有効。static hosting(無料枠)で動作 */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
@@ -1634,6 +1461,184 @@ if ('serviceWorker' in navigator) {
     if(document.visibilityState==='visible') refreshRanking();
   });
 })();
+</script>
+
+<!-- == fq-zukan-order-v1 ==
+     ★図鑑のスクリプトは、必ず supabase-js と config.js の「うしろ」に置くこと。
+       前に置くと window.FQ_CONFIG も window.supabase もまだ無く、
+       図鑑が毎回「通信できません」になる。 -->
+<script>
+/* == fq-zukan-v1 : キャラクター図鑑 ==
+   会場のQR（?z=場所の名前）を読むと、キャラが1体ずつ増える。
+   ★5分の判定はサーバー（zukan_scan）でやる。端末の履歴を消しても回避できない。
+   ★ポイントとは別勘定。participants にも draws にも触らない。
+   先に fq_zukan.sql を Supabase で Run しておくこと。 */
+(function(){
+  'use strict';
+  var TOTAL = 72;                       /* img/zukan/z_01.png 〜 z_72.png */
+  var KEY   = 'fukushi_quest_326_zukan';/* 通信できない時の控え（表示用だけ） */
+
+  var cfg = window.FQ_CONFIG || {};
+  var REAL = !!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0
+             && cfg.SUPABASE_ANON_KEY && cfg.SUPABASE_ANON_KEY.indexOf('YOUR-ANON') < 0
+             && window.supabase);
+  var sb = REAL ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
+
+  var owned = {};
+  try{ (JSON.parse(localStorage.getItem(KEY)||'[]')||[]).forEach(function(n){ owned[n]=1; }); }catch(e){}
+  function saveLocal(){
+    try{ localStorage.setItem(KEY, JSON.stringify(Object.keys(owned).map(Number))); }catch(e){}
+  }
+  function pad(n){ return (n<10?'0':'')+n; }
+  function src(n){ return 'img/zukan/z_'+pad(n)+'.png'; }
+
+  /* ---- 升目を作る ---- */
+  var grid = document.getElementById('zkGrid');
+  var cells = [];
+  if(grid){
+    for(var i=1;i<=TOTAL;i++){
+      var c=document.createElement('div'); c.className='zk-cell';
+      var im=document.createElement('img'); im.loading='lazy'; im.alt=''; im.src=src(i);
+      c.appendChild(im); grid.appendChild(c); cells.push(c);
+    }
+  }
+  function paint(justGot){
+    var n=0;
+    cells.forEach(function(c,i){
+      var has=!!owned[i+1];
+      if(has) n++;
+      c.classList.toggle('got', has);
+      c.classList.toggle('justgot', (i+1)===justGot);
+    });
+    var o=document.getElementById('zkOwned'), t=document.getElementById('zkTotal'),
+        b=document.getElementById('zkBar');
+    if(o) o.textContent=n;
+    if(t) t.textContent=TOTAL;
+    if(b) b.style.width=Math.round(n/TOTAL*100)+'%';
+    return n;
+  }
+
+  /* ---- 画面下のお知らせ ---- */
+  function msg(html, cool){
+    var m=document.getElementById('zkMsg'); if(!m) return;
+    m.innerHTML = html ? ('<div class="'+(cool?'zk-cool':'zk-note')+'">'+html+'</div>') : '';
+  }
+  function mmss(sec){
+    sec=Math.max(0,Math.round(sec));
+    var m=Math.floor(sec/60), s=sec%60;
+    return m>0 ? (m+'分'+(s<10?'0':'')+s+'秒') : (s+'秒');
+  }
+
+  /* ---- 登場のモーダル ---- */
+  function show(n, isNew, got){
+    var mo=document.getElementById('zukanModal'); if(!mo) return;
+    document.getElementById('zkImg').src = src(n);
+    document.getElementById('zkEm').textContent  = isNew ? 'なかまが ふえた！' : 'もう会ったことがあるね';
+    document.getElementById('zkTtl').textContent = isNew ? 'ゲット！' : 'また会えたね';
+    document.getElementById('zkNo').textContent  = 'No.'+pad(n);
+    document.getElementById('zkProg').textContent = got+' / '+TOTAL+' 体';
+    mo.classList.add('show');
+    if(isNew && typeof confetti==='function') confetti(2);
+  }
+
+  /* ---- サーバーとやりとり ---- */
+  function refresh(){
+    if(!sb || !window.DID) return;
+    sb.rpc('zukan_list', {p_recog: String(window.DID)}).then(function(r){
+      if(!r || r.error || !r.data) return;
+      var d = r.data;
+      if(d.total) TOTAL = d.total;
+      owned = {};
+      (d.chars||[]).forEach(function(n){ owned[n]=1; });
+      saveLocal(); paint(0);
+    }).catch(function(){});
+  }
+
+  var busyZk=false;
+  function doScan(spot){
+    if(busyZk) return;
+    if(!sb){ msg('図鑑をつかうには通信が必要です。電波の良い場所でもう一度ひらいてください。', true); return; }
+    if(!window.DID){ setTimeout(function(){ doScan(spot); }, 800); return; }
+    busyZk=true;
+    msg('よみとり中…');
+    sb.rpc('zukan_scan', {p_recog: String(window.DID), p_spot: String(spot)}).then(function(r){
+      busyZk=false;
+      if(!r || r.error || !r.data){ msg('うまく読み取れませんでした。もう一度ためしてください。', true); return; }
+      var d=r.data;
+      if(d.total) TOTAL=d.total;
+      if(d.ok){
+        owned[d.char]=1; saveLocal();
+        var n=paint(d.char);
+        show(d.char, d.is_new !== false, d.owned || n);
+        msg('');
+        var el=document.getElementById('zukanSec');
+        if(el && el.scrollIntoView) el.scrollIntoView({behavior:'smooth', block:'center'});
+      } else if(d.reason==='cooldown'){
+        paint(0);
+        countdown(d.wait);
+      } else {
+        msg('このQRは読み取れませんでした。', true);
+      }
+    }).catch(function(){
+      busyZk=false;
+      msg('通信できませんでした。電波の良い場所でもう一度ためしてください。', true);
+    });
+  }
+
+  /* ---- クールダウンの残り時間を数える ---- */
+  var coolTimer=null;
+  function countdown(sec){
+    if(coolTimer) clearInterval(coolTimer);
+    var end = Date.now() + sec*1000;
+    function tick(){
+      var left = (end - Date.now())/1000;
+      if(left<=0){
+        clearInterval(coolTimer); coolTimer=null;
+        msg('もう一度このQRを読み取れます！', true);
+        return;
+      }
+      msg('このQRは、さっき読んだばかりです。<br>あと <b>'+mmss(left)+'</b> でまた読めます。<br>'
+        + 'そのあいだに <b>ほかの場所のQR</b> をさがしてみよう。', true);
+    }
+    tick(); coolTimer=setInterval(tick, 1000);
+  }
+
+  /* ---- 閉じるボタン ---- */
+  document.addEventListener('click', function(ev){
+    var el=(ev.target && ev.target.closest) ? ev.target.closest('[data-act]') : null;
+    if(!el) return;
+    if(el.getAttribute('data-act')==='zkClose'){
+      var mo=document.getElementById('zukanModal'); if(mo) mo.classList.remove('show');
+    }
+  });
+
+  /* ---- 起動 ---- */
+  paint(0);
+
+  /* URLの ?z= を拾う。
+     ★本体の ?q= ハンドラは q があるときだけ URL を書き換えるので、
+       ?z= 単独ならこの時点でも残っている。 */
+  var spot=null;
+  try{ spot = new URLSearchParams(location.search).get('z'); }catch(e){}
+
+  /* 認識番号はサーバー発行を待つ（fq-recog-serial-v1）。
+     待ちすぎないよう、最大4秒であきらめて手元の番号で進む。 */
+  var waited=0;
+  (function waitId(){
+    var srv=false;
+    try{ srv = localStorage.getItem('fukushi_quest_326_did_srv')==='1'; }catch(e){}
+    if(srv || waited>=4000 || !sb){
+      refresh();
+      if(spot){
+        if(history.replaceState) history.replaceState(null,'',location.pathname);
+        setTimeout(function(){ doScan(spot); }, 300);
+      }
+      return;
+    }
+    waited+=300; setTimeout(waitId, 300);
+  })();
+})();
+
 </script>
 
 <!-- fq-dev-gate-v1: 開発パネル／主催者設定は、登録した端末で合言葉が合ったときだけ出す -->
