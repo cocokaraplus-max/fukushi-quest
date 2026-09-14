@@ -152,7 +152,18 @@ const FQ = {
          ★flip:true … この子の絵は左を向いている。散歩は「まず右へ行って帰る」
            動きなので、そのまま当てると行きの20秒間ずっと後ろ向きに歩く。
            絵を反転させるのではなく、動きの向きを絵に合わせている。 */
-      { photo:'img/ch_green.png', move:'walk',   at: 0, flip:true },
+      /* == fq-cast-fix-v1 ==
+         ★いちばん最初の散歩は「294くんと294ちゃんの2人」。
+           photo2 を書くと2人ならびになる（下の build() と .m-walk.duo を参照）。
+           2人とも正面を向いた絵なので flip は要らない。
+         ★前に散歩していた しか（img/ch_green.png）は、いまは出番なし。
+           ファイルは残してあるので、戻したくなったらここを書きかえるだけ。
+         ★ファイル名と中身がずれている子がいる（絵だけ差し替えたため）:
+             ch_beard.png … 白ひげ  → No.16（ふっくらして重そうな子）
+             ch_cat.png   … 黒猫    → No.03（ペガサスに乗った子）
+             ch_braid.png … 三つ編み → No.28（くろいクマ）
+             ch_wood.png  … 箱の顔  → No.26（グレーのうさぎ） */
+      { photo:'img/294kun.png', photo2:'img/294chan.png', move:'walk', at: 0 },
       { photo:'img/ch_beard.png', move:'drop',   at: 5.4  },
       { photo:'img/ch_cat.png',   move:'bounce', at: 15   },
       { photo:'img/ch_pink.png',  move:'skate',  at: 23   },
@@ -353,6 +364,16 @@ const FQ = {
          --aw:clamp(48px,14vw,80px);   /* fq-cast-v2: 自分の幅。落ちる子の位置計算に使う */
          width:var(--aw);pointer-events:none;user-select:none;}
   .actor img{display:block;width:100%;height:auto;transform-origin:50% 100%;}
+  /* == fq-cast-fix-v1 : 2人で散歩 ==
+     ★actors に photo2 を書くと、この形（duo）になる。
+       枠を2人ぶんの幅にして、絵を横にならべるだけ。動き方は1人のときと同じ。
+     ★2人めだけ足の運びを半歩ずらしてある（.34秒 ＝ 歩幅 .68秒の半分）。
+       そろえてしまうと2人が同じ動きになり、人形が2つ滑っていくように見える。
+     ★向きが変わるとき（scaleX(-1)）は並び順も入れかわる。
+       2人が向きを変えて帰ってくる形になるので、これでよい。 */
+  .m-walk.duo{--aw:clamp(88px,26vw,150px);display:flex;align-items:flex-end;}
+  .m-walk.duo img{width:50%;height:auto;}
+  .m-walk.duo img:last-child{animation-delay:.34s;}
 
   /* ① 歩く … 右へ行って、向きを変えて帰ってくる
         fq-walk-stroll-v1: 早足だったのを「散歩」の速さに変えた。
@@ -526,42 +547,50 @@ const FQ = {
   .m-skate{left:0;animation:a-skate 60s ease-in-out infinite;}
   .m-skate img{transform-origin:50% 92%;animation:i-spin 60s ease-in-out infinite;
                animation-delay:var(--at,0s);}   /* ★滑りと同じ出番に合わせる */
-  @keyframes a-skate{
+    /* == fq-cast-fix-v1 ==
+     ★8の字ぜんぶを右へずらした。理由は「落ちてくる子にぶつかっていた」から。
+       落ちる子は入場無料の丸の下に着地する。丸はロゴの幅で位置が決まるので、
+       画面が広いほど右に寄る（実測: 390pxで横4.6〜18.6%、1600pxで31.3〜36.3%）。
+       8の字は vw で書いてあるので、パソコンの幅だと左の輪が
+       ちょうど落ちる子の上を通っていた（1280pxで重なり100%＝貫通）。
+       いちばん左を 42vw にして、1600pxでもぶつからないようにした。
+     ★地面を動く子を足すときは、必ず広い画面（1280px以上）でも確かめること。 */
+@keyframes a-skate{
       /* ── 1回目：左から入って8の字を1周し、右へ抜ける（出番23秒／10秒） ──
          ★奥は 小さく(.80)・ほんの少し上(bottom 5%)、手前は 大きく(1.12)・下(1%)
          ★★奥行きは「大きさ」で出すこと。上下に動かしすぎると、
            奥へ行ったのではなく **上へ跳んだ** ように見える。ここを広げないこと。 */
       0%      {opacity:0; bottom:2.5%; transform:translateX(-90px) scaleX(1)  scale(1);}
       0.5%    {opacity:1; bottom:2.5%; transform:translateX(-90px) scaleX(1)  scale(1);}
-      2.0%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}
-      3.0%    {opacity:1; bottom:5%;   transform:translateX(70vw)  scaleX(1)  scale(.80);}
-      4.0%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(1)  scale(.90);}
-      4.3%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(-1) scale(.90);}
-      5.5%    {opacity:1; bottom:1%;   transform:translateX(70vw)  scaleX(-1) scale(1.12);}
-      6.5%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
-      9.9%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
-     11.4%    {opacity:1; bottom:5%;   transform:translateX(26vw)  scaleX(-1) scale(.80);}
-     12.4%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(-1) scale(.90);}
-     12.7%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(1)  scale(.90);}
-     13.9%    {opacity:1; bottom:1%;   transform:translateX(26vw)  scaleX(1)  scale(1.12);}
-     14.9%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}
+      2.0%    {opacity:1; bottom:2.5%; transform:translateX(62vw)  scaleX(1)  scale(1);}
+      3.0%    {opacity:1; bottom:5%;   transform:translateX(74vw)  scaleX(1)  scale(.80);}
+      4.0%    {opacity:1; bottom:3.5%; transform:translateX(82vw)  scaleX(1)  scale(.90);}
+      4.3%    {opacity:1; bottom:3.5%; transform:translateX(82vw)  scaleX(-1) scale(.90);}
+      5.5%    {opacity:1; bottom:1%;   transform:translateX(74vw)  scaleX(-1) scale(1.12);}
+      6.5%    {opacity:1; bottom:2.5%; transform:translateX(62vw)  scaleX(-1) scale(1);}
+      9.9%    {opacity:1; bottom:2.5%; transform:translateX(62vw)  scaleX(-1) scale(1);}
+     11.4%    {opacity:1; bottom:5%;   transform:translateX(50vw)  scaleX(-1) scale(.80);}
+     12.4%    {opacity:1; bottom:3.5%; transform:translateX(42vw)  scaleX(-1) scale(.90);}
+     12.7%    {opacity:1; bottom:3.5%; transform:translateX(42vw)  scaleX(1)  scale(.90);}
+     13.9%    {opacity:1; bottom:1%;   transform:translateX(50vw)  scaleX(1)  scale(1.12);}
+     14.9%    {opacity:1; bottom:2.5%; transform:translateX(62vw)  scaleX(1)  scale(1);}
      16.3%    {opacity:1; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(1) scale(1);}
      16.7%    {opacity:0; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(1) scale(1);}
       /* ── 2回目：右から入って逆回り、左へ抜ける（46.5秒／10秒） ── */
      38.9%    {opacity:0; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(-1) scale(1);}
      39.4%    {opacity:1; bottom:2.5%; transform:translateX(calc(100vw + 90px)) scaleX(-1) scale(1);}
-     40.9%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
-     41.9%    {opacity:1; bottom:5%;   transform:translateX(26vw)  scaleX(-1) scale(.80);}
-     42.9%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(-1) scale(.90);}
-     43.2%    {opacity:1; bottom:3.5%; transform:translateX(16vw)  scaleX(1)  scale(.90);}
-     44.4%    {opacity:1; bottom:1%;   transform:translateX(26vw)  scaleX(1)  scale(1.12);}
-     45.4%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}
-     48.8%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(1)  scale(1);}
-     50.3%    {opacity:1; bottom:5%;   transform:translateX(70vw)  scaleX(1)  scale(.80);}
-     51.3%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(1)  scale(.90);}
-     51.6%    {opacity:1; bottom:3.5%; transform:translateX(80vw)  scaleX(-1) scale(.90);}
-     52.8%    {opacity:1; bottom:1%;   transform:translateX(70vw)  scaleX(-1) scale(1.12);}
-     53.8%    {opacity:1; bottom:2.5%; transform:translateX(48vw)  scaleX(-1) scale(1);}
+     40.9%    {opacity:1; bottom:2.5%; transform:translateX(62vw)  scaleX(-1) scale(1);}
+     41.9%    {opacity:1; bottom:5%;   transform:translateX(50vw)  scaleX(-1) scale(.80);}
+     42.9%    {opacity:1; bottom:3.5%; transform:translateX(42vw)  scaleX(-1) scale(.90);}
+     43.2%    {opacity:1; bottom:3.5%; transform:translateX(42vw)  scaleX(1)  scale(.90);}
+     44.4%    {opacity:1; bottom:1%;   transform:translateX(50vw)  scaleX(1)  scale(1.12);}
+     45.4%    {opacity:1; bottom:2.5%; transform:translateX(62vw)  scaleX(1)  scale(1);}
+     48.8%    {opacity:1; bottom:2.5%; transform:translateX(62vw)  scaleX(1)  scale(1);}
+     50.3%    {opacity:1; bottom:5%;   transform:translateX(74vw)  scaleX(1)  scale(.80);}
+     51.3%    {opacity:1; bottom:3.5%; transform:translateX(82vw)  scaleX(1)  scale(.90);}
+     51.6%    {opacity:1; bottom:3.5%; transform:translateX(82vw)  scaleX(-1) scale(.90);}
+     52.8%    {opacity:1; bottom:1%;   transform:translateX(74vw)  scaleX(-1) scale(1.12);}
+     53.8%    {opacity:1; bottom:2.5%; transform:translateX(62vw)  scaleX(-1) scale(1);}
      55.4%    {opacity:1; bottom:2.5%; transform:translateX(-90px) scaleX(-1) scale(1);}
      55.8%,100%{opacity:0; bottom:2.5%; transform:translateX(-90px) scaleX(1) scale(1);}
   }
@@ -758,10 +787,15 @@ const FQ = {
          animation:a-sit 60s linear infinite;}
   .m-sit .bd{position:relative;z-index:2;display:block;width:100%;height:auto;}
   .m-sit .lg{position:absolute;left:0;top:0;z-index:1;display:block;width:100%;height:auto;
-             transform-origin:50.5% 73.3%;              /* 腰のちょうつがい */
-             /* ★fq-newcast-v1 : 絵を差し替えたので測り直した値。
-                  ch_wood_legs.png の上のふちの位置（縦73.3%）と、
-                  足の中心（横50.5%）。絵を変えたら必ず測り直すこと。 */
+             transform-origin:51.8% 87.8%;              /* 腰のちょうつがい */
+             /* ★fq-cast-fix-v1 : 73.3% から 87.8% へ下げた。
+                  73.3%は「頭のすぐ下」で、そこは絵がいちばん太い。
+                  足の絵を振ると、頭の下の板が横からはみ出して見えていた。
+                  87.8%（胴と足のさかい目）は絵がいちばん細いのではみ出さない。
+                ★切る位置は必ず「絵がいちばん細いところ」を選ぶこと。
+                  太いところで切ると、振ったときに必ずはみ出す。
+                ★絵を差し替えたら、この2つの数字は測り直すこと。
+                  測り方：足の絵の上のふちの縦位置（％）と、足の中心の横位置（％）。 */
              animation:i-kick 1.15s ease-in-out infinite alternate;}
   @keyframes a-sit{
       0%      {opacity:0; transform:translateY(-6px);}
@@ -769,7 +803,8 @@ const FQ = {
       1.7%,12%{opacity:1; transform:translateY(0);}
      13.3%,100%{opacity:0; transform:translateY(0);}
   }
-  @keyframes i-kick{ from{transform:rotate(-12deg);} to{transform:rotate(14deg);} }
+  /* fq-cast-fix-v1: ちょうつがいを腰まで下げたぶん動きが小さくなるので、振り幅を広げた */
+  @keyframes i-kick{ from{transform:rotate(-18deg);} to{transform:rotate(20deg);} }
 
   @media(prefers-reduced-motion:reduce){ .actor{display:none;} }
 
@@ -1425,7 +1460,9 @@ const FQ = {
       if (c.x != null) pos += 'left:' + c.x + '%;';
       if (c.y != null) pos += 'bottom:' + c.y + '%;';
       /* fq-cast-v6: flip:true の子は、動きの左右を裏返す（絵が左向きのため） */
-      return '<div class="actor m-' + esc(c.move) + (c.flip ? ' flip' : '') + '" '
+      /* fq-cast-fix-v1: photo2 があると「2人で散歩」になる（294くんと294ちゃん） */
+      return '<div class="actor m-' + esc(c.move) + (c.flip ? ' flip' : '')
+           + (c.photo2 ? ' duo' : '') + '" '
            /* ★--at は「出番の秒数」。中の絵にも同じ遅れを伝えるために置いている。
               animation-delay は親から子へ受けつがれないので、
               変数にして子から var(--at) で読ませる。
@@ -1435,7 +1472,10 @@ const FQ = {
            + (c.move === 'rocket' ? '<span class="smoke"></span>' : '')
            + (c.move === 'dash'   ? '<span class="dashline"></span>' : '')
            + (c.move === 'drop'   ? '<span class="thud"></span>' : '')
-           + '<img src="' + esc(c.photo) + '" alt="" decoding="async"></div>';
+           + '<img src="' + esc(c.photo) + '" alt="" decoding="async">'
+           /* fq-cast-fix-v1: 2人めがいれば、となりに並べる */
+           + (c.photo2 ? '<img src="' + esc(c.photo2) + '" alt="" decoding="async">' : '')
+           + '</div>';
     }
     $('#actors').innerHTML      = back.map(build).join('');
     $('#actorsfront').innerHTML = front.map(build).join('');
