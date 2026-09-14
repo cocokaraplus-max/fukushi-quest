@@ -64,6 +64,32 @@
   .amsg.ng{ color:#e08a8a; } .amsg.ok{ color:#79c08a; }
   .arow{ display:flex; gap:10px; margin-top:16px; }
   .arow button{ flex:1; }
+  /* fq-logpose-admin-v1: ログポースのヒント編集（?admin=1 のときだけ出る） */
+  .lpcard{ border-color:#4a6a5a; }
+  .lpcard h2{ color:#8ec8a8; }
+  .lprow{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+  .lprow label{ font-size:13px; color:var(--sub); }
+  .lpin{ padding:9px 11px; border-radius:8px; border:1px solid var(--line);
+         background:#1c180f; color:var(--cream); font-size:15px; }
+  .lpbtn{ background:#3f6b53; color:#fff; border:1px solid #5f9478; border-radius:10px;
+          padding:9px 16px; font-size:15px; font-weight:800; cursor:pointer; }
+  .lpbtn:disabled{ background:#3a423d; border-color:#4a544d; color:#8f9b94; cursor:not-allowed; }
+  .lpbtn.sm{ padding:7px 12px; font-size:13px; }
+  .lpbtn.del{ background:#6b3f3f; border-color:#946060; }
+  .lpspot{ border:1px solid var(--line); border-radius:12px; padding:12px 13px; margin-bottom:10px;
+           background:#1c180f; }
+  .lpspot .top{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:9px; }
+  .lpspot .sid{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14px;
+                color:var(--gold); font-weight:800; min-width:92px; }
+  .lpspot .lpin.ord{ width:62px; }
+  .lpspot .lpin.name{ width:170px; }
+  .lpspot .lpin.hint{ width:100%; box-sizing:border-box; font-size:16px; }
+  .lpspot .off{ opacity:.45; }
+  .lpqr{ font-size:12px; color:var(--sub); margin-top:7px; line-height:1.7;
+         font-family:ui-monospace,SFMono-Regular,Menlo,monospace; word-break:break-all; }
+  .lpmsg{ font-size:14px; min-height:22px; margin-top:8px; }
+  .lpmsg.ng{ color:#e08a8a; } .lpmsg.ok{ color:#79c08a; }
+  .lpnote{ font-size:12px; color:var(--sub); line-height:1.9; margin:10px 0 0; }
   .cbtn{ background:#3d3527; color:var(--cream); border:1px solid var(--line);
          border-radius:10px; padding:11px 20px; font-size:16px; font-weight:700; cursor:pointer; }
 </style>
@@ -83,6 +109,34 @@
     <div id="ranking"></div>
   </div>
 </div>
+<!-- fq-logpose-admin-v1: ?admin=1 のときだけ出る -->
+<div class="wrap" id="lpWrap" style="display:none;">
+  <div class="card lpcard">
+    <h2>🧭 ログポース ヒント編集</h2>
+    <div class="lprow">
+      <label for="lpPass">合言葉</label>
+      <input type="password" id="lpPass" class="lpin" autocomplete="off" autocapitalize="off"
+             spellcheck="false" style="width:180px;">
+      <button type="button" id="lpEye" class="cbtn" title="合言葉を見る"
+              style="padding:8px 11px;font-size:16px;line-height:1;">👁</button>
+      <button class="lpbtn" id="lpLoad">読み込む</button>
+      <span class="recog" id="lpGoal"></span>
+    </div>
+    <div id="lpList"></div>
+    <div class="lprow" id="lpAddRow" style="display:none;">
+      <input type="text" id="lpNewSpot" class="lpin" placeholder="新しい記号（例 kitchen2）" style="width:200px;">
+      <button class="lpbtn sm" id="lpAdd">この記号で足す</button>
+    </div>
+    <div class="lpmsg" id="lpMsg"></div>
+    <p class="lpnote">
+      <b>記号</b>はQRの中身（<code>?z=</code> のうしろ）。印刷したQRと同じにすること。ここは変えられません。<br>
+      <b>ヒント</b>が参加者の画面に大きく出ます。<b>名前</b>は「こたえを見る」を押したときだけ出ます。<br>
+      <b>使う</b>のチェックを外すと、その場所は行き先に出なくなります（QRが破れた時など）。<br>
+      保存するとすぐ反映されます。行き先の順番は<b>人ごとに自動で変わる</b>ので、番号は表示の並べ替え用です。
+    </p>
+  </div>
+</div>
+
 <!-- fq-reset-button-v1: ?admin=1 のときだけ出る -->
 <div class="wrap" id="adminWrap" style="display:none;">
   <div class="card acard">
@@ -285,6 +339,170 @@ boot();
       msg.textContent = '通信エラー: ' + (e.message || e);
       sync();
     });
+  });
+})();
+</script>
+
+<!-- fq-logpose-admin-v1 -->
+<script>
+/* 当日、会場を見ながらヒントを書き換えるための画面。
+   ★出るのは honbu.html?admin=1 のときだけ。
+   ★守りの本体は合言葉（Supabase の中で照合する。ここには持たせない）。
+   ★先に fq_logpose.sql を Supabase で Run しておくこと。 */
+(function(){
+  'use strict';
+  var p = new URLSearchParams(location.search);
+  if (p.get('admin') !== '1') return;
+
+  var cfg = window.FQ_CONFIG || {};
+  var real = cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0 && window.supabase;
+  var wrap = document.getElementById('lpWrap');
+  if (!wrap) return;
+  wrap.style.display = '';
+
+  var msg  = document.getElementById('lpMsg');
+  var list = document.getElementById('lpList');
+  var pass = document.getElementById('lpPass');
+
+  if (!real) {
+    msg.className = 'lpmsg ng';
+    msg.textContent = 'config.js が未設定なので、ヒントの編集は使えません。';
+    document.getElementById('lpLoad').disabled = true;
+    return;
+  }
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+
+  /* 合言葉の 見る／隠す（fq-pass-eye-v1 と同じ作り。人前で押さないこと） */
+  var eye = document.getElementById('lpEye');
+  if (eye) eye.addEventListener('click', function(){
+    var showing = (pass.type === 'text');
+    pass.type = showing ? 'password' : 'text';
+    eye.textContent = showing ? '\uD83D\uDC41' : '\uD83D\uDE48';
+    eye.title = showing ? '合言葉を見る' : '合言葉を隠す';
+    try { pass.focus(); } catch(e) {}
+  });
+
+  function say(t, cls){ msg.className = 'lpmsg' + (cls ? ' ' + cls : ''); msg.textContent = t; }
+  function esc(s){
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+             .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  /* QRに入れるURL。会場で印刷するときの控え。
+     ★このページと同じ場所にある quest.html を指す。 */
+  function qrUrl(spot){
+    var base = location.origin + location.pathname.replace(/[^\/]*$/, '');
+    return base + 'quest.html?z=' + encodeURIComponent(spot);
+  }
+
+  function row(s){
+    var d = document.createElement('div');
+    d.className = 'lpspot' + (s.enabled ? '' : ' off');
+    d.setAttribute('data-spot', s.spot);
+    d.innerHTML =
+        '<div class="top">'
+      +   '<span class="sid">' + esc(s.spot) + '</span>'
+      +   '<input type="number" class="lpin ord" value="' + esc(s.ord) + '" title="並べ替え用の番号">'
+      +   '<input type="text" class="lpin name" value="' + esc(s.name) + '" placeholder="場所の名前">'
+      +   '<label style="display:flex;gap:5px;align-items:center;">'
+      +     '<input type="checkbox" class="en"' + (s.enabled ? ' checked' : '') + '>使う</label>'
+      +   '<button class="lpbtn sm save">保存</button>'
+      +   '<button class="lpbtn sm del rm">削除</button>'
+      + '</div>'
+      + '<input type="text" class="lpin hint" value="' + esc(s.hint) + '" placeholder="ヒント（例 いいにおいが するところ）">'
+      + '<div class="lpqr">' + esc(qrUrl(s.spot)) + '</div>';
+    return d;
+  }
+
+  function load(){
+    if (!pass.value.trim()) { say('合言葉を入れてください。', 'ng'); return; }
+    say('読み込み中…');
+    sb.rpc('logpose_admin_list', { p_pass: pass.value }).then(function(r){
+      if (r.error) throw r.error;
+      var d = r.data || {};
+      if (!d.ok) { say(d.message || '読み込めませんでした。', 'ng'); return; }
+      list.innerHTML = '';
+      (d.spots || []).forEach(function(s){ list.appendChild(row(s)); });
+      document.getElementById('lpAddRow').style.display = '';
+      document.getElementById('lpGoal').textContent =
+        'ゴールした人 ' + (d.goal_count || 0) + ' 人　／　ゴール報酬 No.' + (d.goal_char || '—');
+      say((d.spots || []).length + ' か所を読み込みました。', 'ok');
+    }).catch(function(e){
+      say('読み込めませんでした（' + (e.message || e) + '）。'
+        + ' fq_logpose.sql をまだ Run していないかもしれません。', 'ng');
+    });
+  }
+
+  function save(box){
+    var spot = box.getAttribute('data-spot');
+    say('保存中…');
+    sb.rpc('logpose_admin_save', {
+      p_pass: pass.value,
+      p_spot: spot,
+      p_ord: parseInt(box.querySelector('.ord').value, 10) || 0,
+      p_name: box.querySelector('.name').value,
+      p_hint: box.querySelector('.hint').value,
+      p_enabled: box.querySelector('.en').checked
+    }).then(function(r){
+      if (r.error) throw r.error;
+      var d = r.data || {};
+      if (!d.ok) { say(d.message || '保存できませんでした。', 'ng'); return; }
+      box.className = 'lpspot' + (box.querySelector('.en').checked ? '' : ' off');
+      say(spot + ' を保存しました。', 'ok');
+    }).catch(function(e){ say('保存できませんでした（' + (e.message || e) + '）。', 'ng'); });
+  }
+
+  /* ★確認のダイアログ（confirm）は使わない。押した人の画面が固まることがあるため。
+       代わりに「削除」を2回押させる。 */
+  function del(box, btn){
+    var spot = box.getAttribute('data-spot');
+    if (btn.getAttribute('data-armed') !== '1') {
+      btn.setAttribute('data-armed', '1');
+      btn.textContent = 'もう一度押すと削除';
+      say(spot + ' を消します。やめるなら、もう一度読み込んでください。', 'ng');
+      setTimeout(function(){
+        btn.removeAttribute('data-armed'); btn.textContent = '削除';
+      }, 5000);
+      return;
+    }
+    sb.rpc('logpose_admin_delete', { p_pass: pass.value, p_spot: spot }).then(function(r){
+      if (r.error) throw r.error;
+      var d = r.data || {};
+      if (!d.ok) { say(d.message || '消せませんでした。', 'ng'); return; }
+      box.parentNode.removeChild(box);
+      say(spot + ' を消しました。', 'ok');
+    }).catch(function(e){ say('消せませんでした（' + (e.message || e) + '）。', 'ng'); });
+  }
+
+  list.addEventListener('click', function(ev){
+    var btn = ev.target;
+    var box = btn.closest ? btn.closest('.lpspot') : null;
+    if (!box) return;
+    if (btn.classList.contains('save')) save(box);
+    else if (btn.classList.contains('rm')) del(box, btn);
+  });
+
+  document.getElementById('lpLoad').addEventListener('click', load);
+  pass.addEventListener('keydown', function(e){ if (e.key === 'Enter') load(); });
+
+  document.getElementById('lpAdd').addEventListener('click', function(){
+    var el = document.getElementById('lpNewSpot');
+    var spot = (el.value || '').trim();
+    if (!/^[a-z0-9_-]+$/i.test(spot)) {
+      say('記号は 半角の英数字・_・- だけにしてください（QRに入る文字です）。', 'ng'); return;
+    }
+    if (list.querySelector('[data-spot="' + spot + '"]')) { say('その記号はもうあります。', 'ng'); return; }
+    sb.rpc('logpose_admin_save', {
+      p_pass: pass.value, p_spot: spot,
+      p_ord: list.children.length + 1, p_name: '', p_hint: '', p_enabled: true
+    }).then(function(r){
+      if (r.error) throw r.error;
+      var d = r.data || {};
+      if (!d.ok) { say(d.message || '足せませんでした。', 'ng'); return; }
+      list.appendChild(row({ spot: spot, ord: list.children.length + 1,
+                             name: '', hint: '', enabled: true }));
+      el.value = '';
+      say(spot + ' を足しました。名前とヒントを入れて「保存」を押してください。', 'ok');
+    }).catch(function(e){ say('足せませんでした（' + (e.message || e) + '）。', 'ng'); });
   });
 })();
 </script>

@@ -304,6 +304,42 @@
   .zk-modal .zk-no{font-size:13px;color:var(--muted);font-weight:800;margin-top:4px;}
   .zk-modal .zk-prog{margin-top:12px;font-size:15px;font-weight:900;color:var(--teal);}
 </style>
+<style>/* == fq-logpose-v1 : つぎの行き先と称号 == */
+  .lp-box{background:#fff;border:2px solid var(--line);border-radius:16px;
+    padding:14px 15px 13px;margin:0 0 14px;box-shadow:0 3px 0 rgba(0,0,0,.04);}
+  .lp-box.done{background:#fbf6ea;border-color:var(--mustard);}
+  .lp-h{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:900;color:var(--ink);}
+  .lp-h .lp-em{font-size:19px;}
+  .lp-top{display:flex;align-items:center;gap:9px;margin:9px 0 10px;}
+  .lp-prog{font-size:12px;font-weight:900;color:var(--muted);white-space:nowrap;}
+  .lp-prog b{font-size:21px;color:var(--mustard);margin-right:1px;}
+  .lp-bar{flex:1;height:11px;border-radius:999px;background:#ece2cc;
+    border:2px solid var(--line);overflow:hidden;}
+  .lp-bar i{display:block;height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,#f3cf86,var(--mustard));transition:width .5s ease;}
+  .lp-hint{background:#fbf6ea;border:2px dashed var(--line);border-radius:13px;
+    padding:13px 12px;font-size:16px;font-weight:900;color:var(--ink);
+    text-align:center;line-height:1.8;letter-spacing:.03em;}
+  .lp-ans{margin-top:9px;text-align:center;}
+  .lp-ans .linkbtn{font-size:12px;}
+  .lp-name{margin-top:9px;text-align:center;font-size:17px;font-weight:900;color:var(--red);}
+  .lp-note{margin-top:10px;font-size:11.5px;color:var(--muted);
+    font-weight:600;line-height:1.7;text-align:center;}
+  .lp-note b{color:var(--ink);}
+  .lp-title{display:flex;align-items:center;justify-content:center;gap:6px;
+    margin:0 0 10px;padding:8px 10px;border-radius:12px;
+    background:#fbf6ea;border:2px solid var(--mustard);
+    font-size:13.5px;font-weight:900;color:var(--ink);text-align:center;line-height:1.6;}
+  .lp-title .lp-tem{font-size:17px;}
+  /* ゴールのモーダル */
+  .lp-modal .modal-card{max-width:340px;}
+  .lp-modal .lp-gem{font-size:38px;line-height:1;}
+  .lp-modal .zk-em{font-size:15px;font-weight:900;color:var(--muted);letter-spacing:.04em;margin-top:6px;}
+  .lp-modal .zk-img{width:180px;height:180px;object-fit:contain;display:block;margin:8px auto 0;
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,.18));}
+  .lp-modal h3{margin:10px 0 0;font-size:24px;color:var(--red);}
+  .lp-award{margin-top:10px;font-size:15px;font-weight:900;color:var(--teal);line-height:1.7;}
+</style>
 
 </head>
 <body>
@@ -362,12 +398,27 @@
   <!-- == fq-zukan-v1 == -->
   <section id="zukanSec">
     <div class="sec-h hand"><span class="em">📖</span>キャラクター図鑑</div>
+    <!-- == fq-logpose-v1 : つぎの行き先。fq_logpose.sql を Run すると出る == -->
+    <div class="lp-box" id="lpBox" style="display:none">
+      <div class="lp-h"><span class="lp-em">🧭</span><span id="lpHead">つぎの ぼうけん</span></div>
+      <div class="lp-top">
+        <div class="lp-prog"><b id="lpVisited">0</b>/<span id="lpTotal">8</span> か所</div>
+        <div class="lp-bar"><i id="lpBar"></i></div>
+      </div>
+      <div class="lp-hint" id="lpHint">…</div>
+      <div class="lp-ans" id="lpAnsWrap"><button class="linkbtn" data-act="lpAns">こたえを見る</button></div>
+      <div class="lp-name" id="lpName" style="display:none"></div>
+      <div class="lp-note" id="lpNote">見つけたら、そこの<b>QR</b>を読み取ろう。<br>
+        行き先は<b>人によってちがいます</b>。となりの人と同じとは限りません。</div>
+    </div>
     <p class="zk-lead">会場のあちこちにいる<b>キャラクターのQR</b>を読み取ると、なかまが増えていきます。<br>
       同じQRは<b>5分たつ</b>とまた読めます。ほかの場所のQRなら、すぐ読めます。</p>
     <div class="zk-head">
       <div class="zk-count"><b id="zkOwned">0</b>/<span id="zkTotal">72</span></div>
       <div class="zk-bar"><i id="zkBar"></i></div>
     </div>
+    <!-- == fq-logpose-v1 : 称号（この端末の中で計算する） == -->
+    <div class="lp-title" id="lpTitle" style="display:none"><span class="lp-tem">🏅</span><b id="lpTitleTx"></b></div>
     <div class="zk-grid" id="zkGrid"></div>
     <div id="zkMsg"></div>
   </section>
@@ -502,6 +553,18 @@
     <div class="zk-no" id="zkNo">No.—</div>
     <div class="zk-prog" id="zkProg">—</div>
     <button class="btn" data-act="zkClose">やった！</button>
+  </div>
+</div>
+
+<!-- == fq-logpose-v1 goal == -->
+<div class="modal lp-modal" id="lpModal">
+  <div class="modal-card">
+    <div class="lp-gem">🧭</div>
+    <div class="zk-em">ぜんぶ まわった！</div>
+    <img class="zk-img" id="lpImg" alt="">
+    <h3 class="hand">ログポース コンプリート！</h3>
+    <div class="lp-award">ここでしか会えない なかまと<br>称号「<span id="lpAwardTx">ログポースの ぼうけんしゃ</span>」</div>
+    <button class="btn" data-act="lpClose">やった！</button>
   </div>
 </div>
 
@@ -1551,6 +1614,8 @@ if ('serviceWorker' in navigator) {
       owned = {};
       (d.chars||[]).forEach(function(n){ owned[n]=1; });
       saveLocal(); paint(0);
+      /* fq-logpose-v1: 持っている数を称号へ渡す */
+      try{ document.dispatchEvent(new CustomEvent('fq-zukan',{detail:d})); }catch(e){}
     }).catch(function(){});
   }
 
@@ -1566,6 +1631,8 @@ if ('serviceWorker' in navigator) {
       if(!r || r.error || !r.data){ msg('うまく読み取れませんでした。もう一度ためしてください。', true); return; }
       var d=r.data;
       if(d.total) TOTAL=d.total;
+      /* fq-logpose-v1: つぎの行き先とゴールを渡す */
+      try{ document.dispatchEvent(new CustomEvent('fq-zukan',{detail:d})); }catch(e){}
       if(d.ok){
         owned[d.char]=1; saveLocal();
         var n=paint(d.char);
@@ -1639,6 +1706,171 @@ if ('serviceWorker' in navigator) {
   })();
 })();
 
+</script>
+
+<script>
+/* == fq-logpose-v1 : ログポース ==
+   会場の8か所を、人によってちがう順番で回らせる。
+   画面には つぎの1か所だけ出す。そこのQRを読むと 次が出る。
+
+   ★ルートはサーバーに保存していない。
+     「まだ読んでいない場所のうち、その人の順番で次の1つ」を毎回計算している。
+     順番は md5(認識番号 + 場所) で決まるので、人ごとに違い、何度見ても同じ。
+     → 当日スポットを増やしても、既に回っている人が壊れない。
+
+   ★称号はここ（端末の中）で計算する。サーバーには持たせない。
+   ★ヒントと場所の名前は、本部モニター（honbu.html?admin=1）から当日変えられる。
+
+   先に fq_logpose.sql を Supabase で Run しておくこと。
+   Run していなければ、この箱は出ないだけで、図鑑はこれまでどおり動く。 */
+(function(){
+  'use strict';
+  var KEY_GOAL = 'fukushi_quest_326_lp_goal';   /* ゴールした印（表示用だけ） */
+  var GOAL_TITLE = 'ログポースの ぼうけんしゃ';
+
+  /* 称号。持っている数で決まる。上から順に見て、届いている一番上を出す。 */
+  var TITLES = [
+    {n:72, t:'326 コンプリート'},
+    {n:50, t:'326マスター'},
+    {n:36, t:'図鑑 はんぶん マスター'},
+    {n:20, t:'326ハンター'},
+    {n:10, t:'なかま あつめ 名人'},
+    {n:5,  t:'なかま あつめ 見習い'},
+    {n:1,  t:'はじめての なかま'}
+  ];
+
+  var cfg = window.FQ_CONFIG || {};
+  var REAL = !!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0
+             && cfg.SUPABASE_ANON_KEY && cfg.SUPABASE_ANON_KEY.indexOf('YOUR-ANON') < 0
+             && window.supabase);
+  var sb = REAL ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
+
+  var goaled = false;
+  try{ goaled = localStorage.getItem(KEY_GOAL)==='1'; }catch(e){}
+  var goalChar = 0;
+  var lastState = null;   /* 最後に受け取った状態。再描画に使う */
+  var lastOwned = 0;      /* 最後に分かった 持っている数 */
+
+  function $(id){ return document.getElementById(id); }
+  function pad(n){ return (n<10?'0':'')+n; }
+
+  /* ---- 称号 ---- */
+  function paintTitle(owned){
+    var box=$('lpTitle'), tx=$('lpTitleTx');
+    if(!box || !tx) return;
+    var t = null;
+    for(var i=0;i<TITLES.length;i++){ if(owned >= TITLES[i].n){ t = TITLES[i].t; break; } }
+    var list = [];
+    if(goaled) list.push(GOAL_TITLE);
+    if(t) list.push(t);
+    if(!list.length){ box.style.display='none'; return; }
+    tx.innerHTML = list.join('</b>　／　<b>');
+    box.style.display='';
+  }
+
+  /* ---- つぎの行き先 ---- */
+  var shownAnswer = false;   /* 「こたえを見る」を押したか */
+  var curSpot = null;        /* いま指している場所。変わったら こたえは隠しなおす */
+  function paintState(st){
+    var box=$('lpBox'); if(!box) return;
+    if(!st || !st.ok || !st.total){ box.style.display='none'; return; }
+    lastState = st;
+    box.style.display='';
+    var v = st.visited||0, tot = st.total||0;
+    $('lpVisited').textContent = v;
+    $('lpTotal').textContent   = tot;
+    $('lpBar').style.width = Math.round(v/Math.max(1,tot)*100)+'%';
+
+    if(st.done){
+      box.classList.add('done');
+      $('lpHead').textContent = 'ぼうけん、ぜんぶ まわった！';
+      $('lpHint').innerHTML = 'おめでとう！<br>会場のぜんぶの場所を まわりました。';
+      $('lpAnsWrap').style.display='none';
+      $('lpName').style.display='none';
+      $('lpNote').innerHTML = 'あとは すきな場所のQRを読んで、なかまを増やそう。';
+      return;
+    }
+
+    box.classList.remove('done');
+    $('lpHead').textContent = 'つぎの ぼうけん';
+    var nx = st.next || {};
+    $('lpHint').textContent = nx.hint || (nx.name || 'つぎの場所をさがそう');
+    $('lpNote').innerHTML = '見つけたら、そこの<b>QR</b>を読み取ろう。<br>'
+      + '行き先は<b>人によってちがいます</b>。となりの人と同じとは限りません。';
+
+    /* 行き先が変わったら「こたえ」は隠しなおす */
+    if(curSpot !== (nx.spot||'')){ curSpot = (nx.spot||''); shownAnswer = false; }
+    var nm=$('lpName'), aw=$('lpAnsWrap');
+    if(shownAnswer && nx.name){
+      nm.textContent = '→ ' + nx.name;
+      nm.style.display=''; aw.style.display='none';
+    } else if(nx.name){
+      nm.style.display='none'; aw.style.display='';
+    } else {
+      nm.style.display='none'; aw.style.display='none';
+    }
+  }
+
+  function refresh(){
+    if(!sb || !window.DID) return;
+    sb.rpc('logpose_state', {p_recog: String(window.DID)}).then(function(r){
+      /* ★fq_logpose.sql をまだ Run していなければ、ここで error になる。
+           そのときは箱を出さないだけ。図鑑は動く。 */
+      if(!r || r.error || !r.data) return;
+      paintState(r.data);
+    }).catch(function(){});
+  }
+
+  /* ---- ゴールしたとき ---- */
+  function celebrate(){
+    goaled = true;
+    try{ localStorage.setItem(KEY_GOAL,'1'); }catch(e){}
+    var mo=$('lpModal'); if(!mo) return;
+    var im=$('lpImg');
+    if(im && goalChar > 0) im.src = 'img/zukan/z_'+pad(goalChar)+'.png';
+    else if(im) im.removeAttribute('src');
+    mo.classList.add('show');
+    if(typeof confetti==='function') confetti(3);
+    paintTitle(lastOwned);          /* ★称号に「ぼうけんしゃ」を足す */
+  }
+
+  /* ---- 図鑑からの知らせを受け取る ---- */
+  document.addEventListener('fq-zukan', function(ev){
+    var d = (ev && ev.detail) || {};
+    if(typeof d.goal_char === 'number' && d.goal_char > 0) goalChar = d.goal_char;
+    if(typeof d.owned === 'number') lastOwned = d.owned;
+    else if(d.chars) lastOwned = d.chars.length;
+    paintTitle(lastOwned);
+    /* ★スキャンの返事には logpose が入っている。図鑑の読み込みには入っていない。
+         入っていないときだけ、あらためて聞きにいく。 */
+    if(d.logpose) paintState(d.logpose);
+    else if(d.char || d.reason) refresh();
+    if(d.just_goal && !goaled) setTimeout(celebrate, 1400);
+  });
+
+  /* ---- ボタン ---- */
+  document.addEventListener('click', function(ev){
+    var el=(ev.target && ev.target.closest) ? ev.target.closest('[data-act]') : null;
+    if(!el) return;
+    var a = el.getAttribute('data-act');
+    if(a==='lpAns'){
+      shownAnswer = true;
+      if(lastState) paintState(lastState); else refresh();
+    } else if(a==='lpClose'){
+      var mo=$('lpModal'); if(mo) mo.classList.remove('show');
+    }
+  });
+
+  /* ---- 起動（認識番号がサーバーから届くのを待つ。最大4秒） ---- */
+  paintTitle(0);
+  var waited=0;
+  (function waitId(){
+    var srv=false;
+    try{ srv = localStorage.getItem('fukushi_quest_326_did_srv')==='1'; }catch(e){}
+    if(srv || waited>=4000 || !sb){ refresh(); return; }
+    waited+=300; setTimeout(waitId, 300);
+  })();
+})();
 </script>
 
 <!-- fq-dev-gate-v1: 開発パネル／主催者設定は、登録した端末で合言葉が合ったときだけ出す -->
