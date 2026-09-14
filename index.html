@@ -171,6 +171,16 @@ const FQ = {
       { photo:'img/ch_braid.png', move:'peek',   at: 33.5 },
       { photo:'img/ch_wood.png',  move:'sit',    at: 34.5 },
       { photo:'img/ch_robot.png', move:'rocket', at: 43.5 },
+      /* == fq-cast-add-v1 ==
+         ★電車の子。使っていなかった dash（走り抜ける）をそのまま使う。
+           この絵は電車の先頭が左を向いていて、dash も右から左へ走るので、
+           絵も動きもいじらずに「進行方向に頭が向く」。
+         ★右へうち上がる子。cls:'r2' を付けると右うち上げの動きになる。
+           左の子（上の行）と同じ m-rocket なので、煙も傾きもそのまま使える。
+         ★フワフワの子。at は 0。出番の時刻は動き（a-float）の中に書いてある。 */
+      { photo:'img/ch_train.png',   move:'dash',   at: 35.5 },
+      { photo:'img/ch_rocket2.png', move:'rocket', at: 56.8, cls:'r2' },
+      { photo:'img/ch_float.png',   move:'float',  at: 0    },
     ],
   },
 
@@ -448,7 +458,35 @@ const FQ = {
      ★2回目は scaleX(-1) で絵を反転して、進む向きに合わせている。
      ★どのコマも translate → scaleX → scale の順で3つ書いてある。
        途中で数を変えると、ブラウザが別の計算に切り替わって動きが濁る。 */
-  .m-rocket{left:50%;animation:a-rocket 60s ease-in infinite;}
+  /* == fq-cast-add-v1 ==
+     ★1人が2回飛んでいたのを、左うち上げ／右うち上げの2つに割った。
+       左（a-rocket-l）… 何も付けない子。いままでどおり No.34
+       右（a-rocket-r）… cls:'r2' を付けた子。No.60
+     ★もとの a-rocket は残してある（中身は左右ぶん両方入ったまま）。
+       誰も使っていないので、消さずに置いてある。
+     ★煙（.smoke）も傾き（i-tilt）も m-rocket のままなので、両方に効く。 */
+  .m-rocket{left:50%;animation:a-rocket-l 60s ease-in infinite;}
+  .m-rocket.r2{animation-name:a-rocket-r;}
+  @keyframes a-rocket-l{
+      /* 左下から右上へ（出番 43.5秒） */
+      0%      {opacity:0; transform:translate(-40vw,10px)  scaleX(1) scale(.95);}
+      0.3%    {opacity:1; transform:translate(-40vw,10px)  scaleX(1) scale(.95);}
+      0.8%    {opacity:1; transform:translate(-40vw,0)     scaleX(1) scale(1);}
+      2.0%    {opacity:1; transform:translate(-33vw,-230px) scaleX(1) scale(.82);}
+      3.2%    {opacity:1; transform:translate(-24vw,-760px) scaleX(1) scale(.42);}
+      3.9%    {opacity:1; transform:translate(-20vw,-1200px) scaleX(1) scale(.28);}
+      4.0%,100%{opacity:0; transform:translate(-20vw,-1200px) scaleX(1) scale(.28);}
+  }
+  @keyframes a-rocket-r{
+      /* 右下から左上へ（出番 56.8秒）。絵は scaleX(-1) で進む向きに合わせる */
+      0%      {opacity:0; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
+      0.3%    {opacity:1; transform:translate(34vw,10px)   scaleX(-1) scale(.95);}
+      0.8%    {opacity:1; transform:translate(34vw,0)      scaleX(-1) scale(1);}
+      2.0%    {opacity:1; transform:translate(27vw,-230px) scaleX(-1) scale(.82);}
+      3.2%    {opacity:1; transform:translate(18vw,-760px) scaleX(-1) scale(.42);}
+      3.9%    {opacity:1; transform:translate(14vw,-1200px) scaleX(-1) scale(.28);}
+      4.0%,100%{opacity:0; transform:translate(14vw,-1200px) scaleX(-1) scale(.28);}
+  }
   .m-rocket img{animation:i-tilt 3s ease-in infinite;}
   @keyframes a-rocket{
       /* 1回目：左下から右上へ（出番 43.5秒） */
@@ -499,6 +537,36 @@ const FQ = {
           消していないのは、また使いたくなったときのため。
         ★この子は「歩く子を追い抜く」役。出番（at）を歩く子に合わせてある。
           歩き 31px/秒 に対して 走り 394px/秒。およそ13倍の差。 */
+  /* == fq-cast-add-v1 : フワフワ飛ぶ ==
+     ★ロゴより上（下から84%）を、ゆっくり横切る。
+       6〜14秒で左から右へ、26〜34秒でもどってくる。
+     ★出番の時刻は、この動きの中に書いてある（at は 0）。
+       ほかの子とちがい「2回ぶんを1つの動きに書く」やり方。ロケットと同じ。
+     ★文字より「うしろ」（#actors）。前に出すとキャッチコピーを隠す。
+     ★上下は bottom の％。px で書くと画面の高さで位置がずれる。
+     ★高さの帯を分けてあるので、下を走る子や文字の上を跳ねる子とぶつからない。
+         地面 … 散歩・滑る・電車   ／ 文字の上 … 跳ねる（78%）
+         ロゴの上 … フワフワ（84%） ／ ロケットは下から上へ通りぬける */
+  .m-float{--aw:clamp(34px,9.5vw,54px);left:0;bottom:84%;
+           animation:a-float 60s linear infinite;}
+  .m-float img{animation:i-bob 2.6s ease-in-out infinite alternate;}
+  @keyframes i-bob{
+      from{transform:translateY(0)     rotate(-5deg);}
+      to  {transform:translateY(-13px) rotate(5deg);}
+  }
+  @keyframes a-float{
+      /* ── 1回目：左から右へ（6〜14秒） ── */
+      0%      {opacity:0; transform:translateX(-26vw) scaleX(1);}
+      9.9%    {opacity:0; transform:translateX(-26vw) scaleX(1);}
+     10.0%    {opacity:1; transform:translateX(-26vw) scaleX(1);}
+     23.2%    {opacity:1; transform:translateX(114vw) scaleX(1);}
+     23.4%    {opacity:0; transform:translateX(114vw) scaleX(1);}
+      /* ── 2回目：右から左へ（26〜34秒）。絵を反転して向きを合わせる ── */
+     43.2%    {opacity:0; transform:translateX(114vw) scaleX(-1);}
+     43.3%    {opacity:1; transform:translateX(114vw) scaleX(-1);}
+     56.6%    {opacity:1; transform:translateX(-26vw) scaleX(-1);}
+     56.8%,100%{opacity:0; transform:translateX(-26vw) scaleX(1);}
+  }
   .m-dash{left:0;animation:a-dash 60s linear infinite;}
   .m-dash img{animation:i-dash .19s ease-in-out infinite alternate;}
   @keyframes a-dash{
@@ -1479,8 +1547,9 @@ const FQ = {
       if (c.y != null) pos += 'bottom:' + c.y + '%;';
       /* fq-cast-v6: flip:true の子は、動きの左右を裏返す（絵が左向きのため） */
       /* fq-cast-fix-v1: photo2 があると「2人で散歩」になる（294くんと294ちゃん） */
+      /* fq-cast-add-v1: cls を書くと、その名前をそのまま足す（右うち上げの r2 など） */
       return '<div class="actor m-' + esc(c.move) + (c.flip ? ' flip' : '')
-           + (c.photo2 ? ' duo' : '') + '" '
+           + (c.photo2 ? ' duo' : '') + (c.cls ? ' ' + esc(c.cls) : '') + '" '
            /* ★--at は「出番の秒数」。中の絵にも同じ遅れを伝えるために置いている。
               animation-delay は親から子へ受けつがれないので、
               変数にして子から var(--at) で読ませる。
