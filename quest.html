@@ -414,7 +414,7 @@
     <p class="zk-lead">会場のあちこちにいる<b>キャラクターのQR</b>を読み取ると、なかまが増えていきます。<br>
       同じQRは<b>5分たつ</b>とまた読めます。ほかの場所のQRなら、すぐ読めます。</p>
     <div class="zk-head">
-      <div class="zk-count"><b id="zkOwned">0</b>/<span id="zkTotal">72</span></div>
+      <div class="zk-count"><b id="zkOwned">0</b>/<span id="zkTotal">69</span></div>
       <div class="zk-bar"><i id="zkBar"></i></div>
     </div>
     <!-- == fq-logpose-v1 : 称号（この端末の中で計算する） == -->
@@ -1538,7 +1538,11 @@ if ('serviceWorker' in navigator) {
    先に fq_zukan.sql を Supabase で Run しておくこと。 */
 (function(){
   'use strict';
-  var TOTAL = 72;                       /* img/zukan/z_01.png 〜 z_72.png */
+  /* == fq-zukan-69-v1 ==
+     ★体数を変えるときは、ここと Supabase の zukan_config.char_count の
+       両方を直すこと。ここは通信できないときの控えで、
+       つながればサーバーの値で上書きされる。 */
+  var TOTAL = 69;                       /* img/zukan/z_01.png 〜 z_69.png */
   var KEY   = 'fukushi_quest_326_zukan';/* 通信できない時の控え（表示用だけ） */
 
   var cfg = window.FQ_CONFIG || {};
