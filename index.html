@@ -163,7 +163,8 @@ const FQ = {
              ch_cat.png   … 黒猫    → No.03（ペガサスに乗った子）
              ch_braid.png … 三つ編み → No.28（くろいクマ）
              ch_wood.png  … 箱の顔  → No.26（グレーのうさぎ） */
-      { photo:'img/294kun.png', photo2:'img/294chan.png', move:'walk', at: 0 },
+      /* fq-cast-fix-v3: flip:true ＝ 行きは絵を裏返す（a-walk-flip を使う） */
+      { photo:'img/294kun.png', photo2:'img/294chan.png', move:'walk', at: 0, flip:true },
       { photo:'img/ch_beard.png', move:'drop',   at: 5.4  },
       { photo:'img/ch_cat.png',   move:'bounce', at: 15   },
       { photo:'img/ch_pink.png',  move:'skate',  at: 23   },
@@ -371,28 +372,18 @@ const FQ = {
        そろえてしまうと2人が同じ動きになり、人形が2つ滑っていくように見える。
      ★向きが変わるとき（scaleX(-1)）は並び順も入れかわる。
        2人が向きを変えて帰ってくる形になるので、これでよい。 */
-  .m-walk.duo{--aw:clamp(88px,26vw,150px);display:flex;align-items:flex-end;
-              animation-name:a-walk-duo;}
+  /* == fq-cast-fix-v3 ==
+     ★fq-cast-fix-v2 では、ここで専用の動き（a-walk-duo）を割り当てて
+       「ぜんぶ裏返さない」動きにしていた（おなかの字を鏡文字にしないため）。
+       それだと行きも帰りも同じ向きで、進む向きと体の向きが合わなかったので、
+       HIROさんの指定で **ふつうの flip の作りに戻した**。
+         行き（右へ）… 絵を裏返す ／ 帰り（左へ）… 絵はそのまま
+       ＝ actors の294の行に flip:true を付けて a-walk-flip を使う。
+     ★引きかえに、行きのあいだは おなかの「ふ」「つ」が鏡文字になる。
+       画面では40pxほどなので、体の向きを優先した判断。 */
+  .m-walk.duo{--aw:clamp(88px,26vw,150px);display:flex;align-items:flex-end;}
   .m-walk.duo img{width:50%;height:auto;}
   .m-walk.duo img:last-child{animation-delay:.34s;}
-  /* == fq-cast-fix-v2 : 294の2人だけ、絵を裏返さない ==
-     ★ふつうの散歩（a-walk）は、帰り道で scaleX(-1) をかけて絵を裏返す。
-       「向きを変えて帰ってきた」に見せるための作り。
-     ★けれど294の2人は **正面を向いた絵** で、おなかに「ふ」「つ」の字がある。
-       裏返すと **字が鏡文字になり、2人の並び順まで入れかわる**。
-     ★なので、この2人のためだけに scaleX を抜いた動きを用意した。
-       中身は a-walk とまったく同じ。scaleX が無いだけ。
-     ★a-walk の数字を直したら、こちらも同じ数字に直すこと。2つで1組。
-     ★おなかに字や左右で違う模様がある子は、ぜんぶこの扱いにすること。 */
-  @keyframes a-walk-duo{
-      0%      {opacity:0; transform:translateX(-90px);}
-      0.5%    {opacity:1; transform:translateX(-90px);}
-      1%      {opacity:1; transform:translateX(-90px);}
-     16.5%    {opacity:1; transform:translateX(calc(100vw - 10px));}
-     17.2%    {opacity:1; transform:translateX(calc(100vw - 10px));}
-     32.5%    {opacity:1; transform:translateX(-90px);}
-     33.3%,100%{opacity:0; transform:translateX(-90px);}
-  }
 
   /* ① 歩く … 右へ行って、向きを変えて帰ってくる
         fq-walk-stroll-v1: 早足だったのを「散歩」の速さに変えた。
