@@ -12,12 +12,24 @@
        つながらない時だけキャッシュを出す（＝オフラインでも開ける）。
      - アイコン・manifest だけ「キャッシュ優先」（変わらないので速さ優先）。
    ------------------------------------------------------------------ */
-const CACHE = 'fq326-v7';   // fq-logo-daku-v3: ロゴの絵（lg_ga/lg_ru）をまた差し替えたので版を上げる
+const CACHE = 'fq326-v8';   // fq-newcast-v1: キャラの絵を全部入れ替えたので版を上げる
 // ★画像は下で「キャッシュ優先」にしている。版を上げないと、
 //   一度端末に取り込まれた古い絵がいつまでも出続ける。
 //   ★img/ の絵を差し替えたら、必ずここの数字を上げること。
 const ASSETS = ['./', './index.html', './quest.html', './config.js', './manifest.webmanifest',  // fq-swap-home-v1: quest.html も先に保存する
-  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png'];
+  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png',
+  /* == fq-newcast-v1 ==
+     アプリの絵。quest.html の中に埋め込んでいたのを、ファイルに出した。
+     ★HTML は毎回ネットから取り直すので、絵を埋め込んだままだと
+       1500人ぶんの通信がとんでもない量になる。
+     ★ここに書いておくと、最初の1回でまとめて端末に保存される。
+     ★絵を差し替えたら、上の CACHE の版を必ず上げること。 */
+  './img/app/brand.png', './img/app/gacha.png', './img/app/prize.png',
+  './img/app/next.png',
+  './img/app/m_jigyosho.png', './img/app/m_talk.png',
+  './img/app/m_check.png', './img/app/m_event.png',
+  './img/app/sw1.png', './img/app/sw2.png', './img/app/sw3.png',
+  './img/app/sw4.png', './img/app/sw5.png', './img/app/sw6.png'];
 
 self.addEventListener('install', e => {
   // 1つでも落ちると全部入らないので、個別に入れて失敗は無視する
