@@ -16,3 +16,6 @@ patch_*.py
 
 # macOS がフォルダごとに勝手に作る設定ファイル
 .DS_Store
+
+# Claude が渡したファイルの置き場（リポジトリには載せない）
+Claude outputs/
