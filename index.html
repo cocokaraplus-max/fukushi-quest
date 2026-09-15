@@ -549,7 +549,10 @@ const FQ = {
      ★高さの帯を分けてあるので、下を走る子や文字の上を跳ねる子とぶつからない。
          地面 … 散歩・滑る・電車   ／ 文字の上 … 跳ねる（78%）
          ロゴの上 … フワフワ（84%） ／ ロケットは下から上へ通りぬける */
-  .m-float{--aw:clamp(34px,9.5vw,54px);left:0;bottom:84%;
+  /* ★fq-tune2-v1: もう少し大きく。54px → 64px（上限）。
+     ★8つの画面幅で測り直し、ほかの子ともキャッチコピーともぶつからないことを確認。
+       これ以上大きくするときは、必ず測り直すこと。 */
+  .m-float{--aw:clamp(40px,11vw,64px);left:0;bottom:84%;
            animation:a-float 60s linear infinite;}
   .m-float img{animation:i-bob 2.6s ease-in-out infinite alternate;}
   @keyframes i-bob{
@@ -595,8 +598,12 @@ const FQ = {
        ペガサスの大きさ（.m-bounce の --aw）を変えたら、ここも合わせること。 */
   .dust{position:absolute;inset:0;z-index:3;pointer-events:none;
         --pw:clamp(43px,12.5vw,72px);}
+  /* ★fq-tune2-v1: will-change を外した。
+       粒が256個になったので、付けたままだと端末が256枚のレイヤーを
+       用意しようとして **かえって重くなる**。
+       動かすのは transform と opacity だけなので、無くてもなめらかに動く。 */
   .dust span{position:absolute;width:7px;height:7px;border-radius:50%;
-        opacity:0;will-change:transform,opacity;
+        opacity:0;
         box-shadow:0 0 5px 1px rgba(255,255,255,.55);
         animation:a-dust 60s linear infinite;}
   /* ★1粒あたり 1.9秒だけ見える（3.2% × 60秒）。
@@ -612,6 +619,60 @@ const FQ = {
   }
   /* ★「動きを減らす」設定の端末では出さない（キャラクターと同じあつかい） */
   @media(prefers-reduced-motion:reduce){ .dust{display:none;} }
+
+  /* ══ fq-tune2-v1 : ペガサスが通りすぎたあとの虹のアーチ ══
+     粉（飛んでいるあいだ）＋ アーチ（通りすぎたあと）の2段がまえ。
+
+     ★★大きさと場所は「ペガサスが通った道」に合わせてある。
+       ペガサスは 左下（-16vw・地面）から上がって、文字の上（bottom:78%）を
+       左から右へ渡り、右（78vw）で着地する。＝ゆるいアーチ。
+         left:-18% / right:8%   … 足もとの位置
+         bottom:1% / height:86% … いちばん高いところが bottom:78% になる高さ
+       ★ペガサスの高さ（a-bounce の bottom:78%）を変えたら、height も見直すこと。
+
+     ★絵ではなく CSS の radial-gradient（同心の楕円）で描いている。
+       ★★円のまん中を「箱のいちばん下」に置くのがコツ。
+         そうすると下半分は箱の外に出て、**上半分＝アーチだけ**が残る。
+         box-shadow で輪を重ねる作りにすると、輪の下の直線部分まで描かれて
+         地面のところに横線が出てしまう。
+
+     ★色はすべて半透明（.24〜.32）。**濃くしないこと。**
+       濃くすると黄色い地とけんかして、キャッチコピーが読みにくくなる。
+     ★奥ゆきは 0。キャラクター(1)より奥、文字(2)より奥。いちばん後ろの背景。
+     ★出る時刻は JS がペガサスの出番から入れる（castActors を参照）。 */
+  .rainbow{position:absolute;left:-18%;right:8%;bottom:1%;height:86%;
+        z-index:0;opacity:0;pointer-events:none;
+        transform:scale(.4);transform-origin:50% 100%;
+        background:radial-gradient(ellipse 50% 100% at 50% 100%,
+            transparent 0 71%,
+            rgba(110,100,195,.24) 71% 74.2%,
+            rgba(70,150,210,.26)  74.2% 77.4%,
+            rgba(90,180,110,.28)  77.4% 80.6%,
+            rgba(244,214,70,.32)  80.6% 83.8%,
+            rgba(240,150,55,.30)  83.8% 87%,
+            rgba(224,80,70,.30)   87% 90.2%,
+            transparent 90.2%);
+        animation:a-rainbow 60s ease-out infinite;}
+  /* ★数字はペガサス（a-bounce）の「画面から抜ける時刻」。
+       1回目は 11.4%（右へ抜けたところ）から、2回目は 72.2%（左へ抜けたところ）から。
+       ★★a-bounce の 11.4% / 72.2% を動かしたら、ここも動かすこと。2つで1組。 */
+  @keyframes a-rainbow{
+      0%       {opacity:0;   transform:scale(.4);}
+     11.4%     {opacity:0;   transform:scale(.4);}    /* 1回目：右へ抜けた */
+     12.8%     {opacity:.9;  transform:scale(.8);}
+     15%       {opacity:1;   transform:scale(1);}     /* ふわっとかかる */
+     20%       {opacity:1;   transform:scale(1.02);}
+     22.5%     {opacity:0;   transform:scale(1.05);}  /* そっと消える */
+     22.6%     {opacity:0;   transform:scale(.4);}
+     72.2%     {opacity:0;   transform:scale(.4);}    /* 2回目：左へ抜けた */
+     73.6%     {opacity:.9;  transform:scale(.8);}
+     75.8%     {opacity:1;   transform:scale(1);}
+     81%       {opacity:1;   transform:scale(1.02);}
+     83.5%     {opacity:0;   transform:scale(1.05);}
+     83.6%,100%{opacity:0;   transform:scale(.4);}
+  }
+  /* ★「動きを減らす」設定の端末では出さない */
+  @media(prefers-reduced-motion:reduce){ .rainbow{display:none;} }
   .rail{position:absolute;left:-3%;right:-3%;bottom:3px;height:11px;z-index:2;
         opacity:0;pointer-events:none;animation:a-rail 60s linear infinite;}
   .rail::before,.rail::after{content:'';position:absolute;left:0;right:0;
@@ -1620,6 +1681,11 @@ const FQ = {
          奥ゆきが同じ3なので、あとに書いたほうが手前になる。
          入れかえると、粉がペガサスの手前に出てしまう。 -->
   <div class="dust" id="dust" aria-hidden="true"></div>
+  <!-- == fq-tune2-v1 : 通りすぎたあとの虹のアーチ ==
+       ★いちばん後ろ（z-index:0）。キャラクターも文字も、虹より手前に出る。
+       ★粉（.dust）は前に出る子と同じ段（3）。アーチはいちばん後ろ（0）。
+         2つは別もの。片方だけ直しても、もう片方は変わらない。 -->
+  <div class="rainbow" id="rainbow" aria-hidden="true"></div>
   <div class="rail" id="rail" aria-hidden="true"><i></i></div>
   <div id="actors" aria-hidden="true"></div>
   <!-- fq-cast-v2: 文字より「まえ」に出る子（ロゴの上を跳ねる猫／丸から落ちる髭）専用。
@@ -1879,8 +1945,11 @@ const FQ = {
       ];
       var COL = ['#e0504a', '#ef9436', '#f2cf3f', '#57b06a', '#3f90d2', '#5b62bf', '#9a5fbd'];
       /* ★区間ごとの粒の数。少ないと「たまに点が出る」だけで粉に見えない。
-         多いほど濃くなるが、そのぶん粒の数（N×4区間×2回）が増える。 */
-      var N = 20;
+         多いほど濃くなるが、そのぶん粒の数（N×4区間×2回）が増える。
+         ★fq-tune2-v1: 20 → 32（ぜんぶで 160 → 256粒）。
+           ★★ここを増やすときは、下の .dust span の will-change に注意。
+             粒の数だけレイヤーを作ろうとして、かえって重くなる。 */
+      var N = 32;
       var html = '', n = 0;
 
       PATHS.forEach(function(path){
@@ -1909,6 +1978,18 @@ const FQ = {
         }
       });
       host.innerHTML = html;
+    })();
+
+    /* == fq-tune2-v1 ==
+       ★虹のアーチの出る時刻を、ペガサス（bounce）の出番に合わせる。
+         ここで合わせておけば、actors の at を変えてもアーチが付いてくる。
+       ★ペガサスがいなければアーチも出さない。 */
+    (function(){
+      var rb = $('#rainbow');
+      if(!rb) return;
+      var pg = A.filter(function(c){ return c.move === 'bounce'; })[0];
+      if(!pg){ rb.style.display = 'none'; return; }
+      rb.style.animationDelay = (pg.at || 0) + 's';
     })();
 
     $('#actors').innerHTML      = back.map(build).join('');
