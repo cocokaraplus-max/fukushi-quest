@@ -133,21 +133,20 @@ const FQ = {
        ★増やす／減らすのは、この並びを足し引きするだけでできます。
        ★動きが苦手な方の端末では、この演出は出ません（下のCSSの説明を参照）。 */
     actors: [
-      /* ★fq-cast-v3: 画面に出るのは同時に2人まで。下の時間割で守っている。
-           0.0〜20.0  みどり（散歩）        ← fq-cast-v6 で箱の顔から交代
-           5.4〜11.2  白ひげ（落ちる）      ← みどりと2人
-          15.0〜22.0  黒猫（跳ねる①）      ← みどりと2人
-          23.0〜33.0  女の子（滑る①）
-          25.4〜31.2  白ひげ（落ちる）      ← 女の子と2人
-          33.5〜41.5  三つ編み（のぞく）
-          34.5〜42.5  木の子（腰かけ）      ← 三つ編みと2人
+      /* ★fq-drop60-v1 までの時間割（60秒ひとまわり）
+           0.0〜20.0  294の2人（散歩）
+           5.4〜11.2  白ひげ（落ちる）      ← 1分に1回だけ
+          15.0〜22.0  ペガサス（跳ねる①）＋虹の粉、22.5〜28.5 虹のアーチ
+          22.3〜29.9  電車（右→左）。左の外へ抜けて待つ
+          23.5〜38.9  うさぎ軍団10体（右→左。0.8秒おきに連なる）
+          38.9〜46.5  電車だけ戻る（左→右）
+          33.5〜41.5  三つ編み（のぞく）    ← 日付の絵のうしろ。床にはいない
+          34.5〜42.5  木の子（腰かけ）      ← 「（日）」の丸の上。床にはいない
           43.5〜46.1  うさぎ耳（飛ぶ①）
-          45.4〜51.2  白ひげ（落ちる）      ← うさぎ耳／女の子と2人
-          46.5〜56.5  女の子（滑る②）
-          51.5〜58.5  黒猫（跳ねる②）      ← 女の子と2人
-          56.8〜59.4  うさぎ耳（飛ぶ②）    ← 黒猫と2人
-         ★at を動かすと、この表が崩れて3人になることがある。
-           動かしたら必ず全体を見直すこと。 */
+          51.5〜58.5  ペガサス（跳ねる②）
+          56.8〜59.4  うさぎ耳（飛ぶ②）
+         ★★床（画面のいちばん下）はもう ほぼ埋まっている。
+           at を動かすと、どこかで必ずぶつかる。動かしたら全体を見直すこと。 */
       /* fq-cast-v6: 走る(dash)から散歩(walk)へ。箱の顔の出番をそのまま引き継ぐ。
          ★flip:true … この子の絵は左を向いている。散歩は「まず右へ行って帰る」
            動きなので、そのまま当てると行きの20秒間ずっと後ろ向きに歩く。
@@ -167,7 +166,10 @@ const FQ = {
       { photo:'img/294kun.png', photo2:'img/294chan.png', move:'walk', at: 0, flip:true },
       { photo:'img/ch_beard.png', move:'drop',   at: 5.4  },
       { photo:'img/ch_cat.png',   move:'bounce', at: 15   },
-      { photo:'img/ch_pink.png',  move:'skate',  at: 23   },
+      /* == fq-usagi-v1 : スケートの子はお休み ==
+         ★行は消さずにコメントにしてある。戻したくなったら、この2行を入れかえるだけ。
+           CSS（.m-skate / a-skate / i-spin）もそのまま残してある。
+      { photo:'img/ch_pink.png',  move:'skate',  at: 23   },  */
       { photo:'img/ch_braid.png', move:'peek',   at: 33.5 },
       { photo:'img/ch_wood.png',  move:'sit',    at: 34.5 },
       { photo:'img/ch_robot.png', move:'rocket', at: 43.5 },
@@ -178,9 +180,35 @@ const FQ = {
          ★右へうち上がる子。cls:'r2' を付けると右うち上げの動きになる。
            左の子（上の行）と同じ m-rocket なので、煙も傾きもそのまま使える。
          ★フワフワの子。at は 0。出番の時刻は動き（a-float）の中に書いてある。 */
-      { photo:'img/ch_train.png',   move:'dash',   at: 33.0 },   /* fq-train-v1: スケートの子とぶつからない唯一の時間 */
+      { photo:'img/ch_train.png',   move:'dash',   at: 22.3 },   /* fq-usagi-v1: スケートが居なくなって前が空いたので繰り上げ。うさぎ10体ぶん(約13秒)の場所を確保し、43.5秒のロケットの手前で終わらせる */
       { photo:'img/ch_rocket2.png', move:'rocket', at: 56.8, cls:'r2' },
       { photo:'img/ch_float.png',   move:'float',  at: 0    },
+      /* == fq-usagi-v1 : 列車のうしろに連なって歩く うさぎ軍団 ==
+         ★★at の間隔は 0.8秒（＝約63px）。**列車とは1.2秒（約95px）あける。**
+           ここを詰めると、うさぎが列車に追いついて **突き抜けて見える**。
+           絵の横幅は 50〜74px なので、63px より詰めると となり同士も重なる。
+         ★出はじめる場所（a-usagi の 100vw+90px）は列車と同じにしてある。
+           ここをずらすと、間隔の秒数がそのまま距離にならなくなる。
+           （はじめ 100vw+70px にしていて、0.5秒あけたのに約10pxしか離れず、
+             うさぎが列車を追い抜いてしまった）
+         ★cls で動きと大きさを変えている。
+             uwalk … とことこ      uhop / uhop2 … ぴょんぴょん（大／小）
+             usway … ゆらゆら      uquick … ちょこちょこ（小刻み）
+             utrip … 途中でつまずく
+             ubig / usml … 大きさ
+         ★★数や間隔を変えたら、**列車が待つ時間（a-dash の27.67%）と
+           レールの出ている時間（a-rail の40.40%）も必ず合わせること。**
+           最後の1体が左へ抜けるのは at + 8.2秒。いまは 30.7 + 8.2 ＝ 38.9秒。 */
+      { photo:'img/usagi_05.png',  move:'usagi', at:23.5, cls:'uwalk'       },
+      { photo:'img/usagi_47.png',  move:'usagi', at:24.3, cls:'uhop'        },
+      { photo:'img/usagi_54.png',  move:'usagi', at:25.1, cls:'usway ubig'  },
+      { photo:'img/usagi_70.png',  move:'usagi', at:25.9, cls:'uwalk'       },
+      { photo:'img/usagi_72a.png', move:'usagi', at:26.7, cls:'uquick usml' },
+      { photo:'img/usagi_72b.png', move:'usagi', at:27.5, cls:'uhop2 usml'  },
+      { photo:'img/usagi_68.png',  move:'usagi', at:28.3, cls:'utrip'       },
+      { photo:'img/usagi_48.png',  move:'usagi', at:29.1, cls:'usway'       },
+      { photo:'img/usagi_45.png',  move:'usagi', at:29.9, cls:'uhop2'       },
+      { photo:'img/usagi_26.png',  move:'usagi', at:30.7, cls:'uwalk ubig'  },
     ],
   },
 
@@ -573,6 +601,56 @@ const FQ = {
      56.8%,100%{opacity:0; transform:translateX(-26vw) scaleX(1);}
   }
   .m-dash{left:0;animation:a-dash 60s linear infinite;}
+  /* ══ fq-usagi-v1 : 列車のうしろに連なって歩く うさぎ軍団 ══
+     ★横の動き（a-usagi）はみんな同じ。ちがうのは
+       「いつ出るか（at）」と「体の動き（内側の img）」だけ。
+       こうしておくと、1体ずつ足したり抜いたりしても列が崩れない。
+     ★進む速さは列車と同じにしてある（画面390pxで約79px/秒）。
+         列車   … 100vw+210px を 7.6秒（-120px まで抜けきる）
+         うさぎ … 100vw+240px を 8.0秒（-150px まで抜けきる）
+       ★★出はじめる場所は列車と同じ（100vw+90px）。
+         ここをずらすと「何秒あけたか」がそのまま距離にならず、
+         うさぎが列車に追いついてしまう。
+       ★速さを変えるときは、この2つを見比べて計算し直すこと。
+         うさぎだけ速いと列車を追い抜いてしまう。
+     ★体の動きは内側の img に掛けている。外（横移動）と内（体のゆれ）を
+       分けてあるので、片方だけ差し替えられる。 */
+  .m-usagi{--aw:clamp(38px,10.5vw,62px);left:0;bottom:2%;
+           animation:a-usagi 60s linear infinite;}
+  .m-usagi.ubig{--aw:clamp(44px,12.5vw,74px);}
+  .m-usagi.usml{--aw:clamp(30px,8.5vw,50px);}
+  @keyframes a-usagi{
+      0%       {opacity:0; transform:translateX(calc(100vw + 90px));}
+      0.3%     {opacity:1; transform:translateX(calc(100vw + 90px));}
+     13.6%     {opacity:1; transform:translateX(-150px);}      /* 8.0秒で渡りきる */
+     13.7%     {opacity:0; transform:translateX(-150px);}
+     13.8%,100%{opacity:0; transform:translateX(calc(100vw + 90px));}
+  }
+  /* ── 体の動き（1体ずつ変える） ── */
+  .m-usagi img       {animation:i-uwalk .52s ease-in-out infinite alternate;}
+  .m-usagi.uhop  img {animation:i-uhop  .44s cubic-bezier(.3,0,.4,1) infinite alternate;}
+  .m-usagi.uhop2 img {animation:i-uhop2 .58s cubic-bezier(.3,0,.4,1) infinite alternate;}
+  .m-usagi.usway img {animation:i-usway .78s ease-in-out infinite alternate;}
+  .m-usagi.uquick img{animation:i-uwalk .32s ease-in-out infinite alternate;}
+  @keyframes i-uwalk { from{transform:translateY(0)    rotate(-3deg);}
+                       to  {transform:translateY(-5px) rotate(3deg);} }
+  @keyframes i-uhop  { from{transform:translateY(0);}  to{transform:translateY(-16px);} }
+  @keyframes i-uhop2 { from{transform:translateY(0);}  to{transform:translateY(-9px);} }
+  @keyframes i-usway { from{transform:rotate(-7deg);}  to{transform:rotate(7deg);} }
+  /* ★つまずく子だけは「1回きり」なので、60秒ひとまわりで出番に合わせている。
+       --at ＝ 出てくる時刻。親の animation-delay は子には伝わらないので、
+       変数にして子から読ませている（ほかの子と同じやり方）。
+     ★3.0% ＝ 1.8秒。歩きはじめて1.6秒あたりで つまずく。
+       ここを動かすと、画面の外でつまずいて誰にも見えない、ということが起きる。 */
+  .m-usagi.utrip img{animation:i-utrip 60s linear infinite;animation-delay:var(--at);}
+  @keyframes i-utrip{
+      0%,3.0%  {transform:translateY(0)   rotate(0);}
+      3.3%     {transform:translateY(2px) rotate(-18deg);}   /* つんのめる */
+      3.6%     {transform:translateY(6px) rotate(-9deg);}    /* 前にころぶ寸前 */
+      3.9%     {transform:translateY(0)   rotate(6deg);}     /* 立て直す */
+      4.3%     {transform:translateY(0)   rotate(-2deg);}
+      4.7%,100%{transform:translateY(0)   rotate(0);}
+  }
   /* == fq-rail-v1 : 電車のレール ==
      ★レールは電車といっしょに動かない。画面に敷いたまま、電車だけが上を走る。
        だから .actor の中ではなく、#actors と同じ階層に独立して置いてある。
@@ -700,13 +778,15 @@ const FQ = {
      ★★fq-train-v1: 電車を往復させたので、ここも伸ばした（7.9% → 21.8%）。
        **伸ばし忘れると、帰り道でレールが消えて電車だけが宙を走る。**
        a-dash の終わりの数字を変えたら、必ずここも合わせること。2つで1組。 */
+  /* ★fq-usagi-v1: 列車が待つぶん長くなったので、レールも伸ばした
+       （21.80% → 40.40%）。**忘れると、待っている途中でレールが消える。** */
   @keyframes a-rail{
       0%        {opacity:0;}
       0.02%     {opacity:0;}
       0.30%     {opacity:1;}
-     21.80%     {opacity:1;}
-     22.50%     {opacity:0;}
-     22.60%,100%{opacity:0;}
+     40.40%     {opacity:1;}
+     41.20%     {opacity:0;}
+     41.30%,100%{opacity:0;}
   }
   /* fq-cast-tune-v1: 走る速さをゆるめたので、体のゆれも同じだけゆるめる。
      .19秒のままだと「ゆっくり進むのに小刻みに震えている」ように見える。
@@ -745,13 +825,20 @@ const FQ = {
       /* ── 行き：右 → 左（6.2秒） ── */
       0%      {opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(1);}
       0.3%    {opacity:1; transform:translateX(calc(100vw + 90px)) scaleX(1);}
-     10.63%   {opacity:1; transform:translateX(-10px)              scaleX(1);}
-      /* ── 左のはしで向きを変える（0.84% ＝ 約0.5秒） ── */
-     11.47%   {opacity:1; transform:translateX(-10px)              scaleX(-1);}
-      /* ── 帰り：左 → 右（6.2秒） ── */
-     21.80%   {opacity:1; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
-     21.90%   {opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
-     22.0%,100%{opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(1);}
+      /* ── ★fq-usagi-v1: 左の外まで抜けて、そこで待つ ──
+           ★もとは -10px（画面のはし）で止まっていたが、そこは まだ見えている。
+             うさぎ軍団がその上を素通りして、**列車を突き抜けて見えた**。
+             だから -120px まで抜けきる。列車は約55〜80pxなので完全に外。
+           ★29.9秒に抜けきり、最後の1体が左へ抜ける38.9秒まで外で待つ。
+           ★★うさぎの数や間隔を変えたら、この 27.67% も動かすこと。
+             忘れると「まだうさぎが歩いているのに列車が戻ってくる」。 */
+     12.97%   {opacity:1; transform:translateX(-120px)             scaleX(1);}
+      /* ── 外で向きを変える。見えないところで変えるので、回る演出は要らない ── */
+     27.67%   {opacity:1; transform:translateX(-120px)             scaleX(-1);}
+      /* ── 帰り：左 → 右（7.6秒）。列車だけで帰る ── */
+     40.34%   {opacity:1; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
+     40.44%   {opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
+     40.6%,100%{opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(1);}
   }
   /* == fq-rail-v1 ==
      ★傾き(rotate)をやめた。もとは「前のめりで走る人」の動きだったが、
@@ -932,34 +1019,45 @@ const FQ = {
   @keyframes i-hoplet{ from{transform:translateY(0);} to{transform:translateY(-24px);} }
 
   /* ⑨ 落ちる（白ひげ）… 入場無料の丸が3回はねた、その3回目に丸から出て落ちる。
-        着地で画面が少し揺れ、足もとから煙が上がる。
+        着地で画面が少し揺れ、頭のクリームが流れて足もとに広がる。
 
         ★★時計が2つある点に注意。
-          キャラクターは34秒ひとまわり、ロゴと丸の鼓動は20秒ひとまわり。
-          この子は「丸」に合わせるので **20秒** で回す。
+          キャラクターは60秒ひとまわり、ロゴと丸の鼓動は20秒ひとまわり。
           出番 5.4秒 ＝ 丸の3回目のはねる時刻（4.4秒 ＋ 1.0秒）。
           ★丸の鼓動（animation-delay:4.4s）を変えたら、ここも直すこと。
+        ★★fq-drop60-v1: もとは20秒ひとまわりで、1分に3回落ちていた。
+          うさぎの行列（22.3〜46.5秒）と必ずぶつかるので **60秒＝1分に1回** にした。
+          丸は20秒のまま3回はねる。**中から出てくるのは1回目のはねのときだけ。**
         ★横の位置は丸のまん中に合わせて計算している（--lw と --fw から）。
           だから丸の大きさを変えても勝手についてくる。
         ★上下は bottom（％）。75.4% が丸の高さ、1% が地面。
           75.4% は7種類の画面幅で実測した値（75.2〜75.8% にそろう）。 */
+  /* ★★fq-drop60-v1: 20秒ひとまわり → **60秒ひとまわり**（1分に1回）。
+       20秒のままだと1分に3回落ちる（5.4／25.4／45.4秒）。
+       うさぎの行列は 22.3〜46.5秒（24秒）あるので、
+       **20秒ごとに起きることは、24秒の行列に必ず1回は入ってしまう**。
+       出番（at）をずらしても逃げられないので、回数のほうを減らした。
+     ★★いっしょに動く4つ（a-drop / i-drip / i-cream / hero-shake）を
+       ぜんぶ60秒にそろえてある。どれか1つでも20秒のまま残すと、
+       **本人がいないのに画面が揺れる／誰もいない床にクリームが広がる**。
+     ★％はすべて 3分の1 にしてある（3倍長くなるため）。かかる秒数は同じ。 */
   .m-drop{left:calc(50% - var(--lw)/2 + var(--fw)*var(--fin) - var(--fw)/2 - var(--aw)/2);
-          bottom:75.4%;animation:a-drop 20s linear infinite;}
+          bottom:75.4%;animation:a-drop 60s linear infinite;}
   @keyframes a-drop{
       /* ★丸の中にいるあいだは小さいまま。落ちながら大きくなる。
          先に大きくすると、丸からはみ出して体が見えてしまう。 */
       0%      {opacity:1; bottom:75.4%; transform:scale(.30);
                animation-timing-function:ease-in;}
-      1.6%    {opacity:1; bottom:64%; transform:scale(.46);}     /* 丸を出たあたり */
-      3%      {opacity:1; bottom:44%; transform:scale(.68);}
-      6%      {opacity:1; bottom:1%;  transform:scale(1);}       /* 落ちる（1.2秒） */
-      6.5%    {opacity:1; bottom:1%;  transform:scale(1.24,.74);} /* ぐしゃっとつぶれる＝重い */
-      7.3%    {opacity:1; bottom:1%;  transform:scale(1.16,.82);} /* すぐには戻らない */
-      8.3%    {opacity:1; bottom:2.5%;  transform:scale(.95,1.06);} /* 小さく1回だけはねる */
-      9.3%    {opacity:1; bottom:1%;  transform:scale(1.06,.94);}
-     10.3%    {opacity:1; bottom:1%;  transform:scale(1);}
-     26%      {opacity:1; bottom:1%;  transform:scale(1);}
-     29%,100% {opacity:0; bottom:1%;  transform:scale(1);}
+      0.533%  {opacity:1; bottom:64%; transform:scale(.46);}     /* 丸を出たあたり */
+      1.0%    {opacity:1; bottom:44%; transform:scale(.68);}
+      2.0%    {opacity:1; bottom:1%;  transform:scale(1);}       /* 落ちる（1.2秒） */
+      2.167%  {opacity:1; bottom:1%;  transform:scale(1.24,.74);} /* ぐしゃっとつぶれる＝重い */
+      2.433%  {opacity:1; bottom:1%;  transform:scale(1.16,.82);} /* すぐには戻らない */
+      2.767%  {opacity:1; bottom:2.5%;  transform:scale(.95,1.06);} /* 小さく1回だけはねる */
+      3.1%    {opacity:1; bottom:1%;  transform:scale(1.06,.94);}
+      3.433%  {opacity:1; bottom:1%;  transform:scale(1);}
+      8.667%  {opacity:1; bottom:1%;  transform:scale(1);}
+      9.667%,100% {opacity:0; bottom:1%;  transform:scale(1);}
   }
   /* ══ fq-cream-v1 : 頭のクリームが溢れて、足もとに広がる ══
      もとは白い土ぼこり（fq-cast-v2）だった。この子は頭にクリームがのった絵なので、
@@ -985,16 +1083,17 @@ const FQ = {
       width:15%;height:100%;background:#f3f4ee;
       border-radius:0 0 60% 60% / 0 0 85% 85%;
       transform:scaleY(.15);transform-origin:50% 0;opacity:0;
-      animation:i-drip 20s linear infinite;animation-delay:6.65s;}
+      animation:i-drip 60s linear infinite;animation-delay:6.65s;}   /* fq-drop60-v1 */
   .m-drop .drip::before{left:18%;}
   /* ★右の流れは少しあとから。同時だと「左右対称のツノ」に見えて生き物っぽくない */
   .m-drop .drip::after{right:18%;animation-delay:6.88s;}
+  /* ★fq-drop60-v1: 60秒ひとまわりに。％は3分の1（かかる秒数は同じ） */
   @keyframes i-drip{
       0%      {opacity:0; transform:scaleY(.15);}
-      0.5%    {opacity:1; transform:scaleY(.45);}
-      1.6%    {opacity:1; transform:scaleY(3.0);}   /* とろ〜り伸びる */
-      3.0%    {opacity:1; transform:scaleY(8.0);}   /* 足もとまで届く */
-      4.6%    {opacity:0; transform:scaleY(9.0);}   /* 下の水たまりに溶ける */
+      0.167%  {opacity:1; transform:scaleY(.45);}
+      0.533%  {opacity:1; transform:scaleY(3.0);}   /* とろ〜り伸びる */
+      1.0%    {opacity:1; transform:scaleY(8.0);}   /* 足もとまで届く */
+      1.533%  {opacity:0; transform:scaleY(9.0);}   /* 下の水たまりに溶ける */
     100%      {opacity:0; transform:scaleY(9.0);}
   }
 
@@ -1003,21 +1102,23 @@ const FQ = {
       border-radius:50%;background:#f3f4ee;opacity:0;
       transform:translateX(-50%) scale(0,.2);transform-origin:50% 60%;
       filter:drop-shadow(0 2px 0 rgba(70,60,40,.13));
-      animation:i-cream 20s linear infinite;animation-delay:6.9s;}
+      animation:i-cream 60s linear infinite;animation-delay:6.9s;}  /* fq-drop60-v1 */
   /* ★左右のふくらみ。まん丸だと「お皿」に見えるので、わざと ふぞろいにしてある */
   .m-drop .thud::before,.m-drop .thud::after{content:'';position:absolute;
       bottom:6%;width:42%;height:118%;border-radius:50%;background:inherit;}
   .m-drop .thud::before{left:-9%;}
   .m-drop .thud::after{right:-11%;height:94%;}
+  /* ★fq-drop60-v1: 60秒ひとまわりに。％は3分の1（かかる秒数は同じ）。
+     ★7.167% ＝ 本人が消える 9.667%（a-drop）より少し前。2つで1組。 */
   @keyframes i-cream{
       0%      {opacity:0; transform:translateX(-50%) scale(0,.2);}
-      0.4%    {opacity:1; transform:translateX(-50%) scale(.30,.5);}  /* ぽたっ */
-      1.6%    {opacity:1; transform:translateX(-50%) scale(.62,.86);}
-      3.2%    {opacity:1; transform:translateX(-50%) scale(.88,1);}   /* じわっ */
-      5.5%    {opacity:1; transform:translateX(-50%) scale(1,1);}
-      9%      {opacity:1; transform:translateX(-50%) scale(1.05,1);}  /* ゆっくり止まる */
-     19%      {opacity:1; transform:translateX(-50%) scale(1.06,1);}
-     21.5%    {opacity:0; transform:translateX(-50%) scale(1.06,1);}  /* 本人と一緒に消える */
+      0.133%  {opacity:1; transform:translateX(-50%) scale(.30,.5);}  /* ぽたっ */
+      0.533%  {opacity:1; transform:translateX(-50%) scale(.62,.86);}
+      1.067%  {opacity:1; transform:translateX(-50%) scale(.88,1);}   /* じわっ */
+      1.833%  {opacity:1; transform:translateX(-50%) scale(1,1);}
+      3.0%    {opacity:1; transform:translateX(-50%) scale(1.05,1);}  /* ゆっくり止まる */
+      6.333%  {opacity:1; transform:translateX(-50%) scale(1.06,1);}
+      7.167%  {opacity:0; transform:translateX(-50%) scale(1.06,1);}  /* 本人と一緒に消える */
     100%      {opacity:0; transform:translateX(-50%) scale(1.06,1);}
   }
   /* ⑩ 着地のゆれ。黄色い面の中身をまとめて数ピクセル動かす。
@@ -1025,23 +1126,24 @@ const FQ = {
           だから「中身の箱4つ」を同じ動きで揺らす。
         ★出番は落ちる子の着地（6.5秒）。落ちる子と同じ20秒ひとまわり。 */
   #kws, .hero-in, #actors, #actorsfront{
-      animation:hero-shake 20s linear infinite;animation-delay:6.5s;}
+      animation:hero-shake 60s linear infinite;animation-delay:6.5s;}  /* fq-drop60-v1 */
   /* ★ゆれの強さを変えるときは、下の px の数字をまとめて増減する。
      いちばん大きいのが 13px（fq-cast-v4 で 7px から強めた）。
      ★ゆれは 3.5%＝0.7秒で必ず 0 に戻すこと。戻さないと画面がずれたままになる。
      ★.hero そのものではなく「中身の箱4つ」を揺らしている。
        .hero を揺らすと黄色い地色ごとズレて、外に白いすき間が出るため。 */
+  /* ★fq-drop60-v1: 60秒ひとまわりに。％は3分の1（ゆれの大きさ・長さは同じ）。 */
   @keyframes hero-shake{
       0%      {transform:translate(0,0);}
-      0.3%    {transform:translate(0,13px);}      /* ドスン */
-      0.7%    {transform:translate(-10px,-8px);}
-      1.1%    {transform:translate(10px,7px);}
-      1.5%    {transform:translate(-8px,-6px);}
-      1.9%    {transform:translate(7px,5px);}
-      2.3%    {transform:translate(-5px,-4px);}
-      2.7%    {transform:translate(4px,3px);}
-      3.1%    {transform:translate(-2px,-1px);}
-      3.5%,100%{transform:translate(0,0);}
+      0.1%    {transform:translate(0,13px);}      /* ドスン */
+      0.233%  {transform:translate(-10px,-8px);}
+      0.367%  {transform:translate(10px,7px);}
+      0.5%    {transform:translate(-8px,-6px);}
+      0.633%  {transform:translate(7px,5px);}
+      0.767%  {transform:translate(-5px,-4px);}
+      0.9%    {transform:translate(4px,3px);}
+      1.033%  {transform:translate(-2px,-1px);}
+      1.167%,100%{transform:translate(0,0);}
   }
   /* ══════════ fq-cast-v2 ここまで ══════════ */
 
@@ -1889,7 +1991,9 @@ const FQ = {
          のぞく子(peek)  … 日付の絵のうしろが定位置 */
     /* fq-cast-tune-v1: フワフワの猫（float）も文字のまえへ。
        うしろだとキャッチコピーに隠れて、ほとんど見えなかった。 */
-    const FRONT = ['bounce', 'skate', 'walk', 'dash', 'float'];
+    /* ★fq-usagi-v1: うさぎ軍団も文字のまえへ（列車といっしょに歩くため）。
+       skate は出番を外したが、戻したときのためにここには残してある。 */
+    const FRONT = ['bounce', 'skate', 'walk', 'dash', 'float', 'usagi'];
     const sit   = A.filter(c => c.move === 'sit');
     const peek  = A.filter(c => c.move === 'peek');
     const front = A.filter(c => FRONT.indexOf(c.move) >= 0);
