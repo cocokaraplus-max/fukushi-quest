@@ -570,6 +570,36 @@ const FQ = {
      56.8%,100%{opacity:0; transform:translateX(-26vw) scaleX(1);}
   }
   .m-dash{left:0;animation:a-dash 60s linear infinite;}
+  /* == fq-rail-v1 : 電車のレール ==
+     ★レールは電車といっしょに動かない。画面に敷いたまま、電車だけが上を走る。
+       だから .actor の中ではなく、#actors と同じ階層に独立して置いてある。
+     ★奥ゆき（z-index）は 2。文字（.hero-in）と同じ高さだが、
+       レールは画面のいちばん下にあるので、文字とは重ならない。
+       電車（#actorsfront＝3）より奥なので、電車がレールの上に乗って見える。
+     ★絵は使わず、CSSの線で描いている。
+         ::before … 上のレール    ::after … 下のレール
+         i        … 枕木（等間隔のたて線）
+     ★出る時刻は JS が入れる（下の castActors を参照）。
+       ここに数字で書くと、電車の出番を変えたときレールだけ取り残される。 */
+  .rail{position:absolute;left:-3%;right:-3%;bottom:3px;height:11px;z-index:2;
+        opacity:0;pointer-events:none;animation:a-rail 60s linear infinite;}
+  .rail::before,.rail::after{content:'';position:absolute;left:0;right:0;
+        height:3px;border-radius:2px;background:var(--ink);}
+  .rail::before{top:0;}
+  .rail::after{top:8px;}
+  .rail i{position:absolute;left:0;right:0;top:2px;height:7px;
+        background:repeating-linear-gradient(90deg,
+          var(--ink) 0 5px, transparent 5px 22px);}
+  /* ★電車の出番（0.3%〜7.9%）より、ほんの少し早く出して遅く消す。
+       同時だと「レールが現れた瞬間に電車が来る」ように見えて不自然。 */
+  @keyframes a-rail{
+      0%       {opacity:0;}
+      0.1%     {opacity:0;}
+      0.5%     {opacity:1;}
+      7.9%     {opacity:1;}
+      8.6%     {opacity:0;}
+      8.7%,100%{opacity:0;}
+  }
   /* fq-cast-tune-v1: 走る速さをゆるめたので、体のゆれも同じだけゆるめる。
      .19秒のままだと「ゆっくり進むのに小刻みに震えている」ように見える。 */
   .m-dash img{animation:i-dash .40s ease-in-out infinite alternate;}
@@ -591,12 +621,20 @@ const FQ = {
       7.9%    {opacity:0; transform:translateX(-150px);}
       8.0%,100%{opacity:0; transform:translateX(calc(100vw + 130px));}
   }
+  /* == fq-rail-v1 ==
+     ★傾き(rotate)をやめた。もとは「前のめりで走る人」の動きだったが、
+       いまは電車なので、まっすぐのまま上下に小さくゆれるだけにする。
+     ★ゆれも 7px → 3px に小さくした。レールの上を走るので、
+       大きく跳ねると線路から浮いて見える。 */
   @keyframes i-dash{
-    from{transform:translateY(0)    rotate(-11deg);}
-    to  {transform:translateY(-7px) rotate(-5deg);}
+    from{transform:translateY(0);}
+    to  {transform:translateY(-3px);}
   }
   /* スピード線。左へ走るので、線は右うしろに引く */
-  .m-dash .dashline{position:absolute;left:100%;top:34%;margin-left:7px;
+  /* fq-rail-v1: レールを敷いたので、白いスピード線は出さない。
+     ★消さずに display:none にしてある。戻したくなったらここだけ直す。 */
+  .m-dash .dashline{display:none;}
+  .m-dash .dashline-off{position:absolute;left:100%;top:34%;margin-left:7px;
       width:30px;height:5px;border-radius:3px;background:rgba(255,255,255,.92);
       box-shadow: 26px 15px 0 -1px rgba(255,255,255,.78),
                   10px 30px 0 -1px rgba(255,255,255,.55),
@@ -1368,6 +1406,10 @@ const FQ = {
     <div class="cd" id="cd"></div>
   </div>
   <!-- 順番に出てくるキャラクター（fq-walker-v1）。飾りなので読み上げ対象外 -->
+  <!-- == fq-rail-v1 : 電車のレール。電車が通るあいだだけ出る ==
+       ★#actors より前に書いてあるが、奥ゆきは z-index で決めている（レール2／電車3）。
+       ★出る時刻は JS が animation-delay に入れる。中身が空でも形は崩れない。 -->
+  <div class="rail" id="rail" aria-hidden="true"><i></i></div>
   <div id="actors" aria-hidden="true"></div>
   <!-- fq-cast-v2: 文字より「まえ」に出る子（ロゴの上を跳ねる猫／丸から落ちる髭）専用。
        うしろ(#actors)に置くと、文字の上を通るときに消えてしまうため分けている。 -->
@@ -1580,6 +1622,18 @@ const FQ = {
            + (c.photo2 ? '<img src="' + esc(c.photo2) + '" alt="" decoding="async">' : '')
            + '</div>';
     }
+    /* == fq-rail-v1 ==
+       ★レールの出る時刻を、電車（dash）の出番に合わせる。
+         ここで合わせておけば、actors の at を変えてもレールが付いてくる。
+       ★電車がいなければレールも出さない。 */
+    (function(){
+      var rail = $('#rail');
+      if(!rail) return;
+      var train = A.filter(function(c){ return c.move === 'dash'; })[0];
+      if(!train){ rail.style.display = 'none'; return; }
+      rail.style.animationDelay = (train.at || 0) + 's';
+    })();
+
     $('#actors').innerHTML      = back.map(build).join('');
     $('#actorsfront').innerHTML = front.map(build).join('');
     $('#peekspot').innerHTML    = peek.map(build).join('');
