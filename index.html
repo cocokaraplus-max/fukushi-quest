@@ -204,20 +204,41 @@ const FQ = {
            「くっついて歩いている」ように見せるための重なりなので、これでよい。
          ★★列車との間（23.5 − 22.3 ＝ 1.2秒・約95px）だけは詰めないこと。
            詰めると うさぎが列車に追いついて **突き抜けて見える**。 */
-      { photo:'img/usagi_05.png',  move:'usagi', at:23.50, cls:'uwalk'       },
-      { photo:'img/usagi_47.png',  move:'usagi', at:24.05, cls:'uhop'        },
-      { photo:'img/usagi_54.png',  move:'usagi', at:24.60, cls:'usway ubig'  },
-      { photo:'img/usagi_70.png',  move:'usagi', at:25.15, cls:'uwalk'       },
-      { photo:'img/usagi_72a.png', move:'usagi', at:25.70, cls:'uquick usml' },
-      { photo:'img/usagi_72b.png', move:'usagi', at:26.25, cls:'uhop2 usml'  },
-      { photo:'img/usagi_68.png',  move:'usagi', at:26.80, cls:'utrip'       },
-      { photo:'img/usagi_48.png',  move:'usagi', at:27.35, cls:'usway'       },
-      { photo:'img/usagi_45.png',  move:'usagi', at:27.90, cls:'uhop2'       },
+      /* ★★fq-usagi-v3: 間隔を「秒でそろえる」のをやめた。
+           うさぎは大きい子（74px）も小さい子（50px）もいるので、
+           同じ秒数だけ空けると **大きい子どうしはくっつき、小さい子どうしは離れる**。
+         ★いまは **すき間が どの組でも「その子の幅の半分」** になるように、
+           1組ずつ計算した秒数が入れてある。
+
+             すき間         ＝ となり合う2人の幅の平均 × 0.5
+             左はしの間隔   ＝ 前の子の幅 ＋ すき間
+                              （※みんな画面の右はし同じ位置から出るので、
+                                 ずれるのは「左はし同士」。中心ではない）
+             間隔（秒）     ＝ 左はしの間隔 ÷ 進む速さ（画面390pxで約79px/秒）
+
+           実測（画面390px）… すき間はどの組も 幅の 0.49〜0.51倍
+             1→2 21px ／ 2→3 22px ／ 3→4 22px ／ 4→5 18px
+             5→6 17px ／ 6→7 18px ／ 7→8 21px ／ 8→9 21px
+
+         ★★大きさ（ubig / usml）や並び順を変えたら、**間隔も計算し直すこと。**
+           幅が変わると、同じ秒数では すき間が変わってしまう。
+         ★列車（22.3秒）と先頭の間は 1.0秒（約79px）。
+           ここだけは「幅の半分」より広くとってある。詰めると
+           うさぎが列車に追いついて突き抜けて見えるため。 */
+      { photo:'img/usagi_05.png',  move:'usagi', at:23.30, cls:'uwalk'       },
+      { photo:'img/usagi_47.png',  move:'usagi', at:24.08, cls:'uhop'        },
+      { photo:'img/usagi_54.png',  move:'usagi', at:24.88, cls:'usway ubig'  },
+      { photo:'img/usagi_70.png',  move:'usagi', at:25.78, cls:'uwalk'       },
+      { photo:'img/usagi_72a.png', move:'usagi', at:26.53, cls:'uquick usml' },
+      { photo:'img/usagi_72b.png', move:'usagi', at:27.16, cls:'uhop2 usml'  },
+      { photo:'img/usagi_68.png',  move:'usagi', at:27.81, cls:'utrip'       },
+      { photo:'img/usagi_48.png',  move:'usagi', at:28.59, cls:'usway'       },
+      { photo:'img/usagi_45.png',  move:'usagi', at:29.37, cls:'uhop2'       },
       /* ★★しんがりは「少し遅れて走ってくる子」。
            みんなより 2.7秒 遅れて出て、1.45倍の速さ（urun）で追いかける。
            追いつくのは画面の外。画面の中では追い抜かない（測って確認済み）。
          ★遅れを縮めすぎると、画面の中で前の子を追い抜いてしまう。 */
-      { photo:'img/usagi_26.png',  move:'usagi', at:30.60, cls:'urun ubig'   },
+      { photo:'img/usagi_26.png',  move:'usagi', at:32.07, cls:'urun ubig'   },
     ],
   },
 
@@ -863,9 +884,9 @@ const FQ = {
       0%        {opacity:0;}
       0.02%     {opacity:0;}
       0.30%     {opacity:1;}
-     37.95%     {opacity:1;}
-     38.75%     {opacity:0;}
-     38.85%,100%{opacity:0;}
+     40.00%     {opacity:1;}
+     40.80%     {opacity:0;}
+     40.90%,100%{opacity:0;}
   }
   /* fq-cast-tune-v1: 走る速さをゆるめたので、体のゆれも同じだけゆるめる。
      .19秒のままだと「ゆっくり進むのに小刻みに震えている」ように見える。
@@ -912,15 +933,17 @@ const FQ = {
              36.3秒まで外で待つ（fq-usagi-v2 で 38.9秒から縮めた）。
            ★fq-tumble-v1: 走る子が転んで1.0秒止まるので、
              待ちを 23.90% → 25.15%（37.4秒）に伸ばした。
-           ★★うさぎの数・間隔・速さを変えたら、この 25.15% も動かすこと。
+           ★fq-usagi-v3: 間隔を広げたぶん、待ちを 25.15% → 27.20%
+             （38.6秒）に伸ばした。
+           ★★うさぎの数・間隔・速さを変えたら、この 27.20% も動かすこと。
              忘れると「まだうさぎが歩いているのに列車が戻ってくる」。 */
      12.97%   {opacity:1; transform:translateX(-120px)             scaleX(1);}
       /* ── 外で向きを変える。見えないところで変えるので、回る演出は要らない ── */
-     25.15%   {opacity:1; transform:translateX(-120px)             scaleX(-1);}
+     27.20%   {opacity:1; transform:translateX(-120px)             scaleX(-1);}
       /* ── 帰り：左 → 右（7.6秒）。列車だけで帰る ── */
-     37.82%   {opacity:1; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
-     37.92%   {opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
-     38.0%,100%{opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(1);}
+     39.87%   {opacity:1; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
+     39.97%   {opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
+     40.1%,100%{opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(1);}
   }
   /* == fq-rail-v1 ==
      ★傾き(rotate)をやめた。もとは「前のめりで走る人」の動きだったが、
