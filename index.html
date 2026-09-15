@@ -581,6 +581,57 @@ const FQ = {
          i        … 枕木（等間隔のたて線）
      ★出る時刻は JS が入れる（下の castActors を参照）。
        ここに数字で書くと、電車の出番を変えたときレールだけ取り残される。 */
+  /* == fq-rainbow-v1 : ペガサスが通ったあとの虹 ==
+     ★絵ではなく CSS の radial-gradient（同心の楕円）で描いている。
+       ★★円のまん中を「箱のいちばん下」に置くのがコツ。
+         そうすると下半分は箱の外に出て、**上半分＝アーチだけ**が残る。
+         box-shadow で輪を重ねる作りにすると、輪の下の直線部分まで描かれて
+         地面のところに横線が出てしまう。
+     ★色はすべて半透明（.24〜.32）。**濃くしないこと。**
+       濃くすると黄色い地とけんかして、文字が読みにくくなる。
+     ★奥ゆき（z-index）は 0。キャラクター(1)より奥、文字(2)より奥。
+     ★出る時刻は JS がペガサスの出番から入れる（下の castActors を参照）。
+       ここに数字で書くと、ペガサスの出番を変えたとき虹だけ取り残される。 */
+  /* ★★大きさと場所は「ペガサスが通った道」に合わせてある。
+       ペガサスは 左下（-16vw・地面）から上がって、文字の上（bottom:78%）を
+       左から右へ渡り、右（78vw）で着地する。＝ゆるいアーチを描く。
+       虹のアーチも同じ形になるよう、次の3つを合わせている。
+         left:-18% / right:8% … 足もとの位置（左は画面の外、右は78vwのあたり）
+         bottom:1% / height:86% … いちばん高いところが bottom:78% になる高さ
+       ★ペガサスの高さ（a-bounce の bottom:78%）を変えたら、height も見直すこと。 */
+  .rainbow{position:absolute;left:-18%;right:8%;bottom:1%;height:86%;
+        z-index:0;opacity:0;pointer-events:none;
+        transform:scale(.4);transform-origin:50% 100%;
+        background:radial-gradient(ellipse 50% 100% at 50% 100%,
+            transparent 0 71%,
+            rgba(110,100,195,.24) 71% 74.2%,
+            rgba(70,150,210,.26)  74.2% 77.4%,
+            rgba(90,180,110,.28)  77.4% 80.6%,
+            rgba(244,214,70,.32)  80.6% 83.8%,
+            rgba(240,150,55,.30)  83.8% 87%,
+            rgba(224,80,70,.30)   87% 90.2%,
+            transparent 90.2%);
+        animation:a-rainbow 60s ease-out infinite;}
+  /* ★数字はペガサス（a-bounce）の出番に合わせてある。
+       1回目は 11.4%（右へ抜けたところ）から、2回目は 72.2%（左へ抜けたところ）から。
+       ★a-bounce の 11.4% / 72.2% を動かしたら、ここも動かすこと。2つで1組。 */
+  @keyframes a-rainbow{
+      0%       {opacity:0;   transform:scale(.4);}
+     11.4%     {opacity:0;   transform:scale(.4);}    /* 1回目：右へ抜けた */
+     12.8%     {opacity:.9;  transform:scale(.8);}
+     15%       {opacity:1;   transform:scale(1);}     /* ふわっと広がる */
+     20%       {opacity:1;   transform:scale(1.02);}
+     22.5%     {opacity:0;   transform:scale(1.05);}  /* そっと消える */
+     22.6%     {opacity:0;   transform:scale(.4);}
+     72.2%     {opacity:0;   transform:scale(.4);}    /* 2回目：左へ抜けた */
+     73.6%     {opacity:.9;  transform:scale(.8);}
+     75.8%     {opacity:1;   transform:scale(1);}
+     81%       {opacity:1;   transform:scale(1.02);}
+     83.5%     {opacity:0;   transform:scale(1.05);}
+     83.6%,100%{opacity:0;   transform:scale(.4);}
+  }
+  /* ★「動きを減らす」設定の端末では出さない（キャラクターと同じあつかい） */
+  @media(prefers-reduced-motion:reduce){ .rainbow{display:none;} }
   .rail{position:absolute;left:-3%;right:-3%;bottom:3px;height:11px;z-index:2;
         opacity:0;pointer-events:none;animation:a-rail 60s linear infinite;}
   .rail::before,.rail::after{content:'';position:absolute;left:0;right:0;
@@ -856,36 +907,64 @@ const FQ = {
      26%      {opacity:1; bottom:1%;  transform:scale(1);}
      29%,100% {opacity:0; bottom:1%;  transform:scale(1);}
   }
-  /* 着地の煙（fq-cast-v2）。
-     ★白い丸を box-shadow で9個に増やして、ひとかたまりの雲にしてある。
-       ばらばらの丸に見えないよう、となり同士が必ず重なる位置に置いている。
-     ★一瞬で広がってキャラクターを覆い隠し、そのあとゆっくり消える。
-       ＝「ドスンと落ちて土ぼこりが上がった」に見せるため。
-     ★煙は絵より手前に出る。position:absolute のものは、
+  /* ══ fq-cream-v1 : 頭のクリームが溢れて、足もとに広がる ══
+     もとは白い土ぼこり（fq-cast-v2）だった。この子は頭にクリームがのった絵なので、
+     土ぼこりだと「何か白いものが一瞬見えた」だけで、何が起きたのか分からない。
+
+     ★色は絵から取った クリーム色（#f3f4ee）。
+       まっ白（#fff）だと黄色い地の上で浮いて、雲のように見えてしまう。
+     ★ふちどりは filter:drop-shadow。**流れと水たまりをまとめて**囲むので、
+       重なったところに線が出ない。別々に付けると つぎはぎに見える。
+     ★どちらも絵より手前に出る。position:absolute のものは、
        ふつうの img より必ず手前に描かれるため（順番を書かなくてよい）。
-     ★出番 6.5秒 は「落ちきる時刻」。落ちる動き（a-drop）の 6% と合わせてある。
-       どちらかを動かしたら、もう一方も合わせること。 */
-  .m-drop .thud{position:absolute;left:50%;bottom:6%;width:40px;height:40px;
-      border-radius:50%;background:#fff;opacity:0;
-      box-shadow:-28px   3px 0  0px #fff,
-                  28px   4px 0  0px #fff,
-                 -15px -18px 0 -1px #fff,
-                  15px -17px 0 -1px #fff,
-                   0px -31px 0 -3px #fff,
-                 -34px -20px 0 -4px #fff,
-                  34px -19px 0 -4px #fff,
-                 -50px  -4px 0 -5px rgba(255,255,255,.95),
-                  50px  -3px 0 -5px rgba(255,255,255,.95),
-                 -30px  20px 0 -6px rgba(255,255,255,.88),
-                  30px  21px 0 -6px rgba(255,255,255,.88);
-      animation:i-thud 20s linear infinite;animation-delay:6.5s;}
-  @keyframes i-thud{
-      0%      {opacity:0; transform:translateX(-50%) scale(.28);}
-      0.5%    {opacity:1; transform:translateX(-50%) scale(1.35);}  /* 一瞬で覆い隠す */
-      2%      {opacity:1; transform:translateX(-50%) scale(1.62);}
-      3%      {opacity:.8;transform:translateX(-50%) scale(1.85);}
-      5.5%    {opacity:0; transform:translateX(-50%) scale(2.4);}   /* すうっと消える */
-    100%      {opacity:0; transform:translateX(-50%) scale(2.4);}
+
+     ★★時刻は3つが連動している。ひとつ動かしたら、必ず残り2つも動かすこと。
+          落ちきる   … a-drop の 6%（出番5.4秒 ＋ 1.2秒 ＝ 6.6秒）
+          流れ落ちる … .drip の animation-delay 6.65秒
+          広がる     … .thud の animation-delay 6.9秒
+       ★この子が消えるのは 11.2秒（a-drop の 29%）。水たまりもそこで消す。 */
+
+  /* ── ① 体の両側を とろ〜りと流れ落ちるクリーム ── */
+  .m-drop .drip{position:absolute;left:0;right:0;top:22%;height:7%;
+      pointer-events:none;filter:drop-shadow(0 0 0 rgba(0,0,0,0));}
+  .m-drop .drip::before,.m-drop .drip::after{content:'';position:absolute;top:0;
+      width:15%;height:100%;background:#f3f4ee;
+      border-radius:0 0 60% 60% / 0 0 85% 85%;
+      transform:scaleY(.15);transform-origin:50% 0;opacity:0;
+      animation:i-drip 20s linear infinite;animation-delay:6.65s;}
+  .m-drop .drip::before{left:18%;}
+  /* ★右の流れは少しあとから。同時だと「左右対称のツノ」に見えて生き物っぽくない */
+  .m-drop .drip::after{right:18%;animation-delay:6.88s;}
+  @keyframes i-drip{
+      0%      {opacity:0; transform:scaleY(.15);}
+      0.5%    {opacity:1; transform:scaleY(.45);}
+      1.6%    {opacity:1; transform:scaleY(3.0);}   /* とろ〜り伸びる */
+      3.0%    {opacity:1; transform:scaleY(8.0);}   /* 足もとまで届く */
+      4.6%    {opacity:0; transform:scaleY(9.0);}   /* 下の水たまりに溶ける */
+    100%      {opacity:0; transform:scaleY(9.0);}
+  }
+
+  /* ── ② 足もとに広がる水たまり ── */
+  .m-drop .thud{position:absolute;left:50%;bottom:-3%;width:86%;height:15%;
+      border-radius:50%;background:#f3f4ee;opacity:0;
+      transform:translateX(-50%) scale(0,.2);transform-origin:50% 60%;
+      filter:drop-shadow(0 2px 0 rgba(70,60,40,.13));
+      animation:i-cream 20s linear infinite;animation-delay:6.9s;}
+  /* ★左右のふくらみ。まん丸だと「お皿」に見えるので、わざと ふぞろいにしてある */
+  .m-drop .thud::before,.m-drop .thud::after{content:'';position:absolute;
+      bottom:6%;width:42%;height:118%;border-radius:50%;background:inherit;}
+  .m-drop .thud::before{left:-9%;}
+  .m-drop .thud::after{right:-11%;height:94%;}
+  @keyframes i-cream{
+      0%      {opacity:0; transform:translateX(-50%) scale(0,.2);}
+      0.4%    {opacity:1; transform:translateX(-50%) scale(.30,.5);}  /* ぽたっ */
+      1.6%    {opacity:1; transform:translateX(-50%) scale(.62,.86);}
+      3.2%    {opacity:1; transform:translateX(-50%) scale(.88,1);}   /* じわっ */
+      5.5%    {opacity:1; transform:translateX(-50%) scale(1,1);}
+      9%      {opacity:1; transform:translateX(-50%) scale(1.05,1);}  /* ゆっくり止まる */
+     19%      {opacity:1; transform:translateX(-50%) scale(1.06,1);}
+     21.5%    {opacity:0; transform:translateX(-50%) scale(1.06,1);}  /* 本人と一緒に消える */
+    100%      {opacity:0; transform:translateX(-50%) scale(1.06,1);}
   }
   /* ⑩ 着地のゆれ。黄色い面の中身をまとめて数ピクセル動かす。
         ★.hero そのものを動かすと、黄色い地色ごとズレて外に白いすき間が出る。
@@ -1222,26 +1301,52 @@ const FQ = {
             text-wrap:pretty;}   /* 「ん」だけが次の行に落ちるのを防ぐ */
   .guest .role{font-size:12.5px;opacity:.92;}
   .guest p{font-size:13.5px;font-weight:500;line-height:1.85;white-space:pre-line;}
-  /* ══ fq-326move-v1 : 326さんがクネクネ踊る ══
-     ★こちらは ずっと動き続ける。ステージのタブを開いている間だけなので、
-       じゃまにならない（閉じているタブは display:none ＝ 動きも止まる）。
-     ★軸は足もと（transform-origin:50% 100%）。
-       まん中を軸にすると「浮いたまま回っている」ように見えてしまう。
-     ★左右の振りは ±5度まで。カードの左右の余白（18px）に収まる大きさ。
-       これより大きくすると、絵が枠からはみ出す。 */
-  .guest .ph{transform-origin:50% 100%;
-             animation:g-dance 2.6s ease-in-out infinite;}
-  @keyframes g-dance{
-      0%  {transform:rotate(-5deg) translateY(0)    scaleX(1);}
-     15%  {transform:rotate(4deg)  translateY(-4px) scaleX(.98);}
-     30%  {transform:rotate(-3deg) translateY(0)    scaleX(1.02);}
-     45%  {transform:rotate(5deg)  translateY(-5px) scaleX(.98);}
-     60%  {transform:rotate(-4deg) translateY(0)    scaleX(1);}
-     75%  {transform:rotate(3deg)  translateY(-3px) scaleX(1.01);}
-    100%  {transform:rotate(-5deg) translateY(0)    scaleX(1);}
+  /* ══ fq-326move-v2 : 白い枠は固定、326さんの首から上だけが動く ══
+     ★動かすのは絵だけ。**白い枠（.ph）は動かさない。**
+       枠ごと動かすと「カードが揺れている」ように見えて、
+       326さんが動いている感じにならない（fq-326move-v1 の反省）。
+
+     ★★同じ絵を2枚かさねて、切り分けている。
+          .gbd … 首から下。**動かさない**
+          .ghd … 首から上。**これだけ傾く**
+       ★★切り口は まっすぐな線ではなく、**あごの線に沿ってゆるく湾曲**させてある。
+         polygon() に11個の点を置いて、カーブを近似している。
+           はし  … 54%（ヘルメットの耳あての下）
+           まん中 … 58%（あごのいちばん下）
+         まっすぐに切ると、あごの下に横一直線の段が出て「切り貼り」に見える。
+         ★polygon() はどのブラウザでも動く。path() は古いiPhoneで効かないので使わない。
+       ★★名前を .ghead にしないこと。**すでにゲストの見出し行が .ghead**。
+         ぶつかると display:flex を拾って、絵が横いっぱいに伸びる。
+       絵は1枚しか無いので、切る位置で「首」を作っている。
+       56% は326さんの絵で「あごが終わって えりが始まる」ところ（＝首）。実測値。
+
+     ★★上下の切り位置を **3%ずらして重ねてある**（下は50%から、上は53%まで）。
+       ぴったり同じにすると、首を傾けたときに
+       **切り口のはしに すき間ができて、首が切れて見える**。
+       傾き±5度で はしが動くのは 約3px。重なり3%（約3.2px）でちょうど隠れる。
+
+     ★軸は首（transform-origin:50% 56%）。
+       絵のまん中を軸にすると「頭ごと平行にずれる」ように見えてしまう。
+
+     ★絵の高さは枠の92%。上に8%（約9px）の余白ができるので、
+       首を傾けても頭のてっぺんが白い枠に切られない。
+     ★★.guest .ph .gimg と、.ph を挟んで書くこと。
+       .guest .gimg だと上の .ph .gimg と強さが同じで、
+       **あとに書いてあるほうが勝って height:92% が効かない**。 */
+  .guest .ph .gimg{height:92%;}
+  .guest .ph .gbd{clip-path:polygon(0% 51%, 10% 52.2%, 20% 53.4%, 30% 54.2%, 40% 54.8%, 50% 55%, 60% 54.8%, 70% 54.2%, 80% 53.4%, 90% 52.2%, 100% 51%, 100% 100%, 0% 100%);}
+  .guest .ph .ghd{clip-path:polygon(0% 0%, 100% 0%, 100% 54%, 90% 55.2%, 80% 56.4%, 70% 57.2%, 60% 57.8%, 50% 58%, 40% 57.8%, 30% 57.2%, 20% 56.4%, 10% 55.2%, 0% 54%);
+               transform-origin:50% 56%;
+               animation:g-neck 2.8s ease-in-out infinite;}
+  @keyframes g-neck{
+      0%  {transform:rotate(-5deg);}
+     28%  {transform:rotate(4deg);}
+     50%  {transform:rotate(-3.5deg);}
+     76%  {transform:rotate(5deg);}
+    100%  {transform:rotate(-5deg);}
   }
-  /* ★「動きを減らす」設定の端末では踊らせない。 */
-  @media(prefers-reduced-motion:reduce){ .guest .ph{animation:none;} }
+  /* ★「動きを減らす」設定の端末では動かさない。 */
+  @media(prefers-reduced-motion:reduce){ .guest .ph .ghd{animation:none;} }
 
   /* スマホでは写真を少し小さくして、名前が1行に収まる幅を確保する */
   @media(max-width:430px){
@@ -1276,36 +1381,45 @@ const FQ = {
                            .gteaser .ph{width:66px;height:91px;} }
   @media(prefers-reduced-motion:reduce){ .gteaser{transition:none;} }
 
-  /* ══ fq-326move-v1 : 326さんが歩いて登場する ══
-     ★カードが画面に入ったときに **1回だけ** 歩いてくる（JSがクラスを付ける）。
-       ずっと歩き続けると、となりの説明文が読めなくなる。
-     ★overflow:hidden は必須。これが無いと、絵が左の外に出ている間に
-       **ページの横幅が広がって、画面が横に揺れる**。
-     ★walkready は「歩く準備ができた（＝JSが動いている）」印。
-       JSがこけた端末では付かないので、絵は最初から見えたまま。
-       ここを CSS だけで隠すと、JSがこけたとき絵が永遠に出てこない。 */
-  .gteaser{overflow:hidden;}
-  .gteaser.walkready .ph{opacity:0;}
-  .gteaser.walkin .ph{animation:g-walkin 1.8s linear both;}
-  /* ★歩幅と上下のゆれを、同じ1本の transform に書いている。
-       2本に分けると、あとに書いたほうだけが効いて片方が消える。
-     ★だんだん歩幅を小さくして、止まるときに「スッ」と減速させている。 */
-  @keyframes g-walkin{
-      0%  {opacity:0; transform:translate(-150%, 0)    rotate(-4deg);}
-      8%  {opacity:1; transform:translate(-136%, -5px) rotate(3deg);}
-     20%  {transform:translate(-108%, 0)    rotate(-4deg);}
-     32%  {transform:translate(-82%,  -5px) rotate(3deg);}
-     44%  {transform:translate(-58%,  0)    rotate(-4deg);}
-     56%  {transform:translate(-36%,  -5px) rotate(3deg);}
-     68%  {transform:translate(-18%,  0)    rotate(-4deg);}
-     80%  {transform:translate(-6%,   -4px) rotate(2deg);}
-     90%  {transform:translate(0,     0)    rotate(-2deg);}
-    100%  {opacity:1; transform:translate(0, 0) rotate(0);}
+  /* ══ fq-326move-v2 : 白い枠のなかで、326さんだけが動く ══
+     ★共通の作り（トップもステージも同じ）
+         .ph    … 白い枠。**ここは動かさない**
+         .gwrap … はみ出しを切る箱（枠のなかいっぱい）
+         .gimg  … 326さんの絵。**動かすのはこれだけ**
+       ★.ig（Instagramの丸）は枠の外へはみ出して置いてあるので、
+         .gwrap の**外**に残すこと。中に入れると丸が切れて消える。
+     ★.ph に position:relative が要る。これが無いと .gwrap の位置が
+       ずっと外側の箱を基準にしてしまい、**絵がどこかへ飛んでいく**。
+       （.guest .ph には元から付いていたが、.gteaser .ph には無かった） */
+  .gteaser .ph{position:relative;}
+  .ph .gwrap{position:absolute;inset:0;overflow:hidden;border-radius:9px;}
+  .ph .gimg{position:absolute;left:0;bottom:0;width:100%;height:100%;
+            object-fit:contain;object-position:center bottom;}
+
+  /* ══ fq-326move-v2 : トップは「のぞいて→引っ込んで→出てくる」 ══
+     ★カードが画面に入ったときに **1回だけ**（JSが walkin を付ける）。
+       ずっと動き続けると、となりの説明文が読めなくなる。
+     ★walkready は「準備ができた（＝JSが動いている）」印。
+       JSがこけた端末では付かないので、絵は最初から まん中に見えたまま。
+       ここを CSS だけで隠すと、JSがこけたとき絵が永遠に出てこない。
+     ★130% ＝ 枠の幅の1.3倍。右の外に出しきる位置。
+       52% ＝ 半分だけ見えている位置（のぞいているところ）。 */
+  .gteaser.walkready .gimg{transform:translateX(130%);}
+  .gteaser.walkin .gimg{animation:g-peekin 2.4s ease-in-out both;}
+  @keyframes g-peekin{
+      0%  {transform:translateX(130%);}   /* 右の外 */
+     14%  {transform:translateX(52%);}    /* ひょっこり のぞく */
+     26%  {transform:translateX(52%);}    /* すこし止まる */
+     40%  {transform:translateX(130%);}   /* 引っ込む */
+     54%  {transform:translateX(130%);}   /* ため */
+     80%  {transform:translateX(-5%);}    /* 出てきて、すこし行き過ぎる */
+     91%  {transform:translateX(2%);}
+    100%  {transform:translateX(0);}      /* まん中におさまる */
   }
-  /* ★「動きを減らす」設定の端末では歩かせない。めまいが出る人がいるため。 */
+  /* ★「動きを減らす」設定の端末では動かさない。めまいが出る人がいるため。 */
   @media(prefers-reduced-motion:reduce){
-    .gteaser.walkready .ph{opacity:1;}
-    .gteaser.walkin .ph{animation:none;}
+    .gteaser.walkready .gimg{transform:none;}
+    .gteaser.walkin .gimg{animation:none;}
   }
 
   /* ══════════ チップ ══════════ */
@@ -1503,6 +1617,9 @@ const FQ = {
   <!-- == fq-rail-v1 : 電車のレール。電車が通るあいだだけ出る ==
        ★#actors より前に書いてあるが、奥ゆきは z-index で決めている（レール2／電車3）。
        ★出る時刻は JS が animation-delay に入れる。中身が空でも形は崩れない。 -->
+  <!-- == fq-rainbow-v1 : ペガサスが通ったあとの虹 ==
+       ★いちばん後ろ（z-index:0）。キャラクターも文字も、虹より手前に出る。 -->
+  <div class="rainbow" id="rainbow" aria-hidden="true"></div>
   <div class="rail" id="rail" aria-hidden="true"><i></i></div>
   <div id="actors" aria-hidden="true"></div>
   <!-- fq-cast-v2: 文字より「まえ」に出る子（ロゴの上を跳ねる猫／丸から落ちる髭）専用。
@@ -1719,7 +1836,9 @@ const FQ = {
            + '--at:' + (c.at || 0) + 's">'
            + (c.move === 'rocket' ? '<span class="smoke"></span>' : '')
            + (c.move === 'dash'   ? '<span class="dashline"></span>' : '')
-           + (c.move === 'drop'   ? '<span class="thud"></span>' : '')
+           /* fq-cream-v1: 落ちる子には2つ。
+              .thud … 足もとに広がるクリーム   .drip … 体を流れ落ちるクリーム */
+           + (c.move === 'drop'   ? '<span class="thud"></span><span class="drip"></span>' : '')
            + '<img src="' + esc(c.photo) + '" alt="" decoding="async">'
            /* fq-cast-fix-v1: 2人めがいれば、となりに並べる */
            + (c.photo2 ? '<img src="' + esc(c.photo2) + '" alt="" decoding="async">' : '')
@@ -1735,6 +1854,18 @@ const FQ = {
       var train = A.filter(function(c){ return c.move === 'dash'; })[0];
       if(!train){ rail.style.display = 'none'; return; }
       rail.style.animationDelay = (train.at || 0) + 's';
+    })();
+
+    /* == fq-rainbow-v1 ==
+       ★虹の出る時刻を、ペガサス（bounce）の出番に合わせる。
+         ここで合わせておけば、actors の at を変えても虹が付いてくる。
+       ★ペガサスがいなければ虹も出さない。 */
+    (function(){
+      var rb = $('#rainbow');
+      if(!rb) return;
+      var peg = A.filter(function(c){ return c.move === 'bounce'; })[0];
+      if(!peg){ rb.style.display = 'none'; return; }
+      rb.style.animationDelay = (peg.at || 0) + 's';
     })();
 
     $('#actors').innerHTML      = back.map(build).join('');
@@ -1855,19 +1986,25 @@ const FQ = {
     const g  = FQ.guest;
     // トップ用（短い紹介）。押すとステージのタブが開く
     $('#gteaser').innerHTML =
-        '<div class="ph" style="'+(g.photo ? 'background-image:url('+esc(g.photo)+')' : '')+'">'
-      +   (g.photo ? '' : '326') + '</div>'
+        /* == fq-326move-v2 ==
+           ★背景（background-image）ではなく <img> にした。
+             背景のままだと「絵だけを動かす」ことができない。
+           ★.gwrap が、動いた絵が白い枠から はみ出すのを切る。 */
+        '<div class="ph">'
+      +   (g.photo ? '<span class="gwrap"><img class="gimg" src="'+esc(g.photo)+'" alt="" decoding="async"></span>' : '326')
+      + '</div>'
       + '<div class="tx"><h3>'+esc(g.name)+'</h3>'
       +   '<div class="role">'+esc(g.role)+'</div>'
       +   (g.short ? '<div class="s">'+esc(g.short)+'</div>' : '')
       +   '<span class="more">くわしく見る →</span></div>';
 
-    /* ── fq-326move-v1: カードが画面に入ったら、1回だけ歩いてくる ──
+    /* ── fq-326move-v2: カードが画面に入ったら、1回だけ出てくる ──
        ★ページを開いた瞬間ではなく「見えたとき」。
-         スクロールして見にきたら もう歩き終わっていた、では意味がない。
-       ★walkready を先に付けておく（＝絵をいったん消す）。
-         これが無いと「その場に立っている絵が、急に左へワープしてから歩く」。
-       ★JSがこけた端末では walkready が付かないので、絵は最初から見えたまま。
+         スクロールして見にきたら もう終わっていた、では意味がない。
+       ★walkready を先に付けておく（＝絵を右の外へ待たせる）。
+         これが無いと「まん中にいる絵が、急に右へワープしてから出てくる」。
+       ★JSがこけた端末では walkready が付かないので、絵は最初から
+         まん中に見えたまま。
        ★「動きを減らす」設定の人には何もしない。 */
     (function(){
       const el = $('#gteaser');
@@ -1888,11 +2025,22 @@ const FQ = {
 
   (function(){
     const g  = FQ.guest;
-    const st = g.photo ? 'background-image:url('+esc(g.photo)+')' : '';
-    const in_ = (g.photo ? '' : '326') + (g.insta ? '<span class="ig">'+IG+'</span>' : '');
+    /* == fq-326move-v2 ==
+       ★背景（background-image）ではなく <img> にした。絵だけを揺らすため。
+       ★.ig（Instagramの丸）は枠の外へはみ出して置いてあるので、
+         **.gwrap の外**に並べること。中に入れると丸が切れて消える。 */
+    /* ★同じ絵を2枚かさねる。下＝首から下（動かない）／上＝首から上（傾く）。
+         URLは同じなので、読み込みは1回きり（2枚めはキャッシュから）。 */
+    const pic = g.photo
+      ? '<span class="gwrap">'
+        + '<img class="gimg gbd" src="'+esc(g.photo)+'" alt="" decoding="async">'
+        + '<img class="gimg ghd" src="'+esc(g.photo)+'" alt="" decoding="async" aria-hidden="true">'
+        + '</span>'
+      : '326';
+    const in_ = pic + (g.insta ? '<span class="ig">'+IG+'</span>' : '');
     const ph = g.insta
-      ? '<a class="ph" style="'+st+'" href="'+esc(g.insta)+'" target="_blank" rel="noopener">'+in_+'</a>'
-      : '<div class="ph" style="'+st+'">'+in_+'</div>';
+      ? '<a class="ph" href="'+esc(g.insta)+'" target="_blank" rel="noopener">'+in_+'</a>'
+      : '<div class="ph">'+in_+'</div>';
     // 写真＋名前 を横並びにして、説明文はその下に全幅で置く
     $('#guest').innerHTML =
         '<div class="ghead">' + ph
