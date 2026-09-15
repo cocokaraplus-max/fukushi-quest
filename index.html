@@ -635,12 +635,24 @@ const FQ = {
      ★★速さと「遅れ」はセット。速くするなら遅れも大きくすること。
        でないと画面の中で前の子を追い抜いてしまう。 */
   .m-usagi.urun{animation-name:a-usagi-run;}
+  /* ══ fq-tumble-v1 : 慌てて転ぶ（横の移動） ══
+     ★★内側の体の動き（i-tumble）と **同じ時間割** にしてある。
+       片方だけ直すと「走ったまま転ぶ」「その場で転んで進まない」になる。
+     ★止まる位置は vw で書いてある。画面の幅が変わっても
+       「だいたい道のりの6割のところで転ぶ」が保たれる。
+         40vw - 54px  … 道のりの60%（転びはじめ）
+         33.5vw - 70px … 道のりの66.5%（すべって止まる）
+     ★転んで1.0秒止まるので、全部で 5.5秒 → 6.25秒 になった。
+       ★★そのぶん **列車が待つ時間とレールも伸ばしてある**。3つでセット。 */
   @keyframes a-usagi-run{
       0%       {opacity:0; transform:translateX(calc(100vw + 90px));}
       0.3%     {opacity:1; transform:translateX(calc(100vw + 90px));}
-      9.47%    {opacity:1; transform:translateX(-150px);}      /* 5.5秒で渡りきる */
-      9.57%    {opacity:0; transform:translateX(-150px);}
-      9.67%,100%{opacity:0; transform:translateX(calc(100vw + 90px));}
+      5.8%     {opacity:1; transform:translateX(calc(40vw - 54px));}    /* 3.3秒 走る */
+      6.38%    {opacity:1; transform:translateX(calc(33.5vw - 70px));}  /* すべって止まる */
+      7.88%    {opacity:1; transform:translateX(calc(33.5vw - 70px));}  /* 倒れている＋起き上がる */
+     10.72%    {opacity:1; transform:translateX(-150px);}               /* また走る（1.7秒） */
+     10.82%    {opacity:0; transform:translateX(-150px);}
+     10.92%,100%{opacity:0; transform:translateX(calc(100vw + 90px));}
   }
   @keyframes a-usagi{
       0%       {opacity:0; transform:translateX(calc(100vw + 90px));}
@@ -657,7 +669,46 @@ const FQ = {
   .m-usagi.uquick img{animation:i-uwalk .32s ease-in-out infinite alternate;}
   /* ★fq-usagi-v2: 走る子は「前のめり＋小刻みに上下」。
      ★右から左へ走るので、前のめり ＝ 左に傾ける（マイナスの角度）。 */
-  .m-usagi.urun  img{animation:i-urun  .26s ease-in-out infinite alternate;}
+  /* ★★fq-tumble-v1: 走る子は「1回きりの動き」なので、
+       短い繰り返し（i-urun）ではなく **60秒ひとまわりの i-tumble** に変えた。
+       走りのゆれも、この60秒のなかに1コマずつ書いてある。
+       ★transform は1つしか持てないので、短い繰り返しと混ぜられない。
+       ★出番は --at（親から渡す秒数）で合わせる。ほかの子と同じやり方。
+       ★★転ぶときは **回すだけ**。下へ動かさないこと（translateY を足さない）。
+         絵は足もとが軸（transform-origin:50% 100%）なので、回せば前へ倒れる。
+         下へ動かすと **地面に沈み込んで見える**。
+     ★i-urun は使わなくなったが、戻したくなったときのために残してある。 */
+  .m-usagi.urun  img{animation:i-tumble 60s linear infinite;animation-delay:var(--at);}
+  @keyframes i-tumble{
+      0.300% {transform:translateY(0) rotate(-11deg);}      /* 走る */
+      0.758% {transform:translateY(-9px) rotate(-5deg);}
+      1.217% {transform:translateY(0) rotate(-11deg);}
+      1.675% {transform:translateY(-9px) rotate(-5deg);}
+      2.133% {transform:translateY(0) rotate(-11deg);}
+      2.592% {transform:translateY(-9px) rotate(-5deg);}
+      3.050% {transform:translateY(0) rotate(-11deg);}
+      3.508% {transform:translateY(-9px) rotate(-5deg);}
+      3.967% {transform:translateY(0) rotate(-11deg);}
+      4.425% {transform:translateY(-9px) rotate(-5deg);}
+      4.883% {transform:translateY(0) rotate(-11deg);}
+      5.342% {transform:translateY(-9px) rotate(-5deg);}
+      5.800% {transform:translateY(0) rotate(-11deg);}
+      6.050% {transform:translateY(-2px) rotate(-42deg);}   /* つんのめる */
+      6.380% {transform:translateY(0) rotate(-78deg);}      /* 転ぶ（足もとを軸に前へ倒れる） */
+      6.700% {transform:translateY(0) rotate(-84deg);}      /* ぺたん */
+      7.400% {transform:translateY(0) rotate(-80deg);}      /* 起き上がりはじめ */
+      7.660% {transform:translateY(-3px) rotate(-34deg);}
+      7.880% {transform:translateY(0) rotate(-11deg);}      /* 立て直した */
+      8.235% {transform:translateY(-10px) rotate(-5deg);}   /* また走る */
+      8.590% {transform:translateY(0) rotate(-12deg);}
+      8.945% {transform:translateY(-10px) rotate(-5deg);}
+      9.300% {transform:translateY(0) rotate(-12deg);}
+      9.655% {transform:translateY(-10px) rotate(-5deg);}
+     10.010% {transform:translateY(0) rotate(-12deg);}
+     10.365% {transform:translateY(-10px) rotate(-5deg);}
+     10.720% {transform:translateY(0) rotate(-12deg);}
+    100.000% {transform:translateY(0) rotate(-11deg);}
+  }
   @keyframes i-uwalk { from{transform:translateY(0)    rotate(-3deg);}
                        to  {transform:translateY(-5px) rotate(3deg);} }
   @keyframes i-uhop  { from{transform:translateY(0);}  to{transform:translateY(-16px);} }
@@ -812,9 +863,9 @@ const FQ = {
       0%        {opacity:0;}
       0.02%     {opacity:0;}
       0.30%     {opacity:1;}
-     36.70%     {opacity:1;}
-     37.50%     {opacity:0;}
-     37.60%,100%{opacity:0;}
+     37.95%     {opacity:1;}
+     38.75%     {opacity:0;}
+     38.85%,100%{opacity:0;}
   }
   /* fq-cast-tune-v1: 走る速さをゆるめたので、体のゆれも同じだけゆるめる。
      .19秒のままだと「ゆっくり進むのに小刻みに震えている」ように見える。
@@ -859,15 +910,17 @@ const FQ = {
              だから -120px まで抜けきる。列車は約55〜80pxなので完全に外。
            ★29.9秒に抜けきり、最後の1体（走ってくる子）が左へ抜ける
              36.3秒まで外で待つ（fq-usagi-v2 で 38.9秒から縮めた）。
-           ★★うさぎの数・間隔・速さを変えたら、この 23.90% も動かすこと。
+           ★fq-tumble-v1: 走る子が転んで1.0秒止まるので、
+             待ちを 23.90% → 25.15%（37.4秒）に伸ばした。
+           ★★うさぎの数・間隔・速さを変えたら、この 25.15% も動かすこと。
              忘れると「まだうさぎが歩いているのに列車が戻ってくる」。 */
      12.97%   {opacity:1; transform:translateX(-120px)             scaleX(1);}
       /* ── 外で向きを変える。見えないところで変えるので、回る演出は要らない ── */
-     23.90%   {opacity:1; transform:translateX(-120px)             scaleX(-1);}
+     25.15%   {opacity:1; transform:translateX(-120px)             scaleX(-1);}
       /* ── 帰り：左 → 右（7.6秒）。列車だけで帰る ── */
-     36.57%   {opacity:1; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
-     36.67%   {opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
-     36.8%,100%{opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(1);}
+     37.82%   {opacity:1; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
+     37.92%   {opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
+     38.0%,100%{opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(1);}
   }
   /* == fq-rail-v1 ==
      ★傾き(rotate)をやめた。もとは「前のめりで走る人」の動きだったが、
