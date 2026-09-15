@@ -1534,7 +1534,7 @@ const FQ = {
   <button role="tab" data-tab="quest" aria-selected="false"><span class="ic">📜</span>クエスト</button>
   <a href="quest.html#shindan"><span class="ic">🔮</span>診断</a>
   <a href="quest.html#zukan"  ><span class="ic">📖</span>図鑑</a>
-  <button role="tab" data-tab="place" aria-selected="false"><span class="ic">🗺</span>会場</button>
+  <button role="tab" data-tab="place" aria-selected="false"><span class="ic">📍</span>会場</button><!-- fq-pin-v1: 世界地図 → 位置ピン。quest.html の .tabbar と同じにすること -->
   <button role="tab" data-tab="support" aria-selected="false"><span class="ic">🤝</span>協賛</button>
 </nav>
 
@@ -1883,7 +1883,7 @@ const FQ = {
       ['quest', '📜', 'クエスト',  'QRを集めてガチャ'],
       ['shindan', '🔮', 'タイプ診断', '生年月日で7つのタイプ', 'quest.html#shindan'],
       ['zukan',   '📖', 'キャラ図鑑', 'QRでなかまが増える', 'quest.html#zukan'],
-      ['place',   '🗺', '会場',       '行き方・駐車場のお願い'],
+      ['place',   '📍', '会場',       '行き方・駐車場のお願い'],   /* fq-pin-v1 */
       ['support', '🤝', '協賛・関係者', 'ささえてくださるみなさま'],
     ];
     $('#short').innerHTML = MENU.map(m => {
