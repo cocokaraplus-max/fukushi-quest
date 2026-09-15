@@ -199,16 +199,25 @@ const FQ = {
          ★★数や間隔を変えたら、**列車が待つ時間（a-dash の27.67%）と
            レールの出ている時間（a-rail の40.40%）も必ず合わせること。**
            最後の1体が左へ抜けるのは at + 8.2秒。いまは 30.7 + 8.2 ＝ 38.9秒。 */
-      { photo:'img/usagi_05.png',  move:'usagi', at:23.5, cls:'uwalk'       },
-      { photo:'img/usagi_47.png',  move:'usagi', at:24.3, cls:'uhop'        },
-      { photo:'img/usagi_54.png',  move:'usagi', at:25.1, cls:'usway ubig'  },
-      { photo:'img/usagi_70.png',  move:'usagi', at:25.9, cls:'uwalk'       },
-      { photo:'img/usagi_72a.png', move:'usagi', at:26.7, cls:'uquick usml' },
-      { photo:'img/usagi_72b.png', move:'usagi', at:27.5, cls:'uhop2 usml'  },
-      { photo:'img/usagi_68.png',  move:'usagi', at:28.3, cls:'utrip'       },
-      { photo:'img/usagi_48.png',  move:'usagi', at:29.1, cls:'usway'       },
-      { photo:'img/usagi_45.png',  move:'usagi', at:29.9, cls:'uhop2'       },
-      { photo:'img/usagi_26.png',  move:'usagi', at:30.7, cls:'uwalk ubig'  },
+      /* ★fq-usagi-v2: 間隔を 0.8秒 → 0.55秒（約63px → 約43px）に詰めた。
+           絵の横幅は 50〜74px なので、となり同士が少し重なる。
+           「くっついて歩いている」ように見せるための重なりなので、これでよい。
+         ★★列車との間（23.5 − 22.3 ＝ 1.2秒・約95px）だけは詰めないこと。
+           詰めると うさぎが列車に追いついて **突き抜けて見える**。 */
+      { photo:'img/usagi_05.png',  move:'usagi', at:23.50, cls:'uwalk'       },
+      { photo:'img/usagi_47.png',  move:'usagi', at:24.05, cls:'uhop'        },
+      { photo:'img/usagi_54.png',  move:'usagi', at:24.60, cls:'usway ubig'  },
+      { photo:'img/usagi_70.png',  move:'usagi', at:25.15, cls:'uwalk'       },
+      { photo:'img/usagi_72a.png', move:'usagi', at:25.70, cls:'uquick usml' },
+      { photo:'img/usagi_72b.png', move:'usagi', at:26.25, cls:'uhop2 usml'  },
+      { photo:'img/usagi_68.png',  move:'usagi', at:26.80, cls:'utrip'       },
+      { photo:'img/usagi_48.png',  move:'usagi', at:27.35, cls:'usway'       },
+      { photo:'img/usagi_45.png',  move:'usagi', at:27.90, cls:'uhop2'       },
+      /* ★★しんがりは「少し遅れて走ってくる子」。
+           みんなより 2.7秒 遅れて出て、1.45倍の速さ（urun）で追いかける。
+           追いつくのは画面の外。画面の中では追い抜かない（測って確認済み）。
+         ★遅れを縮めすぎると、画面の中で前の子を追い抜いてしまう。 */
+      { photo:'img/usagi_26.png',  move:'usagi', at:30.60, cls:'urun ubig'   },
     ],
   },
 
@@ -619,6 +628,20 @@ const FQ = {
            animation:a-usagi 60s linear infinite;}
   .m-usagi.ubig{--aw:clamp(44px,12.5vw,74px);}
   .m-usagi.usml{--aw:clamp(30px,8.5vw,50px);}
+  /* ★★fq-usagi-v2 : 少し遅れて走ってくる子（urun） ==
+     ★横の動きだけ別（a-usagi-run）。ほかはみんなと同じ作りのまま。
+         みんな … 630px を 8.0秒（画面390pxで約79px/秒）
+         この子 … 630px を 5.5秒（　　　　　　約115px/秒）＝ 1.45倍
+     ★★速さと「遅れ」はセット。速くするなら遅れも大きくすること。
+       でないと画面の中で前の子を追い抜いてしまう。 */
+  .m-usagi.urun{animation-name:a-usagi-run;}
+  @keyframes a-usagi-run{
+      0%       {opacity:0; transform:translateX(calc(100vw + 90px));}
+      0.3%     {opacity:1; transform:translateX(calc(100vw + 90px));}
+      9.47%    {opacity:1; transform:translateX(-150px);}      /* 5.5秒で渡りきる */
+      9.57%    {opacity:0; transform:translateX(-150px);}
+      9.67%,100%{opacity:0; transform:translateX(calc(100vw + 90px));}
+  }
   @keyframes a-usagi{
       0%       {opacity:0; transform:translateX(calc(100vw + 90px));}
       0.3%     {opacity:1; transform:translateX(calc(100vw + 90px));}
@@ -632,11 +655,16 @@ const FQ = {
   .m-usagi.uhop2 img {animation:i-uhop2 .58s cubic-bezier(.3,0,.4,1) infinite alternate;}
   .m-usagi.usway img {animation:i-usway .78s ease-in-out infinite alternate;}
   .m-usagi.uquick img{animation:i-uwalk .32s ease-in-out infinite alternate;}
+  /* ★fq-usagi-v2: 走る子は「前のめり＋小刻みに上下」。
+     ★右から左へ走るので、前のめり ＝ 左に傾ける（マイナスの角度）。 */
+  .m-usagi.urun  img{animation:i-urun  .26s ease-in-out infinite alternate;}
   @keyframes i-uwalk { from{transform:translateY(0)    rotate(-3deg);}
                        to  {transform:translateY(-5px) rotate(3deg);} }
   @keyframes i-uhop  { from{transform:translateY(0);}  to{transform:translateY(-16px);} }
   @keyframes i-uhop2 { from{transform:translateY(0);}  to{transform:translateY(-9px);} }
   @keyframes i-usway { from{transform:rotate(-7deg);}  to{transform:rotate(7deg);} }
+  @keyframes i-urun  { from{transform:translateY(0)    rotate(-11deg);}
+                       to  {transform:translateY(-9px) rotate(-5deg);} }
   /* ★つまずく子だけは「1回きり」なので、60秒ひとまわりで出番に合わせている。
        --at ＝ 出てくる時刻。親の animation-delay は子には伝わらないので、
        変数にして子から読ませている（ほかの子と同じやり方）。
@@ -784,9 +812,9 @@ const FQ = {
       0%        {opacity:0;}
       0.02%     {opacity:0;}
       0.30%     {opacity:1;}
-     40.40%     {opacity:1;}
-     41.20%     {opacity:0;}
-     41.30%,100%{opacity:0;}
+     36.70%     {opacity:1;}
+     37.50%     {opacity:0;}
+     37.60%,100%{opacity:0;}
   }
   /* fq-cast-tune-v1: 走る速さをゆるめたので、体のゆれも同じだけゆるめる。
      .19秒のままだと「ゆっくり進むのに小刻みに震えている」ように見える。
@@ -829,16 +857,17 @@ const FQ = {
            ★もとは -10px（画面のはし）で止まっていたが、そこは まだ見えている。
              うさぎ軍団がその上を素通りして、**列車を突き抜けて見えた**。
              だから -120px まで抜けきる。列車は約55〜80pxなので完全に外。
-           ★29.9秒に抜けきり、最後の1体が左へ抜ける38.9秒まで外で待つ。
-           ★★うさぎの数や間隔を変えたら、この 27.67% も動かすこと。
+           ★29.9秒に抜けきり、最後の1体（走ってくる子）が左へ抜ける
+             36.3秒まで外で待つ（fq-usagi-v2 で 38.9秒から縮めた）。
+           ★★うさぎの数・間隔・速さを変えたら、この 23.90% も動かすこと。
              忘れると「まだうさぎが歩いているのに列車が戻ってくる」。 */
      12.97%   {opacity:1; transform:translateX(-120px)             scaleX(1);}
       /* ── 外で向きを変える。見えないところで変えるので、回る演出は要らない ── */
-     27.67%   {opacity:1; transform:translateX(-120px)             scaleX(-1);}
+     23.90%   {opacity:1; transform:translateX(-120px)             scaleX(-1);}
       /* ── 帰り：左 → 右（7.6秒）。列車だけで帰る ── */
-     40.34%   {opacity:1; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
-     40.44%   {opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
-     40.6%,100%{opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(1);}
+     36.57%   {opacity:1; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
+     36.67%   {opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(-1);}
+     36.8%,100%{opacity:0; transform:translateX(calc(100vw + 90px)) scaleX(1);}
   }
   /* == fq-rail-v1 ==
      ★傾き(rotate)をやめた。もとは「前のめりで走る人」の動きだったが、
