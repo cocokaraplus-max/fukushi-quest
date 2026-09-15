@@ -581,57 +581,37 @@ const FQ = {
          i        … 枕木（等間隔のたて線）
      ★出る時刻は JS が入れる（下の castActors を参照）。
        ここに数字で書くと、電車の出番を変えたときレールだけ取り残される。 */
-  /* == fq-rainbow-v1 : ペガサスが通ったあとの虹 ==
-     ★絵ではなく CSS の radial-gradient（同心の楕円）で描いている。
-       ★★円のまん中を「箱のいちばん下」に置くのがコツ。
-         そうすると下半分は箱の外に出て、**上半分＝アーチだけ**が残る。
-         box-shadow で輪を重ねる作りにすると、輪の下の直線部分まで描かれて
-         地面のところに横線が出てしまう。
-     ★色はすべて半透明（.24〜.32）。**濃くしないこと。**
-       濃くすると黄色い地とけんかして、文字が読みにくくなる。
-     ★奥ゆき（z-index）は 0。キャラクター(1)より奥、文字(2)より奥。
-     ★出る時刻は JS がペガサスの出番から入れる（下の castActors を参照）。
-       ここに数字で書くと、ペガサスの出番を変えたとき虹だけ取り残される。 */
-  /* ★★大きさと場所は「ペガサスが通った道」に合わせてある。
-       ペガサスは 左下（-16vw・地面）から上がって、文字の上（bottom:78%）を
-       左から右へ渡り、右（78vw）で着地する。＝ゆるいアーチを描く。
-       虹のアーチも同じ形になるよう、次の3つを合わせている。
-         left:-18% / right:8% … 足もとの位置（左は画面の外、右は78vwのあたり）
-         bottom:1% / height:86% … いちばん高いところが bottom:78% になる高さ
-       ★ペガサスの高さ（a-bounce の bottom:78%）を変えたら、height も見直すこと。 */
-  .rainbow{position:absolute;left:-18%;right:8%;bottom:1%;height:86%;
-        z-index:0;opacity:0;pointer-events:none;
-        transform:scale(.4);transform-origin:50% 100%;
-        background:radial-gradient(ellipse 50% 100% at 50% 100%,
-            transparent 0 71%,
-            rgba(110,100,195,.24) 71% 74.2%,
-            rgba(70,150,210,.26)  74.2% 77.4%,
-            rgba(90,180,110,.28)  77.4% 80.6%,
-            rgba(244,214,70,.32)  80.6% 83.8%,
-            rgba(240,150,55,.30)  83.8% 87%,
-            rgba(224,80,70,.30)   87% 90.2%,
-            transparent 90.2%);
-        animation:a-rainbow 60s ease-out infinite;}
-  /* ★数字はペガサス（a-bounce）の出番に合わせてある。
-       1回目は 11.4%（右へ抜けたところ）から、2回目は 72.2%（左へ抜けたところ）から。
-       ★a-bounce の 11.4% / 72.2% を動かしたら、ここも動かすこと。2つで1組。 */
-  @keyframes a-rainbow{
-      0%       {opacity:0;   transform:scale(.4);}
-     11.4%     {opacity:0;   transform:scale(.4);}    /* 1回目：右へ抜けた */
-     12.8%     {opacity:.9;  transform:scale(.8);}
-     15%       {opacity:1;   transform:scale(1);}     /* ふわっと広がる */
-     20%       {opacity:1;   transform:scale(1.02);}
-     22.5%     {opacity:0;   transform:scale(1.05);}  /* そっと消える */
-     22.6%     {opacity:0;   transform:scale(.4);}
-     72.2%     {opacity:0;   transform:scale(.4);}    /* 2回目：左へ抜けた */
-     73.6%     {opacity:.9;  transform:scale(.8);}
-     75.8%     {opacity:1;   transform:scale(1);}
-     81%       {opacity:1;   transform:scale(1.02);}
-     83.5%     {opacity:0;   transform:scale(1.05);}
-     83.6%,100%{opacity:0;   transform:scale(.4);}
+  /* == fq-dust-v1 : ペガサスがこぼす「虹の粉」 ==
+     もとは大きな虹のアーチ（fq-rainbow-v1）だった。
+     ペガサスと虹がつながって見えなかったので、**こぼれて舞い散る粉**に変えた。
+
+     ★粒は JS が作る（下の castActors を参照）。
+       場所も出る時刻も、ペガサスの通り道から計算している。
+       ★★ここを数字で書かないこと。ペガサスの出番(at)や通り道を変えたとき、
+         粉だけ取り残される。
+     ★奥ゆきは 3（ペガサスと同じ段）。DOMでペガサスより前に置いてあるので、
+       粉はペガサスの**うしろ**に出る。
+     ★--pw は ペガサスの横幅の半分。粒を体のまん中から出すために足している。
+       ペガサスの大きさ（.m-bounce の --aw）を変えたら、ここも合わせること。 */
+  .dust{position:absolute;inset:0;z-index:3;pointer-events:none;
+        --pw:clamp(43px,12.5vw,72px);}
+  .dust span{position:absolute;width:7px;height:7px;border-radius:50%;
+        opacity:0;will-change:transform,opacity;
+        box-shadow:0 0 5px 1px rgba(255,255,255,.55);
+        animation:a-dust 60s linear infinite;}
+  /* ★1粒あたり 1.9秒だけ見える（3.2% × 60秒）。
+       出たしゅんかんに いちばん濃く、散りながら薄くなって消える。
+     ★--dx / --dy は散る向き。JSが1粒ずつ ちがう値を入れる。
+       ここを固定にすると「まとめて落ちる帯」に見えて、粉に見えない。 */
+  @keyframes a-dust{
+      0%      {opacity:0; transform:translate(0,0) scale(.3);}
+      0.25%   {opacity:1; transform:translate(0,0) scale(1);}
+      1.2%    {opacity:.9; transform:translate(calc(var(--dx) * .45), calc(var(--dy) * .3)) scale(.9);}
+      3.2%    {opacity:0; transform:translate(var(--dx), var(--dy)) scale(.3);}
+    100%      {opacity:0; transform:translate(var(--dx), var(--dy)) scale(.3);}
   }
   /* ★「動きを減らす」設定の端末では出さない（キャラクターと同じあつかい） */
-  @media(prefers-reduced-motion:reduce){ .rainbow{display:none;} }
+  @media(prefers-reduced-motion:reduce){ .dust{display:none;} }
   .rail{position:absolute;left:-3%;right:-3%;bottom:3px;height:11px;z-index:2;
         opacity:0;pointer-events:none;animation:a-rail 60s linear infinite;}
   .rail::before,.rail::after{content:'';position:absolute;left:0;right:0;
@@ -1402,19 +1382,36 @@ const FQ = {
      ★walkready は「準備ができた（＝JSが動いている）」印。
        JSがこけた端末では付かないので、絵は最初から まん中に見えたまま。
        ここを CSS だけで隠すと、JSがこけたとき絵が永遠に出てこない。
-     ★130% ＝ 枠の幅の1.3倍。右の外に出しきる位置。
-       52% ＝ 半分だけ見えている位置（のぞいているところ）。 */
+     ★130% ＝ 枠の幅の1.3倍。右の外に出しきる位置。 */
+  /* ══ fq-326peek-v2 : 頭だけ出して覗き込む ══
+     もとは体まで半分そのまま横に出していた（translateX 52%）。
+     まっすぐ横にずらすだけなので「のぞいている」というより
+     「横から歩いて入ってきて止まった」ように見えていた。
+
+     ★★軸は **右下**（transform-origin:90% 100%）。
+       ここを回転の中心にすると、傾けたときに
+       **足もとはほとんど動かず、頭だけが大きく内側へ入ってくる**。
+       ＝ 壁のかげから覗き込む形。
+       まん中を軸にすると、体ごと斜めに倒れて「転んでいる」ように見える。
+
+     ★のぞいている間は translateX を 83〜89% にして、**体は枠の外に置いたまま**。
+       ★★ここを小さくすると体まで入ってしまい、「のぞき込み」に見えない。
+       実測（枠72pxのとき）：86%＝62px右へ。足もとは6px、頭は35pxぶん見える。
+       傾き1度ぶんで頭が内側へ入る量は 101px×sin1° ＝ 約1.8px。 */
+  .gteaser .gimg{transform-origin:90% 100%;}
   .gteaser.walkready .gimg{transform:translateX(130%);}
-  .gteaser.walkin .gimg{animation:g-peekin 2.4s ease-in-out both;}
+  .gteaser.walkin .gimg{animation:g-peekin 2.8s ease-in-out both;}
   @keyframes g-peekin{
-      0%  {transform:translateX(130%);}   /* 右の外 */
-     14%  {transform:translateX(52%);}    /* ひょっこり のぞく */
-     26%  {transform:translateX(52%);}    /* すこし止まる */
-     40%  {transform:translateX(130%);}   /* 引っ込む */
-     54%  {transform:translateX(130%);}   /* ため */
-     80%  {transform:translateX(-5%);}    /* 出てきて、すこし行き過ぎる */
-     91%  {transform:translateX(2%);}
-    100%  {transform:translateX(0);}      /* まん中におさまる */
+      0%  {transform:translateX(130%) rotate(0deg);}    /* 右の外 */
+     10%  {transform:translateX(86%)  rotate(-16deg);}  /* 頭だけ出して のぞく */
+     19%  {transform:translateX(83%)  rotate(-21deg);}  /* もっと のぞき込む */
+     28%  {transform:translateX(89%)  rotate(-13deg);}  /* いったん もどす */
+     36%  {transform:translateX(84%)  rotate(-19deg);}  /* もう一度 様子をみる */
+     45%  {transform:translateX(130%) rotate(0deg);}    /* 引っ込む */
+     57%  {transform:translateX(130%) rotate(0deg);}    /* ため */
+     81%  {transform:translateX(-5%)  rotate(0deg);}    /* 出てきて、すこし行き過ぎる */
+     91%  {transform:translateX(2%)   rotate(0deg);}
+    100%  {transform:translateX(0)    rotate(0deg);}    /* まん中におさまる */
   }
   /* ★「動きを減らす」設定の端末では動かさない。めまいが出る人がいるため。 */
   @media(prefers-reduced-motion:reduce){
@@ -1617,9 +1614,12 @@ const FQ = {
   <!-- == fq-rail-v1 : 電車のレール。電車が通るあいだだけ出る ==
        ★#actors より前に書いてあるが、奥ゆきは z-index で決めている（レール2／電車3）。
        ★出る時刻は JS が animation-delay に入れる。中身が空でも形は崩れない。 -->
-  <!-- == fq-rainbow-v1 : ペガサスが通ったあとの虹 ==
-       ★いちばん後ろ（z-index:0）。キャラクターも文字も、虹より手前に出る。 -->
-  <div class="rainbow" id="rainbow" aria-hidden="true"></div>
+  <!-- == fq-dust-v1 : ペガサスがこぼす「虹の粉」 ==
+       ★中身は JS が作る。ここは空のままでよい。
+       ★ペガサス（#actorsfront）より **前** に書くこと。
+         奥ゆきが同じ3なので、あとに書いたほうが手前になる。
+         入れかえると、粉がペガサスの手前に出てしまう。 -->
+  <div class="dust" id="dust" aria-hidden="true"></div>
   <div class="rail" id="rail" aria-hidden="true"><i></i></div>
   <div id="actors" aria-hidden="true"></div>
   <!-- fq-cast-v2: 文字より「まえ」に出る子（ロゴの上を跳ねる猫／丸から落ちる髭）専用。
@@ -1856,16 +1856,59 @@ const FQ = {
       rail.style.animationDelay = (train.at || 0) + 's';
     })();
 
-    /* == fq-rainbow-v1 ==
-       ★虹の出る時刻を、ペガサス（bounce）の出番に合わせる。
-         ここで合わせておけば、actors の at を変えても虹が付いてくる。
-       ★ペガサスがいなければ虹も出さない。 */
+    /* == fq-dust-v1 : ペガサスがこぼす「虹の粉」を作る ==
+       ★ペガサスの通り道を、そのまま表にしてある（a-bounce と同じ数字）。
+           [ a-bounce の％, 横の位置(vw), 下からの高さ(%) ]
+         ★★a-bounce の translateX / bottom を直したら、この表も直すこと。
+           ここがずれると、粉がペガサスから離れたところに出る。
+       ★そのあいだを細かく分けて、1つずつ粒を置いていく。
+         「その場所にペガサスが来る時刻」が、そのまま粒の出る時刻になる。
+       ★粒の散る向き（--dx / --dy）は1つずつ変えている。
+         そろえると「まとめて落ちる帯」に見えて、粉に見えない。 */
     (function(){
-      var rb = $('#rainbow');
-      if(!rb) return;
+      var host = $('#dust');
+      if(!host) return;
       var peg = A.filter(function(c){ return c.move === 'bounce'; })[0];
-      if(!peg){ rb.style.display = 'none'; return; }
-      rb.style.animationDelay = (peg.at || 0) + 's';
+      if(!peg){ host.style.display = 'none'; return; }
+      var at = peg.at || 0;
+
+      /* ペガサスの通り道（a-bounce と同じ数字）。1回目と2回目。 */
+      var PATHS = [
+        [[0.4, -16, 2], [2.2, 8, 78], [6.2, 62, 78], [8.2, 78, 2], [9.4, 98, 2]],
+        [[60.9, 118, 2], [63.0, 90, 78], [67.0, 34, 78], [69.0, 16, 2], [70.2, -4, 2]]
+      ];
+      var COL = ['#e0504a', '#ef9436', '#f2cf3f', '#57b06a', '#3f90d2', '#5b62bf', '#9a5fbd'];
+      /* ★区間ごとの粒の数。少ないと「たまに点が出る」だけで粉に見えない。
+         多いほど濃くなるが、そのぶん粒の数（N×4区間×2回）が増える。 */
+      var N = 20;
+      var html = '', n = 0;
+
+      PATHS.forEach(function(path){
+        for (var s = 0; s < path.length - 1; s++) {
+          var a = path[s], b = path[s + 1];
+          for (var i = 0; i < N; i++) {
+            var f  = (i + Math.random() * .8) / N;          /* 区間のなかの位置 */
+            var pc = a[0] + (b[0] - a[0]) * f;              /* そのときの a-bounce の％ */
+            var x  = a[1] + (b[1] - a[1]) * f;              /* 横（vw） */
+            var y  = a[2] + (b[2] - a[2]) * f;              /* 下からの高さ（%） */
+            var jx = (Math.random() - .5) * 30;             /* 出る位置のばらつき */
+            var jy = (Math.random() - .5) * 30;
+            var dx = (Math.random() - .5) * 62;             /* 散る向き（横） */
+            var dy = 22 + Math.random() * 60;               /* 散る向き（下へ） */
+            var sz = 5 + Math.round(Math.random() * 4);
+            html += '<span style="'
+                 +  'left:calc(' + x.toFixed(1) + 'vw + var(--pw) + ' + jx.toFixed(0) + 'px);'
+                 +  'bottom:calc(' + y.toFixed(1) + '% + ' + (26 + jy).toFixed(0) + 'px);'
+                 +  'width:' + sz + 'px;height:' + sz + 'px;'
+                 +  'background:' + COL[n % COL.length] + ';'
+                 +  '--dx:' + dx.toFixed(0) + 'px;--dy:' + dy.toFixed(0) + 'px;'
+                 +  'animation-delay:' + (at + pc * 0.6).toFixed(2) + 's">'
+                 +  '</span>';
+            n++;
+          }
+        }
+      });
+      host.innerHTML = html;
     })();
 
     $('#actors').innerHTML      = back.map(build).join('');
