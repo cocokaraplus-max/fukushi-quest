@@ -1250,6 +1250,8 @@ const FQ = {
         border-radius:999px;padding:14px 30px;font-size:16px;font-weight:900;
         box-shadow:0 5px 0 rgba(0,0,0,.28);}
   .qbtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.28);}
+  /* fq-menu-v1: 「この説明は1回だけ」のおことわり */
+  .qnote{margin-top:13px;font-size:11.5px;font-weight:700;line-height:1.75;opacity:.72;}
 
   /* ══════════ 人・団体の一覧 ══════════ */
   .people{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px;}
@@ -1293,22 +1295,31 @@ const FQ = {
        これを入れないと、いちばん下のタブが横棒に隠れて押せなくなります。
      ★body の padding-bottom は、タブバーに隠れる高さぶんの逃げ。
        タブバーの高さを変えたら、こちらも変えてください。 */
+  /* ★fq-menu-v1: 6つ → 8つになったので、入れかたを変えた。
+       ここは quest.html の .tabbar と **同じもの**。2つで1組。
+       片方だけ直すと、ページをまたいだ瞬間にメニューの形が変わる。 */
   .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--ink);
-          display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+          display:flex;padding:6px 2px calc(6px + env(safe-area-inset-bottom));
           box-shadow:0 -2px 10px rgba(0,0,0,.18);}
-  .tabbar button{flex:1;background:none;border:0;cursor:pointer;color:#fff;opacity:.62;
-                 font-family:inherit;font-weight:900;font-size:10.5px;line-height:1.25;
-                 padding:6px 2px 4px;border-radius:12px;white-space:nowrap;
+  /* ★flex:1 1 auto ＝「字の長さに応じた幅」。8つあるので、
+       flex:1（全部おなじ幅）にすると「ステージ」が入りきらない。
+       2文字の『診断・図鑑・会場・協賛』が細くなって、そのぶんを回している。 */
+  .tabbar a,.tabbar button{flex:1 1 auto;min-width:0;position:relative;
+                 background:none;border:0;cursor:pointer;color:#fff;opacity:.62;
+                 font-family:inherit;font-weight:900;font-size:10px;line-height:1.25;
+                 padding:6px 3px 4px;border-radius:11px;white-space:nowrap;
+                 text-decoration:none;
                  display:flex;flex-direction:column;align-items:center;gap:3px;}
-  /* とてもせまい画面（iPhone SEなど）では、字だけ少し小さくして6つ収める */
-  @media(max-width:340px){ .tabbar button{font-size:9.5px;} .tabbar button .ic{font-size:17px;} }
-  .tabbar button .ic{font-size:19px;line-height:1;}
-  .tabbar button[aria-selected="true"]{opacity:1;background:rgba(255,255,255,.13);}
-  .tabbar button[aria-selected="true"] .ic{transform:translateY(-1px);}
+  /* とてもせまい画面（iPhone SEなど）では、字だけ少し小さくして8つ収める */
+  @media(max-width:370px){ .tabbar a,.tabbar button{font-size:9px;padding:6px 2px 4px;}
+                           .tabbar .ic{font-size:16px;} }
+  .tabbar .ic{font-size:18px;line-height:1;}
+  .tabbar [aria-selected="true"]{opacity:1;background:rgba(255,255,255,.13);}
+  .tabbar [aria-selected="true"] .ic{transform:translateY(-1px);}
   body{padding-bottom:calc(66px + env(safe-area-inset-bottom));}
   @media(min-width:761px){
     .tabbar{max-width:760px;margin:0 auto;border-radius:18px 18px 0 0;}
-    .tabbar button{font-size:12px;} .tabbar button .ic{font-size:21px;}
+    .tabbar a,.tabbar button{font-size:12px;} .tabbar .ic{font-size:21px;}
   }
 
   /* タブの中身。表示中のものだけ出す */
@@ -1319,19 +1330,22 @@ const FQ = {
      下のタブバーに気づかない人のために、ホームにも同じ入口を大きく置いています。
      見た目は見出しと同じ「シール」。押すとそのタブが開きます。 */
   .short{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
-  .short button{background:#fff;border:2.5px solid var(--ink);border-radius:16px;
+  /* ★fq-menu-v1: 『診断』『図鑑』はクエスト側のページなので <a> で置く。
+       見た目はボタンと同じにそろえたいので、まとめて書いてある。 */
+  .short button,.short a{background:#fff;border:2.5px solid var(--ink);border-radius:16px;
                 box-shadow:4px 5px 0 var(--ink);padding:15px 13px;cursor:pointer;
                 font-family:inherit;font-weight:900;color:var(--ink);text-align:left;
+                text-decoration:none;
                 display:flex;flex-direction:column;gap:3px;transition:.12s;}
-  .short button:active{transform:translate(2px,3px);box-shadow:2px 2px 0 var(--ink);}
+  .short button:active,.short a:active{transform:translate(2px,3px);box-shadow:2px 2px 0 var(--ink);}
   .short .ic{font-size:26px;line-height:1.1;}
   .short .n{font-size:15.5px;}
   .short .d{font-size:11.5px;color:var(--muted);font-weight:700;line-height:1.6;}
   /* 入口が奇数のとき、最後の1つだけ2列ぶんに広げる（右下が欠けて見えないように）。
      いまは「協賛・関係者」が5つめ＝いちばん目立つ横長のボタンになります。 */
-  .short button:last-child:nth-child(odd){grid-column:1 / -1;}
+  .short>:last-child:nth-child(odd){grid-column:1 / -1;}
   .short .n{white-space:nowrap;}   /* 名前が2行に折れると読みにくいので折らない */
-  @media(prefers-reduced-motion:reduce){ .short button{transition:none;} }
+  @media(prefers-reduced-motion:reduce){ .short button,.short a{transition:none;} }
 
   /* ══ 上に戻るボタン（fq-tabs-v1）══
      少し下までスクロールしたときだけ、そっと出てきます。
@@ -1467,7 +1481,9 @@ const FQ = {
     <h3>🎁 会場をまわって、ガチャをまわそう</h3>
     <p>会場のQRコードを読み取ってポイントを集めると、ガチャが引けます。<br>
        人と出会うほど、いいことがあるかも。</p>
-    <a class="qbtn" href="quest.html">クエストをはじめる</a><!-- fq-swap-home-v1 -->
+    <a class="qbtn" href="quest.html" id="qStart">クエストをはじめる</a><!-- fq-swap-home-v1 -->
+    <p class="qnote">※ この説明が出るのは最初の1回だけです。<br>
+      次からは、下のメニューの<b>📜 クエスト</b>を押すとすぐ始まります。</p><!-- fq-menu-v1 -->
   </div>
 </section>
 </div><!-- /pane-quest -->
@@ -1506,11 +1522,18 @@ const FQ = {
      data-tab の名前が、上の pane-◯◯ とページの #◯◯ に対応しています。
      タブを増やしたいときは、ここに1つ足して、同じ名前の <div class="pane" id="pane-◯◯">
      を上に作ってください。 -->
+<!-- == fq-menu-v1 : メニューを8つに ==
+     ★quest.html と**同じ並び・同じ見た目**。2つで1組。
+       並びを変えるときは quest.html の .tabbar も必ず合わせること。
+     ★『診断』『図鑑』はクエスト側の画面なので、リンク（<a>）で飛ばす。
+       ボタン（<button data-tab>）にすると、このページの中を探しにいってしまう。 -->
 <nav class="tabbar" id="tabbar" role="tablist" aria-label="ページの切りかえ">
   <button role="tab" data-tab="home"  aria-selected="true"><span class="ic">🏠</span>ホーム</button>
   <button role="tab" data-tab="stage" aria-selected="false"><span class="ic">🎤</span>ステージ</button>
   <button role="tab" data-tab="see"   aria-selected="false"><span class="ic">🔍</span>みどころ</button>
-  <button role="tab" data-tab="quest" aria-selected="false"><span class="ic">🎁</span>クエスト</button>
+  <button role="tab" data-tab="quest" aria-selected="false"><span class="ic">📜</span>クエスト</button>
+  <a href="quest.html#shindan"><span class="ic">🔮</span>診断</a>
+  <a href="quest.html#zukan"  ><span class="ic">📖</span>図鑑</a>
   <button role="tab" data-tab="place" aria-selected="false"><span class="ic">🗺</span>会場</button>
   <button role="tab" data-tab="support" aria-selected="false"><span class="ic">🤝</span>協賛</button>
 </nav>
@@ -1824,6 +1847,14 @@ const FQ = {
      ★同じタブをもう一度押したときは、いちばん上に戻します（アプリと同じ動き）。
      ★リンクを人に送るときも #stage を付ければ、そのタブが開いた状態で届きます。 */
   (function(){
+    /* ★fq-menu-v1: クエストの説明を見たかどうかの覚え書き。
+         「クエストをはじめる」を押した時点で立てる。 */
+    const QKEY = 'fq326_quest_intro_seen';
+    const questSeen = () => { try{ return localStorage.getItem(QKEY) === '1'; }catch(e){ return false; } };
+    window.FQ_QUEST_SEEN = () => { try{ localStorage.setItem(QKEY, '1'); }catch(e){} };
+
+    /* ★<a> はここに入れない。querySelectorAll('#tabbar button') なので
+         『診断』『図鑑』のリンクは最初から外れている（別ページだから）。 */
     const TABS = [...document.querySelectorAll('#tabbar button')];
     const KEYS = TABS.map(b => b.dataset.tab);
     const key0 = KEYS[0];
@@ -1842,30 +1873,56 @@ const FQ = {
 
     /* ホームの大きな入口ボタン。下のタブバーと同じところへ飛びます。
        ★文言を変えたいときはここ。data-tab の名前は上のタブと合わせること。 */
+    /* ★fq-menu-v1: 5つめの列に「飛び先（href）」を足せるようにした。
+         href がある行は <a>、無い行は <button> になる。
+         『診断』『図鑑』はクエスト側のページなので、ここは <a> でないと飛べない。
+       ★下のメニュー（#tabbar）と並びをそろえること。2つで1組。 */
     const MENU = [
       ['stage', '🎤', 'ステージ',  '出演者とタイムテーブル'],
       ['see',   '🔍', 'みどころ',  'ブース・相談・フード'],
-      ['quest', '🎁', 'クエスト',  'QRを集めてガチャ'],
+      ['quest', '📜', 'クエスト',  'QRを集めてガチャ'],
+      ['shindan', '🔮', 'タイプ診断', '生年月日で7つのタイプ', 'quest.html#shindan'],
+      ['zukan',   '📖', 'キャラ図鑑', 'QRでなかまが増える', 'quest.html#zukan'],
       ['place',   '🗺', '会場',       '行き方・駐車場のお願い'],
       ['support', '🤝', '協賛・関係者', 'ささえてくださるみなさま'],
     ];
-    $('#short').innerHTML = MENU.map(m =>
-      '<button type="button" data-tab="'+m[0]+'">'
-      + '<span class="ic">'+m[1]+'</span><span class="n">'+esc(m[2])+'</span>'
-      + '<span class="d">'+esc(m[3])+'</span></button>').join('');
+    $('#short').innerHTML = MENU.map(m => {
+      const open  = m[4] ? '<a href="'+m[4]+'">' : '<button type="button" data-tab="'+m[0]+'">';
+      const close = m[4] ? '</a>' : '</button>';
+      return open
+        + '<span class="ic">'+m[1]+'</span><span class="n">'+esc(m[2])+'</span>'
+        + '<span class="d">'+esc(m[3])+'</span>' + close;
+    }).join('');
     $('#short').addEventListener('click', e => {
       const b = e.target.closest('button[data-tab]');
-      if (b) location.hash = b.dataset.tab;
+      if (!b) return;                       // <a> は素通り（ブラウザが飛ばしてくれる）
+      if (b.dataset.tab === 'quest' && questSeen()) { location.href = 'quest.html'; return; }
+      location.hash = b.dataset.tab;
     });
 
     TABS.forEach(b => b.addEventListener('click', () => {
       const k = b.dataset.tab;
+      /* ★fq-menu-v1: 「クエスト」は **初めて押したときだけ** 説明を出す。
+           2回目からは quest.html へ直行。当日は何度も出入りするので、
+           毎回ワンクッション入るとうるさい。
+         ★ここ（押したとき）だけで判定している。show() の中でやると、
+           戻るボタンで index.html#quest に戻ったとたん また飛ばされて、
+           **ページから出られなくなる**。 */
+      if (k === 'quest' && questSeen()) { location.href = 'quest.html'; return; }
       if (k === now()) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
       location.hash = k;                       // ← hashchange が下で受け取る
     }));
 
     addEventListener('hashchange', () => show(now(), true));
     show(now(), false);                        // 最初の1回（#stage 付きで開かれた場合もここで反映）
+  })();
+
+  /* ── fq-menu-v1: 「クエストをはじめる」を押したら、説明は見たことにする ──
+     ★リンクはそのまま飛ばす（preventDefault しない）。
+       ここで止めると、JSがこけたときにクエストへ行けなくなる。 */
+  (function(){
+    const a = $('#qStart');
+    if (a) a.addEventListener('click', () => { if (window.FQ_QUEST_SEEN) window.FQ_QUEST_SEEN(); });
   })();
 
   /* ── 上に戻るボタン（fq-tabs-v1）──

@@ -340,33 +340,50 @@
   .lp-modal h3{margin:10px 0 0;font-size:24px;color:var(--red);}
   .lp-award{margin-top:10px;font-size:15px;font-weight:900;color:var(--teal);line-height:1.7;}
 </style>
-<style>/* == fq-tabs-v1 : 上のタブ == */
-  /* ★上にくっついて残る（position:sticky）。
-       くっつく位置（top）は、ヘッダーの高さに合わせて JS で入れている。
-       ヘッダーの高さは文字の大きさで変わるので、数字で書くとズレる。 */
-  .tabs{position:sticky;top:0;z-index:19;display:flex;gap:6px;
-    margin:0 0 14px;padding:8px 0 9px;
-    background:linear-gradient(180deg,rgba(241,234,216,.98),rgba(241,234,216,.90));
-    backdrop-filter:blur(5px);border-bottom:2px dashed var(--line);}
-  .tabs .tab{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;
-    background:var(--card);border:2px solid var(--line);border-radius:13px;
-    padding:7px 2px 6px;font-size:11.5px;font-weight:900;color:var(--muted);
-    font-family:inherit;line-height:1.3;cursor:pointer;position:relative;
-    box-shadow:0 2px 0 rgba(0,0,0,.05);}
-  .tabs .tab .tem{font-size:19px;line-height:1;}
-  .tabs .tab.on{background:var(--mustard);border-color:var(--ink);color:var(--ink);
-    box-shadow:0 3px 0 rgba(0,0,0,.12);}
-  /* ★赤い点。ガチャが引けるようになったときだけ出す。
-       タブに隠れていると「引ける」ことに気づけないため。 */
-  .tabs .tab.badge::after{content:'';position:absolute;top:4px;right:6px;
-    width:9px;height:9px;border-radius:50%;background:var(--red);
-    border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.25);}
-  @media(max-width:340px){ .tabs .tab{font-size:10.5px;} .tabs .tab .tem{font-size:17px;} }
+<style>/* == fq-menu-v1 : 下のメニュー（案内ページと同じもの）== */
+  /* ★ここは index.html の .tabbar から そのまま写したもの。**2つで1組**。
+       片方だけ直すと、ページをまたいだ瞬間にメニューの形が変わる。
+       並び・字の大きさ・色を変えるときは、必ず index.html も直すこと。
+     ★env(safe-area-inset-bottom) ＝ iPhone の下の黒い横棒のぶんの余白。
+       入れないと、いちばん下が横棒に隠れて押せなくなる。
+     ★奥ゆき（z-index）は 60。モーダル(80)・ガチャの演出(90)・
+       開発パネル(99999)より奥なので、演出中に手前へ出てくることはない。 */
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--ink);
+          display:flex;padding:6px 2px calc(6px + env(safe-area-inset-bottom));
+          box-shadow:0 -2px 10px rgba(0,0,0,.18);}
+  /* ★flex:1 1 auto ＝「字の長さに応じた幅」。8つあるので、
+       flex:1（全部おなじ幅）にすると「ステージ」が入りきらない。
+       2文字の『診断・図鑑・会場・協賛』が細くなって、そのぶんを回している。 */
+  .tabbar a,.tabbar button{flex:1 1 auto;min-width:0;position:relative;
+          background:none;border:0;cursor:pointer;color:#fff;opacity:.62;
+          font-family:inherit;font-weight:900;font-size:10px;line-height:1.25;
+          padding:6px 3px 4px;border-radius:11px;white-space:nowrap;
+          text-decoration:none;
+          display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .tabbar .ic{font-size:18px;line-height:1;}
+  /* とてもせまい画面（iPhone SEなど）では、字だけ少し小さくして8つ収める */
+  @media(max-width:370px){ .tabbar a,.tabbar button{font-size:9px;padding:6px 2px 4px;}
+                           .tabbar .ic{font-size:16px;} }
+  .tabbar [aria-selected="true"]{opacity:1;background:rgba(255,255,255,.13);}
+  .tabbar [aria-selected="true"] .ic{transform:translateY(-1px);}
+  /* ★赤い点。ガチャが引けるようになったときだけ「クエスト」に出す。
+       ガチャは「クエスト」の中にあるので、開いていないと気づけない。 */
+  .tabbar .badge::after{content:'';position:absolute;top:3px;right:3px;
+          width:9px;height:9px;border-radius:50%;background:var(--red);
+          border:2px solid var(--ink);}
+  /* ★メニューに隠れるぶんの逃げ。メニューの高さを変えたら、ここも変えること。 */
+  body{padding-bottom:calc(66px + env(safe-area-inset-bottom));}
+  /* ★お知らせの帯も、メニューに隠れないよう上へずらす（もとは bottom:26px） */
+  #toast{bottom:calc(84px + env(safe-area-inset-bottom));}
+  @media(min-width:761px){
+    .tabbar{max-width:760px;margin:0 auto;border-radius:18px 18px 0 0;}
+    .tabbar a,.tabbar button{font-size:12px;} .tabbar .ic{font-size:21px;}
+  }
 </style>
 
 </head>
 <body>
-<script>/* == fq-tabs-v1 ==
+<script>/* == fq-menu-v1 ==
    ★開いたときのURLを、いちばん先に覚えておく。
      本体のスクリプトは ?q= を読んだあと history.replaceState でURLを消すので、
      あとから location.search を見ても「QRから来たのか」が分からなくなる。 */
@@ -390,16 +407,12 @@ window.__FQ_Q0 = location.search;</script>
     <p class="pinfo-note">大抽選会は、この「なまえ」と「認識番号」で当選が発表されます。会場受付で番号を伝えてください。</p>
   </section>
 
-  <!-- == fq-tabs-v1 ==
-       ★「なまえ・認識番号」は、このタブより上にある＝どのタブでも見えたまま。
-         大抽選会で読み上げる番号なので、隠してはいけない。
-       ★ランキングのタブは、通信できているときだけ出す（下のスクリプト参照）。 -->
-  <nav class="tabs" id="tabs">
-    <button type="button" class="tab" data-tab="quest"><span class="tem">📜</span>クエスト</button>
-    <button type="button" class="tab" data-tab="gacha"><span class="tem">🎁</span>ガチャ</button>
-    <button type="button" class="tab" data-tab="zukan"><span class="tem">📖</span>図鑑</button>
-    <button type="button" class="tab" data-tab="rank" id="tabRank" style="display:none"><span class="tem">🏆</span>ランキング</button>
-  </nav>
+  <!-- == fq-menu-v1 ==
+       ★上に出ていたタブ（fq-tabs-v1）は、**下のメニューに引っ越しました**。
+         クエスト／診断／図鑑 は、いちばん下のメニューで切り替えます。
+         上下に2段あると、どちらを押せばいいのか分からなくなるため。
+       ★「なまえ・認識番号」は、どの画面でも見えたまま（このすぐ上）。
+         大抽選会で読み上げる番号なので、隠してはいけない。 -->
 
   <section data-tab="quest">
     <div class="sec-h hand"><span class="em">📜</span>クエスト</div>
@@ -408,13 +421,13 @@ window.__FQ_Q0 = location.search;</script>
   </section>
 
   <!-- == fq-shindan-v1 == -->
-  <section id="shindanSec" data-tab="quest">
+  <section id="shindanSec" data-tab="shindan">
     <div class="sec-h hand"><span class="em">🔮</span>福祉タイプ診断</div>
     <p class="sd-lead">生年月日から、あなたが福祉の現場で力を出しやすい「7つのタイプ」を見つけます。どのタイプにも、活躍できる場所があります。</p>
     <div id="shindanBody"></div>
   </section>
 
-  <section class="gacha-box" data-tab="gacha">
+  <section class="gacha-box" data-tab="quest">
     <div class="sec-h hand" style="justify-content:center"><span class="em">🎁</span>ガチャに挑戦</div>
     <button id="sndBtn" class="snd" data-act="snd">🔊 音あり</button>
     <div class="steps" id="steps"></div>
@@ -426,7 +439,7 @@ window.__FQ_Q0 = location.search;</script>
     <div class="gacha-hint" id="gachaHint"></div>
   </section>
 
-  <section data-tab="gacha">
+  <section data-tab="quest">
     <div class="sec-h hand"><span class="em">🏅</span>獲得した景品</div>
     <div class="prize-wrap">
       <img class="prize-mascot" src="img/app/prize.png" alt="">
@@ -462,7 +475,7 @@ window.__FQ_Q0 = location.search;</script>
     <div id="zkMsg"></div>
   </section>
 
-  <section id="rankSec" style="display:none" data-tab="rank">
+  <section id="rankSec" style="display:none" data-tab="quest">
     <div class="sec-h hand"><span class="em">🏆</span>ランキング</div>
     <p class="sec-sub">会場のみんなのポイント上位です（自動で更新されます）。あなたは <b id="rankMe">—</b>。</p>
     <div id="rankList"><span class="empty">読み込み中…</span></div>
@@ -2027,72 +2040,102 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
-<!-- == fq-tabs-v1 : タブの切り替え == -->
+<!-- == fq-menu-v1 : 下のメニュー ==
+     ★案内ページ（index.html）と**同じ並び・同じ見た目**。2つで1組。
+       並びを変えるときは index.html の #tabbar も必ず合わせること。
+     ★まん中の3つ（クエスト・診断・図鑑）だけが、このページの中身の切り替え。
+       ほか5つは案内ページへのリンク（<a>）なので、
+       **JSが動かない端末でも必ず飛べる**。 -->
+<nav class="tabbar" id="tabbar" role="tablist" aria-label="ページの切りかえ">
+  <a href="index.html"        ><span class="ic">🏠</span>ホーム</a>
+  <a href="index.html#stage"  ><span class="ic">🎤</span>ステージ</a>
+  <a href="index.html#see"    ><span class="ic">🔍</span>みどころ</a>
+  <button type="button" role="tab" data-tab="quest"   aria-selected="true"><span class="ic">📜</span>クエスト</button>
+  <button type="button" role="tab" data-tab="shindan" aria-selected="false"><span class="ic">🔮</span>診断</button>
+  <button type="button" role="tab" data-tab="zukan"   aria-selected="false"><span class="ic">📖</span>図鑑</button>
+  <a href="index.html#place"  ><span class="ic">🗺</span>会場</a>
+  <a href="index.html#support"><span class="ic">🤝</span>協賛</a>
+</nav>
+
 <script>
-/* ★このスクリプトは いちばん最後に置くこと。
-     セクションもランキングの表示・非表示も、全部決まったあとで引き取るため。
-     先に動かすと、あとから本体がランキングを表示してタブと食い違う。 */
+/* == fq-menu-v1 : 画面の切り替え ==
+   ★このスクリプトは いちばん最後に置くこと。
+     セクションの表示・非表示が全部決まったあとで引き取るため。
+     先に動かすと、あとから本体がランキングを出して、メニューと食い違う。 */
 (function(){
   'use strict';
-  var KEY = 'fukushi_quest_326_tab';
-  var bar = document.getElementById('tabs');
+  var KEY  = 'fukushi_quest_326_tab';
+  var OK   = /^(quest|shindan|zukan)$/;
+  var bar  = document.getElementById('tabbar');
   if(!bar) return;
-  var secs = [].slice.call(document.querySelectorAll('section[data-tab]'));
-  var btns = [].slice.call(bar.querySelectorAll('.tab'));
+  var btns = [].slice.call(bar.querySelectorAll('button[data-tab]'));
+
+  /* ★いま出ている／隠れている状態を、先に控えておく。
+       ランキング（#rankSec）は、通信できているときだけ本体が 'block' にする
+       （fq-rank-lite-v1）。ここで控えておかないと、
+       クエストを開くたびに「通信できていないランキング」まで出てしまう。 */
+  var secs = [].slice.call(document.querySelectorAll('section[data-tab]')).map(function(s){
+    var d = s.style.display || '';
+    return { el:s, tab:s.getAttribute('data-tab'), off:(d === 'none'), on:(d === 'none' ? '' : d) };
+  });
   if(!secs.length || !btns.length) return;
 
-  /* ランキングは、通信できているときだけ本体が表示する（fq-rank-lite-v1）。
-     ここへ来た時点で見えていれば、タブも出す。 */
-  var rs = document.getElementById('rankSec');
-  var hasRank = !!(rs && rs.style.display && rs.style.display !== 'none');
-  var tr = document.getElementById('tabRank');
-  if(hasRank && tr) tr.style.display = '';
+  var cur = 'quest';
 
   function show(key, toTop){
-    if(key === 'rank' && !hasRank) key = 'quest';
-    secs.forEach(function(s){
-      s.style.display = (s.getAttribute('data-tab') === key) ? '' : 'none';
+    if(!OK.test(key)) key = 'quest';
+    cur = key;
+    secs.forEach(function(o){
+      o.el.style.display = (!o.off && o.tab === key) ? o.on : 'none';
     });
     btns.forEach(function(b){
-      b.classList.toggle('on', b.getAttribute('data-tab') === key);
+      b.setAttribute('aria-selected', b.getAttribute('data-tab') === key ? 'true' : 'false');
     });
     try{ localStorage.setItem(KEY, key); }catch(e){}
     if(toTop) window.scrollTo(0, 0);
   }
 
-  bar.addEventListener('click', function(ev){
-    var b = (ev.target && ev.target.closest) ? ev.target.closest('.tab') : null;
-    if(!b) return;
-    show(b.getAttribute('data-tab'), true);
+  /* ★URLのうしろに #zukan のような目印を付けて切り替える。
+       こうしておくと、スマホの「戻る」でひとつ前の画面に戻れる。
+       案内ページから quest.html#zukan と書いて呼ぶこともできる。 */
+  function hash(){
+    var k = (location.hash || '').slice(1);
+    return OK.test(k) ? k : '';
+  }
+
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){
+      var k = b.getAttribute('data-tab');
+      if(k === cur){ window.scrollTo(0, 0); return; }   // 同じところを押したら上へ
+      location.hash = k;                                 // ← hashchange が下で受ける
+    });
   });
 
-  /* ★くっつく位置。ヘッダーの高さは文字の大きさで変わるので、毎回測る。 */
-  function fitTop(){
-    var h = document.querySelector('header');
-    bar.style.top = (h ? h.offsetHeight : 0) + 'px';
-  }
-  fitTop();
-  window.addEventListener('resize', fitTop);
-  window.addEventListener('load', fitTop);
-
-  /* ★最初に出すタブ。QRから開いたときは、その結果が見えるタブを出す。
-       本体がURLを消したあとでも分かるよう、body の先頭で覚えた値を見る。 */
+  /* ★最初に出す画面。QRから開いたときは、その結果が見えるところを出す。
+       本体は ?q= を読んだあと history.replaceState でURLを消してしまうので、
+       body の先頭で控えた値（__FQ_Q0）を見る。 */
   var q0 = window.__FQ_Q0 || '';
-  var start = 'quest';
-  if(/[?&]z=/.test(q0))      start = 'zukan';
-  else if(/[?&]q=/.test(q0)) start = 'quest';
-  else { try{ start = localStorage.getItem(KEY) || 'quest'; }catch(e){} }
-  if(!/^(quest|gacha|zukan|rank)$/.test(start)) start = 'quest';
+  var start = hash();
+  if(!start){
+    if(/[?&]z=/.test(q0))            start = 'zukan';    // キャラのQR → 図鑑
+    else if(/[?&]q=check/.test(q0))  start = 'shindan';  // 診断のQR   → 診断
+    else if(/[?&]q=/.test(q0))       start = 'quest';    // ほかのQR   → クエスト
+    else { try{ start = localStorage.getItem(KEY) || 'quest'; }catch(e){} }
+  }
+  if(!OK.test(start)) start = 'quest';
   show(start, false);
 
-  /* ★ガチャが引けるようになったら、タブに赤い点を出す。
-       タブに隠れていると「引けるようになったこと」に気づけない。
+  /* 戻る／進む。目印が消えていたら、開いたときの画面に戻す */
+  window.addEventListener('hashchange', function(){ show(hash() || start, true); });
+
+  /* ★ガチャが引けるようになったら「クエスト」に赤い点を出す。
+       ガチャはクエストの中にあるので、開いていないと気づけない。
        本体の render() が押せる・押せないを切り替えるので、それを見ている。 */
-  var gtab = bar.querySelector('[data-tab="gacha"]');
+  var qtab = bar.querySelector('button[data-tab="quest"]');
   setInterval(function(){
     if(document.visibilityState !== 'visible') return;
     var g = document.getElementById('gachaBtn');
-    if(gtab) gtab.classList.toggle('badge', !!(g && !g.disabled));
+    if(qtab) qtab.classList.toggle('badge', !!(g && !g.disabled));
   }, 700);
 
   /* ほかのスクリプトから切り替えたいとき用 */
