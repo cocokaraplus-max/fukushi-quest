@@ -1498,6 +1498,23 @@ const FQ = {
      ここだけは少し詰める（開いた直後に空白ばかり見えると不安になるため） */
   .pane > section:first-of-type{padding-top:44px;}
 
+  /* ★★fq-gap-v1: 2つめ以降の見出しの上に、すき間がまったく無かった。
+
+     原因は **クラスのほうが 要素より強い** こと。
+         section{padding:62px 0 10px;}   ← 要素（弱い）
+         .wrap  {padding:0 18px;}        ← クラス（強い）
+     画面の中身は section に class="wrap" と書いてあって両方に当たるので、
+     .wrap が勝って上下のすき間が 0 になっていた。
+     **上の 62px は一度も効いていない。** 書きかえても何も変わらないので注意。
+
+     直しかたは「クラスを含む形」で書いて勝たせること。
+         section.wrap  … クラス1つ＋要素1つ → .wrap より強い
+
+     40px は 0 / 28 / 40 / 56 を並べて見くらべて決めた。
+     28 はまだ詰まって見え、56 は同じタブの中なのに切り離されて見える。
+     ★ここを変えると ホーム／ステージ／みどころ／協賛 の4つとも変わります。 */
+  .pane > section.wrap + section.wrap{padding-top:40px;}
+
   .lead{background:var(--ink);color:#fff;text-align:center;padding:22px 20px;
         font-size:clamp(15.5px,4.2vw,22px);font-weight:900;line-height:1.7;
         letter-spacing:.01em;text-wrap:balance;}
