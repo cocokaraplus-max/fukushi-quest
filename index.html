@@ -251,8 +251,14 @@ const FQ = {
     { time:'11:00〜12:00', name:'ウォルターズ',         note:'ライブ',
       insta:'https://www.instagram.com/walters0830/',      photo:'img/walters.jpg', pos:'center top' },
     { time:'13:00〜14:00', name:'かすこんねぅ',         note:'ライブ',
-      insta:'https://www.instagram.com/kasukonnnnnneu/',   photo:'img/kasukon.jpg',
-      pos:'center 18%', credit:'©Stardust Promotion, Inc.' },
+      insta:'https://www.instagram.com/kasukonnnnnneu/',   photo:'img/kasukon2.jpg',
+      /* ★fq-soon-v1: 写真を新しいものに差し替え。
+           前の写真は img/kasukon.jpg として残してあります（戻すときは名前を書きかえるだけ）。
+         ★pos は「写真のどこを枠のまん中に置くか」。
+           カードの枠は 4:3（.act .ph）で、写真は はみ出した分を切って入ります。
+           この写真は横長なので 左右が切れます。45% にすると顔がまん中に来ます。
+           ★写真を替えたら、ここも必ず見直すこと。 */
+      pos:'45% center', credit:'©Stardust Promotion, Inc.' },
     { time:'15:00〜16:00', name:'プラタナス',            note:'ライブ',
       url:'https://platanus.bitfan.id/contents/menu/154141', photo:'img/platanus.jpg' },
   ],
@@ -1725,6 +1731,24 @@ const FQ = {
   /* fq-menu-v1: 「この説明は1回だけ」のおことわり */
   .qnote{margin-top:13px;font-size:11.5px;font-weight:700;line-height:1.75;opacity:.72;}
 
+  /* ══════════ fq-soon-v1 : 準備中（工事中）のお知らせ ══════════
+     html に soon-on が付いているときだけ、中身とさしかえて これを出す。
+     付け外しは <head> の SOON（true/false）。当日は false に。 */
+  .soonbox{display:none;background:var(--yellow-l);border:3px dashed var(--ink);
+           border-radius:20px;padding:24px 18px;text-align:center;}
+  html.soon-on .soonbox{display:block;}
+  html.soon-on #qReal{display:none;}
+  .soonbox .sn-em{font-size:38px;line-height:1;}
+  .soonbox h3{font-size:clamp(18px,4.8vw,23px);font-weight:900;margin:8px 0 2px;}
+  .soonbox .sn-en{font-size:11px;font-weight:900;letter-spacing:.16em;
+                  color:var(--muted);margin-bottom:14px;}
+  .soonbox p{font-size:13.5px;font-weight:700;line-height:1.85;margin:0 0 14px;}
+  .soonbox .sn-when{display:inline-block;background:#fff;border:2px solid var(--ink);
+           border-radius:14px;padding:11px 16px;font-size:13.5px;font-weight:900;
+           line-height:1.8;margin-bottom:4px;}
+  .soonbox .sn-note{margin-top:14px;font-size:11.5px;font-weight:700;
+           line-height:1.75;opacity:.72;}
+
   /* ══════════ 人・団体の一覧 ══════════ */
   .people{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px;}
   .per{text-align:center;text-decoration:none;display:block;}
@@ -1832,6 +1856,24 @@ const FQ = {
   .totop.on{opacity:1;pointer-events:auto;}
   @media(prefers-reduced-motion:reduce){ .totop{transition:none;} }
 </style>
+<!-- == fq-soon-v1 : 準備中（工事中）のスイッチ ==
+     ★★当日は下の true を **false** にするだけ。中身は消していません。
+       index.html と quest.html の 2か所とも false にすること。
+     ★?dev=1 を付けて開くと、true のままでも中身が見られます（動作確認用）。
+       ?soon=1 を付けると、逆に準備中の画面を見られます。
+     ★ここは <head> の中（絵を描く前）に置くこと。
+       あとに置くと、中身が一瞬ちらっと見えてしまう。 -->
+<script>
+(function(){
+  var SOON = true;                        /* ←★当日ここを false に */
+  try{
+    var m = /[?&]soon=([01])/.exec(location.search);
+    if (m)                                  SOON = (m[1] === '1');
+    else if (/[?&]dev=1/.test(location.search)) SOON = false;
+  }catch(e){}
+  if (SOON) document.documentElement.className += ' soon-on';
+})();
+</script>
 </head>
 <body>
 
@@ -1960,7 +2002,24 @@ const FQ = {
 <!-- ══ クエスト ══ -->
 <div class="pane" id="pane-quest">
 <section class="wrap">
-  <div class="quest">
+
+  <!-- == fq-soon-v1 : 準備中のお知らせ ==
+       ★下の #qReal（本物の案内）と、この .soonbox は **どちらか片方だけ**出ます。
+         切りかえているのは <head> の SOON。当日 false にすると #qReal に戻ります。 -->
+  <div class="soonbox">
+    <div class="sn-em">🚧</div>
+    <h3>クエストは準備中です</h3>
+    <div class="sn-en">COMING SOON</div>
+    <p>「クエスト」「タイプ診断」<br>
+       「キャラクター図鑑」は、<br>
+       <b>イベント当日にオープン</b>します。</p>
+    <div class="sn-when">📅 2026年12月13日（日）10:00〜16:00<br>
+      📍 豊田市福祉センター</div>
+    <p class="sn-note">ステージ・みどころ・会場のご案内は、<br>
+      もう公開しています。</p>
+  </div>
+
+  <div class="quest" id="qReal">
     <h3>🎁 会場をまわって、ガチャをまわそう</h3>
     <p>会場のQRコードを読み取ってポイントを集めると、ガチャが引けます。<br>
        人と出会うほど、いいことがあるかも。</p>
