@@ -2191,6 +2191,31 @@ const FQ = {
     const back  = A.filter(c => c.move !== 'sit' && c.move !== 'peek'
                                 && FRONT.indexOf(c.move) < 0);
 
+    /* ══════════ fq-cut-v1 : キャラの絵を WebP で出す ══════════
+       ★切り抜きを作り直して、輪郭に なめらかな半透明の縁がついた。
+         これを PNG のまま持つと 700KB → 3.5MB にふくらむ。当日の電波には重い。
+         WebP なら 664KB で、いまとほぼ同じ大きさのまま きれいになる。
+       ★WebP が読めない端末（iOS 13以前など）には これまでどおり .png を出す。
+         .png も作り直したものに入れかわっているので、古い端末でもきれいになる。
+       ★fq-cut-light-v1: ただし予備の .png だけは **半分の大きさ（長辺50%）**で持つ。
+         2.3MB → 673KB。GitHubへの送信が上りの細さで通らなかったため。
+         予備を見るのは WebPが読めない古い端末だけで、
+         そういう端末は画面の細かさも2倍まで。半分の大きさでも足りる。
+         ★WebP のほうは大きさも色もそのまま。ふだん見えるのはこちら。
+       ★端末が落とすのは **どちらか片方だけ**。通信量は増えない。
+       ★差しかえるのは img/ch_◯◯.png と img/usagi_◯◯.png だけ。
+         写真（.jpg）や 326.png はそのまま。 */
+    var CAN_WEBP = (function(){
+      try{
+        var cv = document.createElement('canvas');
+        return cv.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+      }catch(e){ return false; }
+    })();
+    function ph(src){
+      return (CAN_WEBP && /^img\/(ch_|usagi_)/.test(src))
+        ? src.replace(/\.png$/, '.webp') : src;
+    }
+
     function build(c){
       /* ★x/y を書いたときだけ位置を上書きする。
          fq-cast-v2 の8つの動きは、位置をCSS側で決めているので普通は書かない。 */
@@ -2213,9 +2238,9 @@ const FQ = {
            /* fq-cream-v1: 落ちる子には2つ。
               .thud … 足もとに広がるクリーム   .drip … 体を流れ落ちるクリーム */
            + (c.move === 'drop'   ? '<span class="thud"></span><span class="drip"></span>' : '')
-           + '<img src="' + esc(c.photo) + '" alt="" decoding="async">'
+           + '<img src="' + esc(ph(c.photo)) + '" alt="" decoding="async">'
            /* fq-cast-fix-v1: 2人めがいれば、となりに並べる */
-           + (c.photo2 ? '<img src="' + esc(c.photo2) + '" alt="" decoding="async">' : '')
+           + (c.photo2 ? '<img src="' + esc(ph(c.photo2)) + '" alt="" decoding="async">' : '')
            + '</div>';
     }
     /* == fq-rail-v1 ==
@@ -2308,8 +2333,8 @@ const FQ = {
     $('#sitspot').innerHTML = sit.map(c => {
       const base = c.photo.replace(/\.png$/, '');
       return '<div class="actor m-sit" style="animation-delay:' + (c.at || 0) + 's">'
-           + '<img class="lg" src="' + esc(base) + '_legs.png" alt="" decoding="async">'
-           + '<img class="bd" src="' + esc(base) + '_body.png" alt="" decoding="async"></div>';
+           + '<img class="lg" src="' + esc(ph(base + '_legs.png')) + '" alt="" decoding="async">'
+           + '<img class="bd" src="' + esc(ph(base + '_body.png')) + '" alt="" decoding="async"></div>';
     }).join('');
   })();
 
