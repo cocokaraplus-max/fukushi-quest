@@ -316,12 +316,27 @@ const FQ = {
   ],
 
   /* ── 運営スタッフ ── */
+  /* == fq-staff-v1 ==
+     ★押すとプロフィールが開きます。bio は「ひとこと紹介」。
+       **空にしておくと、その行はプロフィールに出ません。**
+     ★insta を書いた人だけ、プロフィールの中に
+       「Instagramを見る →」のボタンが出ます。
+     ★photo は正方形の絵にすること。丸の中は
+       background-size:cover（はみ出したぶんを切る）で入るので、
+       横長のままだと左右が切れます。 */
   staff: [
-    { name:'（お名前）', role:'実行委員長', insta:'', photo:'' },
-    { name:'（お名前）', role:'ステージ担当', insta:'', photo:'' },
-    { name:'（お名前）', role:'ブース担当', insta:'', photo:'' },
-    { name:'（お名前）', role:'フード担当', insta:'', photo:'' },
-    { name:'（お名前）', role:'広報担当', insta:'', photo:'' },
+    { name:'（お名前）', role:'実行委員長',  insta:'', photo:'', bio:'' },
+    { name:'（お名前）', role:'ステージ担当', insta:'', photo:'', bio:'' },
+    { name:'（お名前）', role:'ブース担当',  insta:'', photo:'', bio:'' },
+    { name:'（お名前）', role:'フード担当',  insta:'', photo:'', bio:'' },
+    { name:'（お名前）', role:'広報担当',    insta:'', photo:'', bio:'' },
+    /* ★丸の中はロゴの「マーク」だけ。文字まで入れると74pxでは読めない。
+       ★InstagramのURLは ?utm_source=… を外した短い形。追跡用の印なので無くてよい。 */
+    { name:'ココカラプラス', role:'アプリ担当',
+      insta:'https://www.instagram.com/cocokaraplus5526/',
+      photo:'img/logo_ccp.png',
+      bio:'豊田市の機能訓練型デイサービスです。\n'
+        + 'このイベントのアプリ（クエスト・タイプ診断・キャラクター図鑑）を作りました。' },
   ],
 
   /* ── アクセス ── */
@@ -1788,6 +1803,35 @@ const FQ = {
   .per .n{font-size:12.5px;font-weight:900;line-height:1.4;}
   .per .r{font-size:10.5px;color:var(--muted);font-weight:700;}
 
+  /* ══════════ fq-staff-v1 : 関係者のプロフィール ══════════
+     ★.per は <a> ではなく <button> になりました。
+       Instagramの有無にかかわらず、全員ぶん同じように開くため。
+       ボタンの見ためは消して、中身の見ためはそのまま使います。
+     ★[hidden] は .pcard{display:flex} に負けるので、
+       打ち消しをここに書いておくこと。書かないと開きっぱなしになる。 */
+  .per{background:none;border:0;padding:0;font:inherit;color:inherit;width:100%;cursor:pointer;}
+  .pcard{position:fixed;inset:0;z-index:80;background:rgba(54,39,30,.55);
+         display:flex;align-items:center;justify-content:center;padding:20px;}
+  .pcard[hidden]{display:none;}
+  .pcard-in{position:relative;width:100%;max-width:340px;text-align:center;
+            background:var(--paper);border:3px solid var(--ink);border-radius:20px;
+            padding:26px 20px 22px;box-shadow:0 10px 0 rgba(0,0,0,.18);}
+  .pcard-x{position:absolute;top:9px;right:11px;width:34px;height:34px;border-radius:50%;
+           border:2.5px solid var(--ink);background:#fff;font:inherit;font-size:15px;
+           font-weight:900;cursor:pointer;line-height:1;}
+  .pcard-in .av{width:104px;height:104px;border-radius:50%;margin:0 auto 12px;
+                border:3px solid var(--ink);background-size:cover;background-position:center;
+                display:flex;align-items:center;justify-content:center;
+                font-size:34px;font-weight:900;}
+  .pcard-in .n{font-size:19px;font-weight:900;line-height:1.4;}
+  .pcard-in .r{font-size:12.5px;color:var(--muted);font-weight:700;margin-bottom:13px;}
+  .pcard-in .b{font-size:13.5px;font-weight:700;line-height:1.85;margin:0 0 16px;
+               text-align:left;white-space:pre-line;}
+  .pcard-in .b[hidden]{display:none;}
+  .pcard-ig{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;
+            border-radius:999px;padding:11px 24px;font-size:14px;font-weight:900;}
+  .pcard-ig[hidden]{display:none;}
+
   .orgs{display:flex;flex-wrap:wrap;gap:9px;}
   .org{background:#fff;border:2.5px solid var(--line);border-radius:12px;padding:10px 15px;
        text-decoration:none;display:flex;align-items:center;gap:8px;}
@@ -2079,6 +2123,20 @@ const FQ = {
   <div class="people" id="staff"></div>
 </section>
 </div><!-- /pane-support -->
+
+<!-- == fq-staff-v1 : 関係者のプロフィール ==
+     ★中身はJSが入れます。ここは入れものだけ。
+     ★hidden を付けたまま置くこと。外すと最初から出てしまう。 -->
+<div class="pcard" id="pcard" hidden>
+  <div class="pcard-in" role="dialog" aria-modal="true" aria-labelledby="pcName">
+    <button class="pcard-x" id="pcX" type="button" aria-label="閉じる">✕</button>
+    <div class="av" id="pcAv"></div>
+    <div class="n" id="pcName"></div>
+    <div class="r" id="pcRole"></div>
+    <p class="b" id="pcBio" hidden></p>
+    <a class="pcard-ig" id="pcIg" href="#" target="_blank" rel="noopener" hidden>Instagramを見る →</a>
+  </div>
+</div>
 
 <footer>
   <div class="h" id="host"></div>
@@ -2535,15 +2593,49 @@ const FQ = {
                 : '<div class="org">'+inner+'</div>';
   }).join('');
 
-  /* ── 運営スタッフ ── */
+  /* ── 運営スタッフ ──
+     == fq-staff-v1 ==
+     ★全員 <button> にして、押すとプロフィールが開くようにした。
+       前は「Instagramがある人だけ <a>」だったので、
+       ほかの人は押しても何も起きず、押せるのかどうか分からなかった。
+     ★Instagramへは、プロフィールの中のボタンから飛ぶ。 */
   $('#staff').innerHTML = FQ.staff.map((p,i) => {
     const inner = '<div class="av" style="'+photoStyle(p.photo,i,p.pos)+'">'
       + (p.photo ? '' : phInner(p.name, i, false))
       + (p.insta ? '<span class="ig">'+IG+'</span>' : '')
       + '</div><div class="n">'+esc(p.name)+'</div><div class="r">'+esc(p.role)+'</div>';
-    return p.insta ? '<a class="per" href="'+esc(p.insta)+'" target="_blank" rel="noopener">'+inner+'</a>'
-                   : '<div class="per">'+inner+'</div>';
+    return '<button class="per" type="button" data-i="'+i+'">'+inner+'</button>';
   }).join('');
+
+  /* == fq-staff-v1 : プロフィールの開け閉め ==
+     ★1人ずつに onclick を付けず、親の #staff で1回だけ受ける。
+       人数が変わっても、ここは直さなくてよい。
+     ★背景タップと Esc でも閉じる。閉じるボタンだけだと、
+       スマホで戻れなくなったように見えることがある。 */
+  (function(){
+    const box = $('#pcard'); if(!box) return;
+    const av=$('#pcAv'), nm=$('#pcName'), ro=$('#pcRole'), bi=$('#pcBio'), ig=$('#pcIg');
+    function open(i){
+      const p = FQ.staff[i]; if(!p) return;
+      av.style.cssText = photoStyle(p.photo, i, p.pos);
+      av.innerHTML = p.photo ? '' : phInner(p.name, i, false);
+      nm.textContent = p.name;
+      ro.textContent = p.role;
+      bi.textContent = p.bio || '';
+      bi.hidden = !p.bio;                      /* ひとこと紹介が空なら出さない */
+      if (p.insta) { ig.href = p.insta; ig.hidden = false; } else { ig.hidden = true; }
+      box.hidden = false;
+      document.body.style.overflow = 'hidden'; /* うしろが動くと迷子になる */
+    }
+    function close(){ box.hidden = true; document.body.style.overflow = ''; }
+    $('#staff').addEventListener('click', e => {
+      const b = e.target.closest('.per'); if(!b) return;
+      open(+b.dataset.i);
+    });
+    $('#pcX').addEventListener('click', close);
+    box.addEventListener('click', e => { if (e.target === box) close(); });
+    addEventListener('keydown', e => { if (e.key === 'Escape' && !box.hidden) close(); });
+  })();
 
   /* ── アクセス ── */
   (function(){
