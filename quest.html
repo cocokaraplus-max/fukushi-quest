@@ -540,6 +540,9 @@ window.__FQ_Q0 = location.search;</script>
     <div class="lp-title" id="lpTitle" style="display:none"><span class="lp-tem">🏅</span><b id="lpTitleTx"></b></div>
     <div class="zk-grid" id="zkGrid"></div>
     <div id="zkMsg"></div>
+    <!-- == fq-zukan-retry-v1 : 「あとで受け取ります」の ==
+         中身はJSが入れます。CSSは足していません（.zk-note を使いまわす）。 -->
+    <div id="zkPend" hidden></div>
   </section>
 
   <section id="rankSec" style="display:none" data-tab="quest">
@@ -1746,6 +1749,68 @@ if ('serviceWorker' in navigator) {
     }).catch(function(){});
   }
 
+  /* ══════════ fq-zukan-retry-v1 : 電波が戻ったら あとで受け取る ══════════
+     ★会場にWi-Fiが無く、建物の中には電波の弱い場所がある。
+       そこでQRを読んでも、いままでは その場で終わりだった。
+       読んだ場所まで戻らないとキャラが手に入らない。
+     ★読み取りに失敗した場所を端末に覚えておいて、
+       電波が戻ったら自動でサーバーへ送る。
+     ★サーバー側は直していない。記録するのは「場所の名前」だけで、
+       どのキャラになるかを決めるのはサーバー側なので、
+       あとから送っても同じように処理される。 */
+  var PKEY = 'fukushi_quest_326_zk_pending';
+  function pget(){ try{ return JSON.parse(localStorage.getItem(PKEY)||'[]')||[]; }catch(e){ return []; } }
+  function pset(a){ try{ localStorage.setItem(PKEY, JSON.stringify(a.slice(0,16))); }catch(e){} }
+  function padd(spot){
+    /* 同じ場所は二重に入れない。新しいほうを先頭に */
+    var a = pget().filter(function(x){ return x && x.spot !== spot; });
+    a.unshift({ spot:String(spot), at:Date.now() });
+    pset(a); pnote();
+  }
+  function pdel(spot){
+    pset(pget().filter(function(x){ return !x || x.spot !== spot; })); pnote();
+  }
+  function pclean(){
+    var lim = Date.now() - 12*3600*1000;      /* 12時間たった控えは捨てる */
+    pset(pget().filter(function(x){ return x && x.at > lim; }));
+  }
+  function pnote(){
+    var el = document.getElementById('zkPend'); if(!el) return;
+    var n = pget().length;
+    el.hidden = !n;
+    el.innerHTML = n
+      ? '<div class="zk-note">電波が戻ったら、あと <b>'+n+'か所</b>ぶん 自動で受け取ります。<br>'
+        + 'このまま先へ進んで大丈夫です。</div>'
+      : '';
+  }
+
+  var flushing = false;
+  function pflush(){
+    if(flushing || !sb || !window.DID) return;
+    pclean();
+    var q = pget(); if(!q.length) return;
+    flushing = true;
+    var item = q[0];
+    sb.rpc('zukan_scan', {p_recog:String(window.DID), p_spot:String(item.spot)}).then(function(r){
+      flushing = false;
+      /* つながらない・サーバーが答えない → 待ち行列に残して、次の機会に */
+      if(!r || r.error || !r.data) return;
+      var d = r.data;
+      if(d.total) TOTAL = d.total;
+      try{ document.dispatchEvent(new CustomEvent('fq-zukan',{detail:d})); }catch(e){}
+      /* ★ここまで来たら「サーバーに届いた」。ok でも cooldown でも待ち行列から外す。
+           cooldown ＝ さっき読んだばかり ＝ **もう受け取れている**。 */
+      pdel(item.spot);
+      if(d.ok){
+        owned[d.char]=1; saveLocal();
+        var n = paint(d.char);
+        show(d.char, d.is_new !== false, d.owned || n);
+        msg('');
+      }
+      if(pget().length) setTimeout(pflush, 600);   /* つぎの1件 */
+    }).catch(function(){ flushing = false; });
+  }
+
   var busyZk=false;
   function doScan(spot){
     if(busyZk) return;
@@ -1755,7 +1820,13 @@ if ('serviceWorker' in navigator) {
     msg('よみとり中…');
     sb.rpc('zukan_scan', {p_recog: String(window.DID), p_spot: String(spot)}).then(function(r){
       busyZk=false;
-      if(!r || r.error || !r.data){ msg('うまく読み取れませんでした。もう一度ためしてください。', true); return; }
+      /* ★fq-zukan-retry-v1: サーバーが答えを返せなかった（通信・サーバー側の不調）。
+           場所を覚えておいて、あとで送り直す。 */
+      if(!r || r.error || !r.data){
+        padd(spot);
+        msg('いまは受け取れませんでした。<br><b>あとで自動で受け取ります</b>。このまま先へ進んで大丈夫です。', true);
+        return;
+      }
       var d=r.data;
       if(d.total) TOTAL=d.total;
       /* fq-logpose-v1: つぎの行き先とゴールを渡す */
@@ -1775,7 +1846,10 @@ if ('serviceWorker' in navigator) {
       }
     }).catch(function(){
       busyZk=false;
-      msg('通信できませんでした。電波の良い場所でもう一度ためしてください。', true);
+      /* ★fq-zukan-retry-v1: 電波が届かなかった。ここがいちばん多い。
+           「戻ってもう一度」ではなく、覚えておいて あとで送る。 */
+      padd(spot);
+      msg('いまは電波が届きませんでした。<br><b>あとで自動で受け取ります</b>。このまま先へ進んで大丈夫です。', true);
     });
   }
 
@@ -1808,6 +1882,22 @@ if ('serviceWorker' in navigator) {
 
   /* ---- 起動 ---- */
   paint(0);
+  pclean();          /* 古い控えを捨ててから数える。捨てないと数だけ残る */
+  pnote();
+
+  /* == fq-zukan-retry-v1 : 送り直すきっかけ ==
+     ★画面を見ているときだけ送る。裏に回っている間は通信しない。
+     ★ガチャの演出中は邪魔しない（window.busy）。
+     ★30秒ごとに見るが、待ち行列が空なら何もしない。 */
+  addEventListener('online', pflush);
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible') pflush();
+  });
+  setInterval(function(){
+    if(document.visibilityState !== 'visible') return;
+    if(window.busy) return;
+    pflush();
+  }, 30000);
 
   /* URLの ?z= を拾う。
      ★本体の ?q= ハンドラは q があるときだけ URL を書き換えるので、
@@ -1823,6 +1913,7 @@ if ('serviceWorker' in navigator) {
     try{ srv = localStorage.getItem('fukushi_quest_326_did_srv')==='1'; }catch(e){}
     if(srv || waited>=4000 || !sb){
       refresh();
+      pflush();                 /* fq-zukan-retry-v1: 前に取りこぼした場所を送り直す */
       if(spot){
         if(history.replaceState) history.replaceState(null,'',location.pathname);
         setTimeout(function(){ doScan(spot); }, 300);
