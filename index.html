@@ -1581,7 +1581,15 @@ const FQ = {
   .when2{--dw:min(48vw,320px);
         background:none;border-radius:0;padding:0;max-width:100%;
         display:flex;align-items:flex-end;justify-content:center;
-        gap:calc(var(--dw) * 0.041);}
+        gap:calc(var(--dw) * 0.041);
+        /* ★fq-timepos-v1: 日付の絵と同じだけ右へずらす。
+           日付（.datewrap）は、右はしに付いた曜日の丸のぶん
+           「12.13」が左へ寄って見えるのを、わざと右へ戻してある。
+           時間にも同じずらしを入れないと、時間だけ左に残る
+           （実測 390px画面で 20.2px ずれていた）。
+           ★★0.1078 は .datewrap と同じ数。
+             **日付の絵を作り直して丸の大きさが変わったら、2か所とも直すこと。** */
+        position:relative;left:calc(var(--dw) * 0.1078);}
   .when2 .w2t{width:calc(var(--dw) * 0.712);height:auto;display:block;}
   .when2 .w2n{width:calc(var(--dw) * 0.247);height:auto;display:block;
         margin-bottom:calc(var(--dw) * 0.012);}
