@@ -66,7 +66,7 @@ const FQ = {
     date:     '2026年12月13日',
     youbi:    '日',
     dateISO:  '2026-12-13T10:00:00+09:00',   // カウントダウンに使います
-    time:     '10:00〜16:00',
+    time:     '10:00〜17:00',   /* ★fq-logo2026-v1: チラシに合わせた。3F・4Fは16:00まで */
     place:    '豊田市福祉センター',
     address:  '〒471-0877 愛知県豊田市錦町1-1-1',
     host:     '豊田市社会福祉協議会 主催',
@@ -246,11 +246,11 @@ const FQ = {
      insta は追跡用の「?utm_source=…」を外した短い形にしてあります。
      長いままでも開きますが、短いほうが安全で見やすいです。 */
   stage: [
-    { time:'10:00〜10:30', name:'豊田大谷高校ダンス部', note:'ダンス',
+    { time:'10:30〜11:10', name:'豊田大谷高校ダンス部', note:'ダンス',
       insta:'https://www.instagram.com/toyotaotani_dance/', photo:'img/otani_dance.jpg' },
-    { time:'11:00〜12:00', name:'ウォルターズ',         note:'ライブ',
+    { time:'12:00〜12:45', name:'ウォルターズ',         note:'ライブ',
       insta:'https://www.instagram.com/walters0830/',      photo:'img/walters.jpg', pos:'center top' },
-    { time:'13:00〜14:00', name:'かすこんねぅ',         note:'ライブ',
+    { time:'13:30〜14:30', name:'かすこんねぅ',         note:'ライブ',
       insta:'https://www.instagram.com/kasukonnnnnneu/',   photo:'img/kasukon2.jpg',
       /* ★fq-soon-v1: 写真を新しいものに差し替え。
            前の写真は img/kasukon.jpg として残してあります（戻すときは名前を書きかえるだけ）。
@@ -259,7 +259,9 @@ const FQ = {
            この写真は横長なので 左右が切れます。45% にすると顔がまん中に来ます。
            ★写真を替えたら、ここも必ず見直すこと。 */
       pos:'45% center', credit:'©Stardust Promotion, Inc.' },
-    { time:'15:00〜16:00', name:'プラタナス',            note:'ライブ',
+    /* ★fq-logo2026-v1: チラシの印刷は 15:10〜16:00 だが、
+         手書きの 15:55 が正しいと確認ずみ。 */
+    { time:'15:10〜15:55', name:'プラタナス',            note:'ライブ',
       /* ★fq-plat-v1: 写真を新しいものに差し替え。
            前の写真は img/platanus.jpg として残してあります
            （戻すときは名前を書きかえるだけ）。
@@ -382,7 +384,7 @@ const FQ = {
              ロゴを小さくせずに丸を大きくできる。
            ★落ちる子（髭）の立ち位置もこの2つから計算している。
              どちらかを変えたら、落ちる子は自動でついてくる。 */
-        --fup:.66; --fin:.16;}
+        --fup:0; --fin:.16;}   /* ★fq-logo2026-v1: 新しいロゴの「つ」の高さに合わせた（.66→0） */
   /* ══ 背景の透かし文字（fq-kw-cycle-v1）══
      言葉が順番に1つずつ、ふわっと現れて消えます。位置は下のJSで決めています。
 
@@ -1413,7 +1415,11 @@ const FQ = {
      ★動きが苦手な方の端末では鼓動しない（いちばん下の指定）。
        これは他の演出（歩く・飛ぶ）と同じ扱いにしてある。 */
   .lgline{position:relative;}
-  .lgline.logo {aspect-ratio:960 / 252;}
+  /* ★fq-logo2026-v1: 新しいロゴは2行まとめて1つの箱。
+       1889 / 961 は絵そのものの縦横。ここが絵と合っていないと、
+       文字の置きどころ（％）が全部ズレる。
+     ★.lgline.logo2 は使っていないが、前のロゴに戻すときのために残してある。 */
+  .lgline.logo {aspect-ratio:1889 / 961;}
   .lgline.logo2{aspect-ratio:960 / 254;}
   .lgline .lt{position:absolute;display:block;height:auto;
       transform-origin:50% 55%;
@@ -1962,33 +1968,26 @@ const FQ = {
              ここを手で書き換えると文字がズレる。絵を作り直したときだけ測り直すこと。
            ★--i は鼓動の順番（つ=0 … タ=7）。0.5秒ずつ遅れて鼓動する。
            ★元の logo_line1.png / logo_line2.png は img/ に残してある（戻したいとき用）。 -->
-      <div class="logo lgline" role="img" aria-label="つながる">
-        <img class="lt" style="--i:0;left:0%;top:1.5873%;width:30.9375%" src="img/lg_tsu.png" alt="" decoding="async">
-        <img class="lt" style="--i:1;left:29.4792%;top:0%;width:26.875%" src="img/lg_na.png" alt="" decoding="async">
-        <!-- fq-logo-daku-v4: HIRO さんが画像編集ソフトで切り分けたものを、そのまま採用した。
-             ★戻ってきた画像は白い紙に焼き付けられていたため、縁の半透明な画素が
-               白に近づいて「消えた」ように見えていた。そこは元の1枚絵から復元してある。
-               判定は「白い紙の上に置いたら白としか出ようがない画素か」で行った。
-        <!-- fq-logo-daku-v3: どの灰色の面がどちらの文字のものかは、HIRO さんが
-             絵を見て決めた（部品⑩ x758-791 y120-169 と 部品⑪ x766-786 y19-82 は「る」）。
-             ★機械的な判定（近さ・面の多数決）では2回とも間違えた。
-               3Dの壁は本体から離れた所まで伸びるので、近さでは持ち主が決まらない。
-        <!-- fq-logo-daku-v2: 「が」の濁点の2画目が「る」の絵に入っていて、
-             「る」と一緒に鼓動していた。濁点をまるごと「が」の絵へ移した。
-             ★v1 では「る」の腕の真下にある壁（灰色の面）まで持ってきてしまい、
-               「が」が鼓動するたびに「る」の壁がついてきた。
-               v2 では黒い輪郭線を仕切りとみなして「面」に分け、面ごと丸ごと
-               振り分けている。壁が途中で割れないので、この症状は起きない。
-             ★数字は元の1枚絵 logo_line1.png の中での位置。
-               4枚を重ね直すと元の絵と1画素も違わないことを確認済み。 -->
-        <img class="lt" style="--i:2;left:56.25%;top:0.7937%;width:25.2083%" src="img/lg_ga.png" alt="" decoding="async">
-        <img class="lt" style="--i:3;left:78.5417%;top:0.7937%;width:21.4583%" src="img/lg_ru.png" alt="" decoding="async">
-      </div>
-      <div class="logo2 lgline" role="img" aria-label="フェスタ">
-        <img class="lt" style="--i:4;left:0%;top:1.5748%;width:28.125%" src="img/lg_fu.png" alt="" decoding="async">
-        <img class="lt" style="--i:5;left:27.3958%;top:24.0157%;width:19.6875%" src="img/lg_e.png" alt="" decoding="async">
-        <img class="lt" style="--i:6;left:46.875%;top:0%;width:26.25%" src="img/lg_su.png" alt="" decoding="async">
-        <img class="lt" style="--i:7;left:70.5208%;top:0.7874%;width:29.4792%" src="img/lg_ta.png" alt="" decoding="async">
+      <!-- == fq-logo2026-v1 : 新しいロゴ（326さん・2026年版）==
+           ★★2行を **1つの箱** にまとめてある。
+             前は「つながる」と「フェスタ」で箱が2つだった。
+             新しい絵は **フェスタが右に寄って、つながるに食い込む** 並びなので、
+             箱を分けるとその重なりが再現できない。
+           ★left / top / width は「絵全体の中での位置」を％にした数字。
+             **手で書きかえると文字がズレる。**
+             絵を作り直したときだけ測り直すこと。
+           ★--i は鼓動の順番（つ=0 … タ=7）。0.5秒ずつ遅れて鼓動する。
+           ★前のロゴ（lg_◯◯.png / logo_line1.png / logo_line2.png）は
+             img/ に残してある（戻したいとき用）。 -->
+      <div class="logo lgline" role="img" aria-label="つながるフェスタ">
+        <img class="lt" style="--i:0;left:0.0000%;top:5.2029%;width:23.1339%" src="img/lg2_tsu.png" alt="" decoding="async">
+        <img class="lt" style="--i:1;left:24.1398%;top:0.0000%;width:26.4161%" src="img/lg2_na.png" alt="" decoding="async">
+        <img class="lt" style="--i:2;left:51.4029%;top:2.6015%;width:28.4277%" src="img/lg2_ga.png" alt="" decoding="async">
+        <img class="lt" style="--i:3;left:81.6834%;top:1.4568%;width:18.3166%" src="img/lg2_ru.png" alt="" decoding="async">
+        <img class="lt" style="--i:4;left:15.5109%;top:49.0114%;width:22.1810%" src="img/lg2_fu.png" alt="" decoding="async">
+        <img class="lt" style="--i:5;left:37.0037%;top:65.8689%;width:13.0757%" src="img/lg2_e.png" alt="" decoding="async">
+        <img class="lt" style="--i:6;left:51.1382%;top:52.4454%;width:17.8401%" src="img/lg2_su.png" alt="" decoding="async">
+        <img class="lt" style="--i:7;left:66.2785%;top:52.4454%;width:20.8576%" src="img/lg2_ta.png" alt="" decoding="async">
       </div>
     </div>
     <div class="datewrap">
@@ -2270,7 +2269,7 @@ const FQ = {
       }catch(e){ return false; }
     })();
     function ph(src){
-      return (CAN_WEBP && /^img\/(ch_|usagi_)/.test(src))
+      return (CAN_WEBP && /^img\/(ch_|usagi_|lg2_)/.test(src))   /* fq-logo2026-v1: ロゴも */
         ? src.replace(/\.png$/, '.webp') : src;
     }
 
