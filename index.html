@@ -1560,19 +1560,31 @@ const FQ = {
        絵そのものに白いフチが付いている。
      ★会場名（.when3）は触っていない。チラシも白い角丸のままだから。
 
-     ★★大きさは「日付とのつり合い」で決めた値。
-       チラシでは 10:00〜17:00 と 12.13 がほぼ同じ幅だが、
-       そのまま合わせると画面では時間が小さくなりすぎて読めない。
-       少し大きめの 45.5vw にしてある。
-       ★日付の絵を作り直したら、ここも見直すこと。
+     ★★fq-timefit-v1: 大きさは「日付の絵の幅にぴったり収める」で決めている。
+       日付の絵の幅は .datewrap の --dw ＝ min(48vw,320px)。
+       同じ式をここにも置いて、中身をその割合で分けた。
+
+           時間     --dw × 0.712
+           すきま   --dw × 0.041
+           添え書き --dw × 0.247
+           ─────────────────
+           合計     --dw × 1.000   ← 日付の絵とぴったり同じ幅
+
+       ★0.712 : 0.247 はチラシの実寸の比（500dpiで 1066 : 60 : 370）。
+       ★★足して 1.000 になるように決めてある。
+         **どれかを変えたら、ほかも足して1.000になるよう直すこと。**
+       ★★--dw の式を .datewrap とここの2か所に書いている。
+         CSSの変数は親から子へしか伝わらず、この2つは横ならびのため。
+         **日付の大きさを変えるときは、両方直すこと。**
      ★align-items:flex-end ＝ 添え書きを時間の「下ぞろえ」にする。
        まん中ぞろえだと、2行の添え書きが時間より上に飛び出して見える。 */
-  .when2{background:none;border-radius:0;padding:0;max-width:96%;
+  .when2{--dw:min(48vw,320px);
+        background:none;border-radius:0;padding:0;max-width:100%;
         display:flex;align-items:flex-end;justify-content:center;
-        gap:clamp(7px,2.4vw,13px);}
-  .when2 .w2t{width:clamp(152px,45.5vw,256px);height:auto;display:block;}
-  .when2 .w2n{width:clamp(40px,11.6vw,66px);height:auto;display:block;
-        margin-bottom:clamp(1px,0.6vw,4px);}
+        gap:calc(var(--dw) * 0.041);}
+  .when2 .w2t{width:calc(var(--dw) * 0.712);height:auto;display:block;}
+  .when2 .w2n{width:calc(var(--dw) * 0.247);height:auto;display:block;
+        margin-bottom:calc(var(--dw) * 0.012);}
 
   /* カウントダウン（日・時間・分・秒の4つ）
      ★tabular-nums ＝ 数字の幅をぜんぶ同じにする指定。
