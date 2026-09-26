@@ -358,6 +358,7 @@ const FQ = {
     /* チラシから実際に色を取りました */
     --yellow:#E7DE01; --yellow-l:#F1EE6A; --yellow-d:#D9D000;
     --pink:#E84686; --blue:#1186CE; --orange:#E75409; --green:#2FA84F;
+    --free-ink:#B83A77;   /* fq-freecolor-v1: 「入場無料」の文字と輪。チラシから実測 */
     --ink:#36271E; --paper:#FFFDF5; --line:#E4DCC8; --muted:#8B7F6E;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
@@ -1459,6 +1460,29 @@ const FQ = {
         font-size:calc(var(--fw) * 0.25);font-weight:900;letter-spacing:.02em;
         line-height:1.1;transform:rotate(-8deg);}
   .free b{display:block;font-weight:900;}
+
+  /* ══ fq-freecolor-v1 : 文字と輪をチラシの色に ══
+     チラシは「白い丸 ＋ 赤紫の文字 ＋ 内側に細い赤紫の輪」。
+     いままでは黒文字で、輪も無かった。
+
+     ★色の出どころ
+       チラシのスキャンで、丸の内側だけを取り出して実測した値が rgb(168,41,96)。
+       ただしスキャンは全体が暗く出る。
+       同じ紙の黄色が #E7DE01 なのに rgb(182,171,14) で出ていた。
+       そのぶんを戻した色を :root の --free-ink に置いてある。
+       ★日付の「日」の丸も、チラシでは同じ色。
+         あちらはチラシを切り出した絵（img/date.png）なので直す必要はない。
+         画面で見くらべる相手として使える。
+
+     ★輪は丸の内側 7.5%、太さは丸の 2.4%。丸と一緒に大きくなる。
+       ★★border-radius:inherit を必ず書くこと。
+         書かないと輪だけ真円になる。丸のほうは少しゆがんだ形なので線がずれて見える。
+       ★★position:absolute を必ず書くこと。
+         .free は flex なので、書かないと輪が「3つ目の行」になって文字を押し出す。 */
+  .free{color:var(--free-ink);}
+  .free::before{content:'';position:absolute;inset:7.5%;
+        border:calc(var(--fw) * 0.024) solid currentColor;border-radius:inherit;
+        pointer-events:none;}
 
   /* ══ 入場無料の丸がはねる（fq-logo-bigger-v1）══
      ロゴの8文字の鼓動が終わったあと、丸が3回はねる。
