@@ -66,7 +66,11 @@ const FQ = {
     date:     '2026年12月13日',
     youbi:    '日',
     dateISO:  '2026-12-13T10:00:00+09:00',   // カウントダウンに使います
-    time:     '10:00〜17:00',   /* ★fq-logo2026-v1: チラシに合わせた。3F・4Fは16:00まで */
+    /* ★fq-flyer2-v1: 時間と添え書きは絵（img/time.png / img/time_note.png）。
+       下の2つは、その絵の読み上げ文（alt）として使う。
+       ★時間を変えるときは、絵も作り直すこと。文字だけ直しても画面は変わらない。 */
+    time:     '10:00〜17:00',
+    timeNote: '3F・4Fは16:00まで',
     place:    '豊田市福祉センター',
     address:  '〒471-0877 愛知県豊田市錦町1-1-1',
     host:     '豊田市社会福祉協議会 主催',
@@ -358,7 +362,10 @@ const FQ = {
     /* チラシから実際に色を取りました */
     --yellow:#E7DE01; --yellow-l:#F1EE6A; --yellow-d:#D9D000;
     --pink:#E84686; --blue:#1186CE; --orange:#E75409; --green:#2FA84F;
-    --free-ink:#B83A77;   /* fq-freecolor-v1: 「入場無料」の文字と輪。チラシから実測 */
+    --free-ink:#D42C7C;   /* 「入場無料」の文字と輪／日付の「日」の丸。
+                             fq-freecolor-v1 ではチラシの実測どおりの色だったが、
+                             画面で見るとくすむので fq-flyer2-v1 で明るいほうへ寄せた。
+                             ★img/date.png の「日」の丸も同じ色。片方だけ直さないこと */
     --ink:#36271E; --paper:#FFFDF5; --line:#E4DCC8; --muted:#8B7F6E;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
@@ -1544,6 +1551,29 @@ const FQ = {
   .when2{font-size:clamp(14px,4.2vw,19px);letter-spacing:.02em;}
   .when3{font-size:clamp(13px,3.9vw,18px);}
 
+  /* ══ fq-flyer2-v1 : 時間もチラシから切り出した絵にする ══
+     時間の書体を日付とそろえたい、というご要望。
+     日付（12.13）は文字ではなく絵なので、同じ見た目にするには時間も絵にするしかない。
+     Webの書体では、あの角ばった形にどうしても届かない（日付のときに確認済み）。
+
+     ★白い角丸の箱はやめる。チラシの時間は箱に入っておらず、
+       絵そのものに白いフチが付いている。
+     ★会場名（.when3）は触っていない。チラシも白い角丸のままだから。
+
+     ★★大きさは「日付とのつり合い」で決めた値。
+       チラシでは 10:00〜17:00 と 12.13 がほぼ同じ幅だが、
+       そのまま合わせると画面では時間が小さくなりすぎて読めない。
+       少し大きめの 45.5vw にしてある。
+       ★日付の絵を作り直したら、ここも見直すこと。
+     ★align-items:flex-end ＝ 添え書きを時間の「下ぞろえ」にする。
+       まん中ぞろえだと、2行の添え書きが時間より上に飛び出して見える。 */
+  .when2{background:none;border-radius:0;padding:0;max-width:96%;
+        display:flex;align-items:flex-end;justify-content:center;
+        gap:clamp(7px,2.4vw,13px);}
+  .when2 .w2t{width:clamp(152px,45.5vw,256px);height:auto;display:block;}
+  .when2 .w2n{width:clamp(40px,11.6vw,66px);height:auto;display:block;
+        margin-bottom:clamp(1px,0.6vw,4px);}
+
   /* カウントダウン（日・時間・分・秒の4つ）
      ★tabular-nums ＝ 数字の幅をぜんぶ同じにする指定。
        これが無いと、1秒ごとに数字の幅が変わって枠がぴくぴく動きます。 */
@@ -2438,7 +2468,12 @@ const FQ = {
       .map(x => '<p>' + esc(x).replace('「福祉」','<em>「福祉」</em>') + '</p>').join('');
   // 日付はチラシから切り出した絵。読み上げ用の文だけ FQ から入れる
   $('#when').alt = E.date + '（' + E.youbi + '）';
-  $('#when2').textContent = E.time;
+  /* ★fq-flyer2-v1: 時間と添え書きはチラシから切り出した絵。
+     文字は読み上げ用（alt）に入れている。 */
+  $('#when2').innerHTML =
+      '<img class="w2t" src="img/time.png" alt="' + esc(E.time) + '" decoding="async">'
+    + (E.timeNote ? '<img class="w2n" src="img/time_note.png" alt="'
+        + esc(E.timeNote) + '" decoding="async">' : '');
   $('#when3').textContent = E.place;
   // 「広が／る！」のように変なところで折れないよう、読点で区切って語のまとまりを保つ
   $('#lead').innerHTML = E.lead.split('、').map((x,i,a) =>
