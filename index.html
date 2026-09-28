@@ -1851,6 +1851,23 @@ const FQ = {
      見た目で上に出したぶんを、下でも margin-bottom で消しておく。
      ★★マイナスの margin-top を付けたら、下の空きも必ず見ること。 */
   @media(min-width:620px){ .gp-bub{margin-top:-2.4em;margin-bottom:-0.7em;} }
+  /* ★★fq-bdown-v1: スマホでは見出しの下に置くと、吹き出しが青の中に
+     ぽつんと浮いて見える（青いフチが青の下地に溶けて、白い形だけが残るため）。
+     そこで **326さんの横のあいた場所まで下ろして**、しっぽが本人の頭を指すようにする。
+     ★下ろす量は vw で書く。px で書くと画面幅ごとに指す高さがずれる。
+       実測（320/360/390/430/560/619px）で、しっぽの先と頭の高さのズレは +1〜+3px。
+     ★横の位置は「326さんの幅 + 20px」。右ぞろえのままだと、画面が広いほど
+       しっぽと326さんが離れる（560pxで121px離れていた）。
+       ★★326さんの幅は .guest.gp .ph の clamp(84px,26vw,132px)。
+         あちらを変えたら、ここの 26vw / 132px も一緒に直すこと。
+     ★320pxでは幅52vwのままだと吹き出しが326さんに重なるので、48vwにしてある。
+       字の大きさも一緒に下げないと、楕円からはみ出す。 */
+  @media(max-width:619px){
+    .gp-bub{width:min(48vw,240px);margin-bottom:calc(-1 * min(13.8vw,70px));
+            margin-left:calc(min(26vw,132px) + 20px);margin-right:auto;}
+    .gp-bub i{font-size:clamp(9px,3.0vw,14px);}
+    .gp-bub b{font-size:clamp(16px,5.3vw,27px);}
+  }
   /* 絵と ito を横ならび */
   .gp-figs{display:flex;flex-wrap:wrap;align-items:flex-end;
           gap:6px clamp(10px,3.4vw,18px);margin-top:2px;}
