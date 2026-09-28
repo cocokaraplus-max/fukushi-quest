@@ -1800,22 +1800,31 @@ const FQ = {
           0.141em -0.141em 0 var(--blue),
           0.173em -0.100em 0 var(--blue),
           0.193em -0.052em 0 var(--blue);}
-  @media(min-width:560px){ .gp-top{flex-wrap:nowrap;} }
-  /* 吹き出し。しっぽは ::after の三角形 */
+  /* ★fq-gbub-v1: 560pxだと「SPECIAL GUEST」と吹き出しが並びきらず、
+     吹き出しが枠の右へ23pxはみ出していた。横ならびにするのは620pxから。 */
+  @media(min-width:620px){ .gp-top{flex-wrap:nowrap;} }
   /* ══ 吹き出し（チラシと同じ形）══
-     ★★チラシの吹き出しは **白い楕円に青いフチ**、そして左下に丸いしっぽ。
+     ★★チラシの吹き出しは **白い楕円に青いフチ**。
        さらに **枠の上のふちをまたいで** 置かれている（上半分は紙、下半分は青の上）。
        だから青いフチが見える。枠の中に収めてしまうと、青の上に青のフチで見えない。
      ★★形は SVG のひと続きの線で描いている。
        前は「楕円＋小さな楕円」を重ねていたが、フチを付けると重なりの線が出る。
        ひと続きの形なら、フチもきれいに1本になる。
-     ★大きさの比は チラシ実測（楕円の部分がおよそ 2.8 : 1）。 */
+     ★★fq-gbub-v1: しっぽは **ほぼ真横（左）むき** の細長い形。
+       前は左下へ45度に出た短い三角で、チラシとまるで違っていた。
+       チラシ実測（500dpiで白い部分のふちを1列ずつ測った値）:
+         楕円の外まわり   624 × 257（よこ : たて ＝ 2.43 : 1）
+         しっぽの先       楕円の上から71%の高さ
+         しっぽの長さ     楕円の横幅の15%ぶん、左にはみ出す
+         しっぽの付け根   楕円の高さの21%ぶんの太さ
+         フチの太さ       楕円の横幅の1.9%
+       ★★向きは目分量で決めないこと。45度ずれていても気づかない。 */
   .gp-bub{position:relative;flex:0 0 auto;
-          width:clamp(162px,48vw,232px);aspect-ratio:210 / 86;
+          width:clamp(176px,52vw,262px);aspect-ratio:282 / 104;
           display:flex;flex-direction:column;align-items:center;justify-content:center;
-          padding-left:5%;margin:2px 2px 0 auto;}
+          padding-left:13.4%;margin:2px 2px 0 auto;}
   .gp-bub svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
-  .gp-bub svg path{fill:#fff;stroke:var(--blue);stroke-width:3;stroke-linejoin:round;}
+  .gp-bub svg path{fill:#fff;stroke:var(--blue);stroke-width:4.6;stroke-linejoin:round;}
   /* ★SVGは字より後に描かれるので、字のほうを前に出す。
      書かないと吹き出しの中の字がSVGの下に隠れる。 */
   .gp-bub i,.gp-bub b{position:relative;z-index:1;}
@@ -1824,12 +1833,12 @@ const FQ = {
   .gp-bub i{display:block;font-style:normal;color:var(--ink);font-weight:900;
           font-size:clamp(10px,3vw,13px);letter-spacing:.02em;line-height:1.2;}
   .gp-bub b{display:block;color:var(--blue);font-weight:900;line-height:1.05;
-          font-size:clamp(17px,5.4vw,26px);letter-spacing:.01em;margin-top:1px;}
+          font-size:clamp(17px,5.2vw,25px);letter-spacing:.01em;margin-top:1px;}
   .gp-bub b em{font-style:normal;font-size:.58em;letter-spacing:.02em;margin-left:.15em;}
-  /* ★560px以上では見出しと横ならびになり、上に空きができる。
+  /* ★620px以上では見出しと横ならびになり、上に空きができる。
      そこではチラシと同じく、枠の上のふちをまたがせる（青いフチが見える）。
      ★スマホでは見出しの下に置くので、またがせない（見出しと重なるため）。 */
-  @media(min-width:560px){ .gp-bub{margin-top:-2.4em;} }
+  @media(min-width:620px){ .gp-bub{margin-top:-2.4em;} }
   /* 絵と ito を横ならび */
   .gp-figs{display:flex;flex-wrap:wrap;align-items:flex-end;
           gap:6px clamp(10px,3.4vw,18px);margin-top:10px;}
@@ -2910,12 +2919,15 @@ const FQ = {
        ★吹き出しの中身は FQ.guest.bubble（2行）。 */
     const bub = g.bubble || [];
     /* ★吹き出しの形。ひと続きの線なので、フチが1本できれいに出る。
-       左下の出っぱりがしっぽ。 */
+       ★fq-gbub-v1: 左へ細長くのびた出っぱりがしっぽ。
+       楕円のまん中は (158, 51)、よこ半径117・たて半径47。
+       しっぽの先は (2, 71) ＝ まん中より少し下で、ほぼ真横に出る。 */
     const BUBSVG =
-      '<svg viewBox="0 0 210 86" aria-hidden="true" focusable="false"><path d="'
-      + 'M112 6 C164 6 206 21 206 40 C206 59 164 74 112 74 '
-      + 'C84 74 59 70 40 62 C30 70 18 78 4 84 C10 72 15 56 18 43 '
-      + 'C18 42 18 41 18 40 C18 21 60 6 112 6 Z"/></svg>';
+      '<svg viewBox="-2 0 282 104" aria-hidden="true" focusable="false"><path d="'
+      + 'M158 4 C223 4 275 25 275 51 C275 77 223 98 158 98 '
+      + 'C120 98 85 91 63 78 C40 78 20 76 2 71 '
+      + 'C12 69 29 65 45 58 C43 56 41 54 41 51 '
+      + 'C41 25 93 4 158 4 Z"/></svg>';
     $('#guest').innerHTML =
         '<div class="gp-in">'
       +   '<div class="gp-top"><span class="gp-h">SPECIAL GUEST</span>'
