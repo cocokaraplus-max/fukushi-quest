@@ -1834,11 +1834,17 @@ const FQ = {
   .gp-text{margin-top:14px;}
   /* ★広い画面ではチラシと同じく、絵の右に本文を置く */
   @media(min-width:700px){
-    .gp-body{display:flex;align-items:flex-start;gap:22px;}
-    /* ★名前の行が入ったぶん、絵の列が広がりすぎて本文が細くなる。
-       絵の列に上限をつけて、本文に幅を残す。 */
-    .gp-figs{flex:0 1 auto;max-width:46%;}
-    .gp-text{flex:1;min-width:0;margin-top:10px;}
+    /* ★左（絵と名前）と右（本文）の2列。
+       ★名前の行が入ったぶん、絵の列が広がりすぎて本文が細くなるので、
+         絵の列に上限をつけて本文に幅を残している。
+       ★★fq-gtidy-v1: 本文は「まん中ぞろえ」。
+         左の列は高さ254px、右の本文は175px（1100px幅で実測）。
+         上ぞろえにすると差の79pxがぜんぶ右下に落ちて、
+         そこだけぽっかり空いて見える。
+         **背の違う2つを横に並べるときは、低いほうをまん中ぞろえにする。** */
+    .gp-body{display:flex;align-items:stretch;gap:24px;}
+    .gp-figs{flex:0 1 auto;max-width:46%;align-content:flex-start;}
+    .gp-text{flex:1;min-width:0;margin:0;align-self:center;}
   }
   /* ══ fq-326move-v2 : 白い枠は固定、326さんの首から上だけが動く ══
      ★動かすのは絵だけ。**白い枠（.ph）は動かさない。**
