@@ -298,6 +298,10 @@ const FQ = {
          + 'イベントの最後には、326さんによるスペシャルトークショーを開催！'
          + 'ぜひ最後まで会場でお楽しみください。',
     hl:    'イベントの最後には、326さんによるスペシャルトークショーを開催！',
+    /* ★fq-gpanel-v1: 吹き出しの中身。3つめは小さい字になります。 */
+    bubble: ['イベントに参加！', '326', 'ミツルさん'],
+    itoPhoto: 'img/ito.png',
+    itoLabel: '大人気カードゲーム',
   },
 
   /* ── DISCOVER（3F・4F フロア） ── */
@@ -1731,6 +1735,64 @@ const FQ = {
             text-wrap:pretty;}   /* 「ん」だけが次の行に落ちるのを防ぐ */
   .guest .role{font-size:12.5px;opacity:.92;}
   .guest p{font-size:13.5px;font-weight:500;line-height:1.85;white-space:pre-line;}
+
+  /* ══════════ fq-gpanel-v1 : SPECIAL GUEST をチラシと同じ組み立てに ══════════
+     チラシは「青い枠の中に、見出し／吹き出し／326さんの絵と名札／ito の写真／本文」。
+     見出しは枠の外ではなく **枠の中の左上**。だからステージのタブでは
+     いつもの見出し（白い箱）を出していない。
+
+     ★吹き出しは絵ではなく **CSSで描いている**。
+       チラシの吹き出しは白地なので、紙から切り抜こうとすると
+       まわりの紙の色と見分けがつかない（実測で 248,247,246 と 253,251,246）。
+       描いたほうが確実で、画面の幅に合わせて字も大きくなる。
+     ★ito のパッケージだけ写真（img/ito.png）。青地を透明にして切り抜いてある。
+     ★326さんの絵は白い枠をやめた。チラシは枠なしで青地に直接置いている。
+       ★首から上が動く仕掛け（fq-326move-v2）はそのまま。
+         あれは .guest .ph .ghd に付いているので、.ph を残せば動く。 */
+  .guest.gp{padding:0;overflow:hidden;}
+  .gp-in{padding:16px 16px 18px;}
+  /* ★スマホでは見出しと吹き出しを上下に。横に並べると
+     「SPECIAL GUEST」が2行に折れてしまう（390pxで実測）。 */
+  .gp-top{display:flex;flex-wrap:wrap;align-items:flex-start;
+          justify-content:flex-end;gap:2px 8px;}
+  .gp-h{font-family:"Jost","Century Gothic","Avenir Next",sans-serif;
+        font-weight:300;letter-spacing:.09em;color:#fff;line-height:1.1;
+        font-size:clamp(23px,7.4vw,32px);white-space:nowrap;
+        flex:1 0 100%;}
+  @media(min-width:560px){ .gp-top{flex-wrap:nowrap;justify-content:space-between;}
+                           .gp-h{flex:0 1 auto;padding-top:2px;} }
+  /* 吹き出し。しっぽは ::after の三角形 */
+  .gp-bub{position:relative;background:#fff;border-radius:50%;
+          padding:7px clamp(12px,3.6vw,20px) 8px;text-align:center;flex:0 0 auto;
+          max-width:84%;margin-top:-2px;}
+  .gp-bub::after{content:'';position:absolute;left:-7px;bottom:22%;
+          border:9px solid transparent;border-right-color:#fff;border-left:0;
+          transform:rotate(-12deg);}
+  .gp-bub i{display:block;font-style:normal;color:var(--ink);font-weight:900;
+          font-size:clamp(10px,3vw,13px);letter-spacing:.02em;line-height:1.2;}
+  .gp-bub b{display:block;color:var(--blue);font-weight:900;line-height:1.05;
+          font-size:clamp(17px,5.4vw,26px);letter-spacing:.01em;margin-top:1px;}
+  .gp-bub b em{font-style:normal;font-size:.58em;letter-spacing:.02em;margin-left:.15em;}
+  /* 絵と ito を横ならび */
+  .gp-figs{display:flex;align-items:flex-end;gap:clamp(10px,3.4vw,18px);margin-top:10px;}
+  .gp-fig{display:flex;flex-direction:column;align-items:flex-start;min-width:0;}
+  .gp-lab{background:#fff;color:var(--ink);font-weight:900;border-radius:7px;
+          font-size:clamp(9.5px,2.7vw,12px);padding:2px 8px;margin-bottom:5px;
+          white-space:nowrap;}
+  .gp-ito{width:clamp(66px,20vw,104px);height:auto;display:block;}
+  /* チラシに合わせて白い枠をやめる。絵だけを置く */
+  .guest.gp .ph{background:none;border:0;border-radius:0;
+          width:clamp(84px,26vw,132px);height:auto;aspect-ratio:100/138;}
+  .guest.gp .ph .gwrap{border-radius:0;}
+  .guest.gp .ph .ig{right:0;bottom:0;width:24px;height:24px;border-radius:8px;}
+  .gp-text{margin-top:14px;}
+  /* ★広い画面ではチラシと同じく、絵の右に本文を置く */
+  @media(min-width:700px){
+    .gp-body{display:flex;align-items:flex-start;gap:22px;}
+    .gp-figs{flex:0 0 auto;}
+    .gp-text{flex:1;min-width:0;margin-top:10px;}
+  }
+  @media(max-width:360px){ .gp-lab{font-size:9px;padding:2px 6px;} }
   /* ══ fq-326move-v2 : 白い枠は固定、326さんの首から上だけが動く ══
      ★動かすのは絵だけ。**白い枠（.ph）は動かさない。**
        枠ごと動かすと「カードが揺れている」ように見えて、
@@ -2219,8 +2281,8 @@ const FQ = {
 </section>
 
 <section class="wrap">
-  <div class="sec-h"><h2 class="h-flyer">SPECIAL GUEST</h2></div>
-  <div class="guest" id="guest"></div>
+  <!-- ★fq-gpanel-v1: 見出しは枠の中（.gp-h）に入れたので、ここには出しません -->
+  <div class="guest gp" id="guest"></div>
 </section>
 </div><!-- /pane-stage -->
 
@@ -2750,12 +2812,24 @@ const FQ = {
       const k = esc(h);
       return x.indexOf(k) < 0 ? x : x.replace(k, '<mark>' + k + '</mark>');
     };
-    // 写真＋名前 を横並びにして、説明文はその下に全幅で置く
+    /* ★fq-gpanel-v1: チラシと同じ組み立て。
+         上に「見出し＋吹き出し」、下に「名札つきの絵」と「ito」、その下に本文。
+       ★吹き出しの中身は FQ.guest.bubble（2行）。 */
+    const bub = g.bubble || [];
     $('#guest').innerHTML =
-        '<div class="ghead">' + ph
-      + '<div class="gname"><h3>'+esc(g.name)+'</h3>'
-      + '<div class="role">'+esc(g.role)+(g.insta?' ・ <u>Instagram</u>':'')+'</div></div></div>'
-      + '<p>' + hl(g.text, g.hl) + '</p>';
+        '<div class="gp-in">'
+      +   '<div class="gp-top"><span class="gp-h">SPECIAL GUEST</span>'
+      +     (bub.length ? '<div class="gp-bub"><i>'+esc(bub[0])+'</i>'
+      +       '<b>'+esc(bub[1])+'<em>'+esc(bub[2]||'')+'</em></b></div>' : '')
+      +   '</div>'
+      +   '<div class="gp-body"><div class="gp-figs">'
+      +     '<div class="gp-fig"><span class="gp-lab">'+esc(g.name)+'</span>' + ph + '</div>'
+      +     (g.itoPhoto ? '<div class="gp-fig"><span class="gp-lab">'+esc(g.itoLabel)+'</span>'
+      +       '<img class="gp-ito" src="'+esc(g.itoPhoto)+'" alt="'+esc(g.itoLabel)+'" '
+      +       'loading="lazy" decoding="async"></div>' : '')
+      +   '</div>'
+      +   '<p class="gp-text">' + hl(g.text, g.hl) + '</p></div>'
+      + '</div>';
   })();
 
   /* ── DISCOVER ── */
