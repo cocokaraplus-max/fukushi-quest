@@ -1821,19 +1821,27 @@ const FQ = {
        ★★向きは目分量で決めないこと。45度ずれていても気づかない。 */
   .gp-bub{position:relative;flex:0 0 auto;
           width:clamp(176px,52vw,262px);aspect-ratio:282 / 104;
-          display:flex;flex-direction:column;align-items:center;justify-content:center;
-          padding-left:13.4%;margin:2px 2px 0 auto;}
+          margin:2px 2px 0 auto;}
   .gp-bub svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
   .gp-bub svg path{fill:#fff;stroke:var(--blue);stroke-width:4.6;stroke-linejoin:round;}
+  /* ★★fq-bmid-v1: 字は楕円のまん中にそろえる。
+     楕円は吹き出しの幅の 15.25%〜98.23% にあるので、その中でまん中ぞろえ。
+     ★★padding に % を書くと **親の幅** に対する % になる（自分の幅ではない）。
+       前はそれで、広い画面では字が29pxも右にずれていた。
+       自分の幅に対する % がほしいときは
+       **position:absolute の left / right** を使うこと。 */
+  .gp-bt{position:absolute;left:15.25%;right:1.77%;top:0;bottom:1.92%;
+          display:flex;flex-direction:column;align-items:center;justify-content:center;
+          text-align:center;}
   /* ★SVGは字より後に描かれるので、字のほうを前に出す。
      書かないと吹き出しの中の字がSVGの下に隠れる。 */
   .gp-bub i,.gp-bub b{position:relative;z-index:1;}
   /* ★★色は必ず書くこと。書かないと枠の白い字を受けついで、
      白い吹き出しに白い字＝見えなくなる。 */
   .gp-bub i{display:block;font-style:normal;color:var(--ink);font-weight:900;
-          font-size:clamp(10px,3vw,13px);letter-spacing:.02em;line-height:1.2;}
+          font-size:clamp(11px,3.3vw,15px);letter-spacing:.02em;line-height:1.2;}
   .gp-bub b{display:block;color:var(--blue);font-weight:900;line-height:1.05;
-          font-size:clamp(17px,5.2vw,25px);letter-spacing:.01em;margin-top:1px;}
+          font-size:clamp(19px,5.8vw,29px);letter-spacing:.01em;margin-top:1px;}
   .gp-bub b em{font-style:normal;font-size:.58em;letter-spacing:.02em;margin-left:.15em;}
   /* ★620px以上では見出しと横ならびになり、上に空きができる。
      そこではチラシと同じく、枠の上のふちをまたがせる（青いフチが見える）。
@@ -2931,8 +2939,9 @@ const FQ = {
     $('#guest').innerHTML =
         '<div class="gp-in">'
       +   '<div class="gp-top"><span class="gp-h">SPECIAL GUEST</span>'
-      +     (bub.length ? '<div class="gp-bub">' + BUBSVG + '<i>'+esc(bub[0])+'</i>'
-      +       '<b>'+esc(bub[1])+'<em>'+esc(bub[2]||'')+'</em></b></div>' : '')
+      +     (bub.length ? '<div class="gp-bub">' + BUBSVG + '<span class="gp-bt">'
+      +       '<i>'+esc(bub[0])+'</i>'
+      +       '<b>'+esc(bub[1])+'<em>'+esc(bub[2]||'')+'</em></b></span></div>' : '')
       +   '</div>'
       +   '<div class="gp-body"><div class="gp-figs">'
       +     '<div class="gp-fig">' + ph + '</div>'
