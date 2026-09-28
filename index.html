@@ -297,12 +297,22 @@ const FQ = {
   /* ── DISCOVER（3F・4F フロア） ── */
   discover: {
     text: '地域の魅力や福祉の仕事にふれる、たくさんのブースが大集合！\n新しい発見や、人とのつながりを見つけよう！',
-    groups: [
-      { label:'出展事業所（一例）', color:'green',
-        items:['高齢者福祉','障がい福祉','児童福祉','相談・支援','医療・リハビリ'] },
-      { label:'相談・体験コーナー', color:'pink',
-        items:['お仕事相談','就職サポート','見学・体験','ミニセミナー','資格・制度紹介'] },
+    /* ★チラシの「丸が重なった絵」。4つのまとまり × 2つずつ。
+       cat … 丸の中の2行  ／ items … 写真と、その上にのせる名前
+       ★写真は img/dc_◯◯.jpg（と同じ名前の .webp）。 */
+    flyer: [
+      { cat:['体験','交流'],   c:'or',
+        items:[{n:'車イス体験', p:'dc_wheel'},  {n:'eスポーツ',    p:'dc_esports'}] },
+      { cat:['相談','知る'],   c:'gr',
+        items:[{n:'仕事相談',   p:'dc_soudan'}, {n:'トークショー', p:'dc_talk'}] },
+      { cat:['つくる','楽しむ'], c:'bl',
+        items:[{n:'ワークショップ', p:'dc_work'}, {n:'ボッチャ体験', p:'dc_boccia'}] },
+      { cat:['出会う','味わう'], c:'pk',
+        items:[{n:'マルシェ',   p:'dc_marche'}, {n:'キッチンカー', p:'dc_kitchen'}] },
     ],
+    /* ★ここには前まで「出展事業所（一例）」「相談・体験コーナー」の
+       四角いチップが並んでいました。チラシの丸に置きかえたので外しています。
+       戻したくなったら git の履歴から拾えます（fq-fcircle-v1 の1つ前）。 */
   },
 
   /* ── FOOD（駐車場・1F・3F） ── */
@@ -1839,6 +1849,55 @@ const FQ = {
     .gteaser.walkin .gimg{animation:none;}
   }
 
+  /* ══════════ fq-fcircle-v1 : チラシの「丸が重なった絵」 ══════════
+     チラシ2ページめの DISCOVER にある、丸を3つ重ねたあの形。
+     絵を1枚貼るのではなく、**丸と帯はCSSで描き、写真だけ絵**にしている。
+     こうすると、画面の幅に合わせて名前の字が大きくなるので、
+     スマホでも読める（1枚絵だと字がつぶれて読めない）。
+
+     ★寸法はぜんぶ「1つぶんの幅 --gw」に対する割合。チラシを実測した値。
+         写真の丸   直径 63.4% ／ 中心 (31.7%, 30.4%) と (68.3%, 68.4%)
+         言葉の丸   直径 36.2% ／ 中心 (79.3%, 25.3%)
+         名前の帯   幅 64% ／ 高さ 15.5% ／ 写真の中心から下へ 19.5%
+     ★重なりの順番（下から）… 言葉の丸 → 写真1 → 写真2 → 名前の帯
+       帯を写真の中に入れると、写真2が帯の上に乗ってしまい、
+       「車イス体験」の右はしが隠れる。だから帯だけ外に出して z-index を上げている。
+     ★写真には、チラシの帯が写り込んでいる（切り抜けない位置にあるため）。
+       CSSの帯を **チラシの帯より少し大きく**描いて、上から隠している。
+       ★帯の大きさを小さくすると、下から古い帯がはみ出して二重に見える。
+     ★言葉の字の大きさは2文字と3文字で変える。チラシもそうしている。
+       同じ大きさにすると、3文字（つくる・出会う）が丸からはみ出す。 */
+  .fband{display:grid;justify-items:center;justify-content:center;
+         margin:14px 0 4px;
+         /* スマホは2つずつ2段。左右の余白ぶんだけ外へ広げて、写真を少しでも大きく取る */
+         margin-inline:-18px;padding-inline:6px;
+         grid-template-columns:1fr 1fr;gap:12px 6px;--gw:min(46.5vw,200px);}
+  @media(min-width:560px){.fband{margin-inline:0;padding-inline:0;
+         --gw:min(40vw,280px);gap:14px 10px;}}
+  @media(min-width:900px){.fband{grid-template-columns:repeat(4,1fr);--gw:min(21.5vw,236px);
+         gap:0 14px;}}
+  .fg{position:relative;width:var(--gw);aspect-ratio:1;}
+  .fg.or{--c:#D4532A;} .fg.gr{--c:#5F9E45;} .fg.bl{--c:#4A9AC6;} .fg.pk{--c:#CE5C87;}
+  .fgcat{position:absolute;left:61.2%;top:7.2%;width:36.2%;aspect-ratio:1;
+         border-radius:50%;background:var(--c);color:#fff;}
+  .fgcat i{position:absolute;font-style:normal;white-space:nowrap;line-height:1;
+           font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+           font-weight:900;font-size:calc(var(--gw) * .110);letter-spacing:.03em;}
+  .fg.c3 .fgcat i{font-size:calc(var(--gw) * .089);}
+  .fgcat i:nth-child(1){left:44%;top:28.1%;transform:translate(-50%,-50%);}
+  .fgcat i:nth-child(2){left:56%;top:68.0%;transform:translate(-50%,-50%);}
+  .fgp{position:absolute;width:63.4%;aspect-ratio:1;border-radius:50%;
+       background:var(--c);padding:3.6%;box-sizing:border-box;}
+  .fgp img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+  .fgp1{left:0;top:0;} .fgp2{left:36.6%;top:36.6%;}
+  .fg b{position:absolute;transform:translate(-50%,-50%);z-index:3;
+        width:64%;height:15.5%;background:var(--c);color:#fff;border-radius:999px;
+        border:calc(var(--gw) * .009) solid #fff;box-sizing:border-box;
+        display:flex;align-items:center;justify-content:center;white-space:nowrap;
+        font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+        font-weight:900;font-size:calc(var(--gw) * .062);letter-spacing:.03em;}
+  .fg b.b1{left:32.5%;top:51.2%;} .fg b.b2{left:67.3%;top:86.6%;}
+
   /* ══════════ チップ ══════════ */
   .grp{margin-bottom:16px;}
   .grp .gl{display:inline-block;font-size:11.5px;font-weight:900;color:#fff;
@@ -2143,7 +2202,7 @@ const FQ = {
   <div class="sec-h"><h2 class="h-blue">DISCOVER</h2><span class="sub">– 知る・出会う・相談する・つながる –</span>
     <span class="where w-blue">3F・4F フロア</span></div>
   <div class="sec-t" id="discoverText"></div>
-  <div id="discover"></div>
+  <div class="fband" id="fband"></div>
 </section>
 
 <section class="wrap">
@@ -2663,11 +2722,22 @@ const FQ = {
 
   /* ── DISCOVER ── */
   $('#discoverText').textContent = FQ.discover.text;
-  $('#discover').innerHTML = FQ.discover.groups.map(g =>
-    '<div class="grp"><span class="gl" style="background:var(--'+esc(g.color)+')">'+esc(g.label)+'</span>'
-    + '<div class="chips">' + g.items.map(x => '<span class="chip">'+esc(x)+'</span>').join('') + '</div></div>'
-  ).join('');
 
+  /* ★fq-fcircle-v1: チラシの「丸が重なった絵」。
+     写真は <picture> で WebP を先に出し、読めない端末には .jpg を出す。
+     ★3文字の言葉のときだけ class="c3" を付ける（字を小さくするため）。 */
+  $('#fband').innerHTML = (FQ.discover.flyer || []).map(g => {
+    const c3 = g.cat.some(t => t.length >= 3) ? ' c3' : '';
+    const pic = (it, k) => '<div class="fgp fgp' + k + '"><picture>'
+        + '<source srcset="img/' + esc(it.p) + '.webp" type="image/webp">'
+        + '<img src="img/' + esc(it.p) + '.jpg" alt="" loading="lazy" decoding="async">'
+        + '</picture></div>';
+    return '<div class="fg ' + esc(g.c) + c3 + '">'
+      + '<div class="fgcat">' + g.cat.map(t => '<i>' + esc(t) + '</i>').join('') + '</div>'
+      + pic(g.items[0], 1) + pic(g.items[1], 2)
+      + '<b class="b1">' + esc(g.items[0].n) + '</b>'
+      + '<b class="b2">' + esc(g.items[1].n) + '</b></div>';
+  }).join('');
   /* ── FOOD ── */
   $('#foodText').textContent = FQ.food.text;
   $('#foods').innerHTML = FQ.food.items.map(x => '<span>'+esc(x)+'</span>').join('')
