@@ -1846,10 +1846,14 @@ const FQ = {
   /* ★620px以上では見出しと横ならびになり、上に空きができる。
      そこではチラシと同じく、枠の上のふちをまたがせる（青いフチが見える）。
      ★スマホでは見出しの下に置くので、またがせない（見出しと重なるため）。 */
-  @media(min-width:620px){ .gp-bub{margin-top:-2.4em;} }
+  /* ★★fq-bgap-v1: 上にはみ出させたぶん、下にも空きが残っていた。
+     行の高さはいちばん背の高いもの（＝吹き出し）で決まるので、
+     見た目で上に出したぶんを、下でも margin-bottom で消しておく。
+     ★★マイナスの margin-top を付けたら、下の空きも必ず見ること。 */
+  @media(min-width:620px){ .gp-bub{margin-top:-2.4em;margin-bottom:-0.7em;} }
   /* 絵と ito を横ならび */
   .gp-figs{display:flex;flex-wrap:wrap;align-items:flex-end;
-          gap:6px clamp(10px,3.4vw,18px);margin-top:10px;}
+          gap:6px clamp(10px,3.4vw,18px);margin-top:2px;}
   .gp-figs .gp-name{flex:1 0 100%;}
   .gp-fig{display:flex;flex-direction:column;align-items:flex-start;min-width:0;}
   .gp-ito{width:clamp(48px,14vw,76px);height:auto;display:block;}
