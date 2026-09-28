@@ -1906,9 +1906,14 @@ const FQ = {
          border-radius:50%;background:var(--c);color:#fff;}
   .fgcat i{position:absolute;font-style:normal;white-space:nowrap;line-height:1;
            font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
-           font-weight:700;font-size:calc(var(--gw) * .100);letter-spacing:.05em;}
-  .fgcat i:nth-child(1){left:46%;top:29%;transform:translate(-50%,-50%);}
-  .fgcat i:nth-child(2){left:54%;top:71%;transform:translate(-50%,-50%);}
+           font-weight:700;font-size:calc(var(--gw) * .086);letter-spacing:.04em;}
+  /* ★fq-cfit-v1: 本物の書体で測り直したら、3文字が丸からはみ出していた。
+     ★★確認するときは必ず本物の書体を入れること。
+       代わりの書体は字幅がせまいので、はみ出しが見つからない。
+     ★これ以上大きくすると、3文字（つくる・出会う）がまたはみ出す。
+       大きくしたいときは、丸（36.2%）のほうを大きくすること。 */
+  .fgcat i:nth-child(1){left:48%;top:30%;transform:translate(-50%,-50%);}
+  .fgcat i:nth-child(2){left:52%;top:70%;transform:translate(-50%,-50%);}
   .fgp{position:absolute;width:63.4%;aspect-ratio:1;border-radius:50%;
        background:var(--c);padding:3.6%;box-sizing:border-box;}
   .fgp img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
@@ -1918,7 +1923,7 @@ const FQ = {
         border:calc(var(--gw) * .009) solid #fff;box-sizing:border-box;
         display:flex;align-items:center;justify-content:center;white-space:nowrap;
         font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
-        font-weight:700;font-size:calc(var(--gw) * .058);letter-spacing:.09em;}
+        font-weight:700;font-size:calc(var(--gw) * .055);letter-spacing:.07em;}
   .fg b.b1{left:32.5%;top:51.2%;} .fg b.b2{left:67.3%;top:86.6%;}
 
   /* ══════════ チップ ══════════ */
