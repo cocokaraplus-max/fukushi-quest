@@ -1863,8 +1863,22 @@ const FQ = {
      ★320pxでは幅52vwのままだと吹き出しが326さんに重なるので、48vwにしてある。
        字の大きさも一緒に下げないと、楕円からはみ出す。 */
   @media(max-width:619px){
-    .gp-bub{width:min(48vw,240px);margin-bottom:calc(-1 * min(13.8vw,70px));
-            margin-left:calc(min(26vw,132px) + 20px);margin-right:auto;}
+    /* ★★fq-bcenter-v1: 326さんと吹き出しを **ひとかたまり** として、まん中に置く。
+       ひとかたまりの幅 ＝ 326さんの幅 + すき間 + 吹き出しの幅。
+       余りを2で割った値（--lead）を、326さんの左と吹き出しの左に足す。
+       ★名前は動かさない。本文と左はしをそろえるため。
+       ★★% は「親の幅」に対する % になる。--lead は .gp-top と .gp-body の
+         両方に置いてあるが、どちらも .gp-in の内側と同じ幅なので同じ値になる。
+       ★すき間を min(20px,4.4vw) にしているのは、320pxで20pxのままだと
+         ひとかたまりが枠より6px広くなって、まん中に置けなくなるため。
+       ★max(0px, ...) は、320pxで余りがマイナスになるときの受け。
+       ★326さんの幅（.guest.gp .ph の clamp）を変えたら --fig も直すこと。 */
+    .gp-top,.gp-body{--fig:clamp(84px,26vw,132px);--bw:min(48vw,240px);
+            --gg:min(20px,4.4vw);
+            --lead:max(0px, calc((100% - (var(--fig) + var(--gg) + var(--bw))) / 2));}
+    .gp-figs > .gp-fig:first-child{margin-left:var(--lead);}
+    .gp-bub{width:var(--bw);margin-bottom:calc(-1 * min(13.8vw,70px));
+            margin-left:calc(var(--lead) + var(--fig) + var(--gg));margin-right:auto;}
     .gp-bub i{font-size:clamp(9px,3.0vw,14px);}
     .gp-bub b{font-size:clamp(16px,5.3vw,27px);}
   }
