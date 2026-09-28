@@ -38,7 +38,7 @@ if ('serviceWorker' in navigator) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Zen Kaku Gothic New … チラシの開催日と同じ系統の「角ゴシック」の極太 -->
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300&family=Zen+Kaku+Gothic+New:wght@900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 
 <script>
 /* ══════════════════════════════════════════════════════════════════
@@ -287,11 +287,17 @@ const FQ = {
     photo: 'img/326.png',
     /* short … トップページに出す一言（2行くらいまで）。
        くわしい話は下の text（ステージのタブ）に置いています。 */
-    short: '当日は326さんご本人から、\nお話を伺う時間も予定しています。',
-    text:  'フォークデュオ「19」の元メンバーで、人気カードゲーム「ito」を手がけた'
-         + 'イラストレーター・326（ナカムラミツル）さんが、イベントに参加します。\n'
-         + '今回のイベントでは、イラストのご提供や企画のアイデア出しなどにご協力いただきました。'
-         + '当日は、326さんご本人からお話を伺う時間も予定しています。',
+    /* ★fq-guest-v1: チラシの文章に合わせました。
+       hl … text の中で黄色く目立たせるところ。
+       ★text の中にそのまま出てくる文字を書くこと。
+         書きまちがえても壊れません。色が付かないだけになります。 */
+    short: 'イベントの最後には、326さんによる\nスペシャルトークショーを開催！',
+    text:  'フォークデュオ「19」の元メンバーで、人気カードゲーム『ito』を手がけた'
+         + 'イラストレーター・326（ナカムラミツル）さんが、イベントに参加します！\n'
+         + '今回のイベントでは、イラストや企画づくりにご協力いただきました。'
+         + 'イベントの最後には、326さんによるスペシャルトークショーを開催！'
+         + 'ぜひ最後まで会場でお楽しみください。',
+    hl:    'イベントの最後には、326さんによるスペシャルトークショーを開催！',
   },
 
   /* ── DISCOVER（3F・4F フロア） ── */
@@ -1656,6 +1662,20 @@ const FQ = {
             box-shadow:5px 6px 0 var(--ink);}
   .h-pink{color:var(--pink);}  .h-blue{color:var(--blue);}
   .h-green{color:var(--green);} .h-orange{color:var(--orange);}
+
+  /* ★fq-guest-v1: SPECIAL GUEST の見出しだけ、チラシと同じ「青い帯に白文字」。
+     ほかの見出し（白い箱＋色の文字）はそのままです。
+     ★書体は Jost の300。チラシの細い欧文（Century Gothic 系）にいちばん近いもの。
+       ★★Jost に日本語は入っていません。
+         **日本語の見出しに h-flyer を付けないこと**（字が入れかわって見えます）。
+       ★届かなかったときは Avenir Next などに落ちます。細い形のままです。 */
+  .sec-h h2.h-flyer{background:var(--blue);color:#fff;border-color:var(--ink);
+        font-family:"Jost","Century Gothic","Avenir Next",sans-serif;
+        font-weight:300;letter-spacing:.09em;}
+
+  /* ★fq-guest-v1: チラシでは、トークショーの一文だけ黄色い字になっている。
+     ★★<mark> は何も書かないと「黄色い地に黒い字」。**両方とも上書きすること。** */
+  .guest p mark{background:none;color:#F7E36B;font-weight:900;}
   .sec-h .sub{font-size:13.5px;font-weight:700;color:var(--muted);}
   .sec-h .where{margin-left:auto;font-size:12px;font-weight:900;color:#fff;
                 border:2.5px solid var(--ink);border-radius:9px;padding:4px 11px;
@@ -1865,8 +1885,12 @@ const FQ = {
      ★写真には、チラシの帯が写り込んでいる（切り抜けない位置にあるため）。
        CSSの帯を **チラシの帯より少し大きく**描いて、上から隠している。
        ★帯の大きさを小さくすると、下から古い帯がはみ出して二重に見える。
-     ★言葉の字の大きさは2文字と3文字で変える。チラシもそうしている。
-       同じ大きさにすると、3文字（つくる・出会う）が丸からはみ出す。 */
+     ★★fq-cfont-v1: 書体は **丸ゴシック（Zen Maru Gothic）**。チラシと同じ形。
+       前は角ゴシック（Zen Kaku Gothic New）で、字の形がチラシと違っていた。
+     ★★言葉の字の大きさは **4つとも同じ**。
+       前は2文字と3文字で変えていたが、チラシは4つとも同じ大きさだった。
+       3文字（つくる・出会う）が丸に収まるよう、全体を少し小さくしてある。
+       ★これ以上大きくすると、3文字が丸からはみ出す。 */
   .fband{display:grid;justify-items:center;justify-content:center;
          margin:14px 0 4px;
          /* スマホは2つずつ2段。左右の余白ぶんだけ外へ広げて、写真を少しでも大きく取る */
@@ -1881,11 +1905,10 @@ const FQ = {
   .fgcat{position:absolute;left:61.2%;top:7.2%;width:36.2%;aspect-ratio:1;
          border-radius:50%;background:var(--c);color:#fff;}
   .fgcat i{position:absolute;font-style:normal;white-space:nowrap;line-height:1;
-           font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
-           font-weight:900;font-size:calc(var(--gw) * .110);letter-spacing:.03em;}
-  .fg.c3 .fgcat i{font-size:calc(var(--gw) * .089);}
-  .fgcat i:nth-child(1){left:44%;top:28.1%;transform:translate(-50%,-50%);}
-  .fgcat i:nth-child(2){left:56%;top:68.0%;transform:translate(-50%,-50%);}
+           font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
+           font-weight:700;font-size:calc(var(--gw) * .100);letter-spacing:.05em;}
+  .fgcat i:nth-child(1){left:46%;top:29%;transform:translate(-50%,-50%);}
+  .fgcat i:nth-child(2){left:54%;top:71%;transform:translate(-50%,-50%);}
   .fgp{position:absolute;width:63.4%;aspect-ratio:1;border-radius:50%;
        background:var(--c);padding:3.6%;box-sizing:border-box;}
   .fgp img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
@@ -1894,8 +1917,8 @@ const FQ = {
         width:64%;height:15.5%;background:var(--c);color:#fff;border-radius:999px;
         border:calc(var(--gw) * .009) solid #fff;box-sizing:border-box;
         display:flex;align-items:center;justify-content:center;white-space:nowrap;
-        font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
-        font-weight:900;font-size:calc(var(--gw) * .062);letter-spacing:.03em;}
+        font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
+        font-weight:700;font-size:calc(var(--gw) * .058);letter-spacing:.09em;}
   .fg b.b1{left:32.5%;top:51.2%;} .fg b.b2{left:67.3%;top:86.6%;}
 
   /* ══════════ チップ ══════════ */
@@ -2172,7 +2195,7 @@ const FQ = {
 <div class="lead" id="lead"></div>
 
 <section class="wrap">
-  <div class="sec-h"><h2 class="h-green">SPECIAL GUEST</h2><span class="sub">– 1F 大ホール –</span></div>
+  <div class="sec-h"><h2 class="h-flyer">SPECIAL GUEST</h2><span class="sub">– 1F 大ホール –</span></div>
   <a class="gteaser" id="gteaser" href="#stage"></a>
 </section>
 
@@ -2191,7 +2214,7 @@ const FQ = {
 </section>
 
 <section class="wrap">
-  <div class="sec-h"><h2 class="h-green">SPECIAL GUEST</h2></div>
+  <div class="sec-h"><h2 class="h-flyer">SPECIAL GUEST</h2></div>
   <div class="guest" id="guest"></div>
 </section>
 </div><!-- /pane-stage -->
@@ -2712,12 +2735,22 @@ const FQ = {
     const ph = g.insta
       ? '<a class="ph" href="'+esc(g.insta)+'" target="_blank" rel="noopener">'+in_+'</a>'
       : '<div class="ph">'+in_+'</div>';
+    /* ★fq-guest-v1: hl のところだけ黄色い字にする（チラシと同じ）。
+       ★★先に esc（安全な文字に直す）してから差しかえること。
+         順番を逆にすると、入れた <mark> まで消えてしまう。
+       ★見つからないときは何もしない。色が付かないだけで、文章は出る。 */
+    const hl = (t, h) => {
+      const x = esc(t);
+      if (!h) return x;
+      const k = esc(h);
+      return x.indexOf(k) < 0 ? x : x.replace(k, '<mark>' + k + '</mark>');
+    };
     // 写真＋名前 を横並びにして、説明文はその下に全幅で置く
     $('#guest').innerHTML =
         '<div class="ghead">' + ph
       + '<div class="gname"><h3>'+esc(g.name)+'</h3>'
       + '<div class="role">'+esc(g.role)+(g.insta?' ・ <u>Instagram</u>':'')+'</div></div></div>'
-      + '<p>'+esc(g.text)+'</p>';
+      + '<p>' + hl(g.text, g.hl) + '</p>';
   })();
 
   /* ── DISCOVER ── */
@@ -2727,12 +2760,11 @@ const FQ = {
      写真は <picture> で WebP を先に出し、読めない端末には .jpg を出す。
      ★3文字の言葉のときだけ class="c3" を付ける（字を小さくするため）。 */
   $('#fband').innerHTML = (FQ.discover.flyer || []).map(g => {
-    const c3 = g.cat.some(t => t.length >= 3) ? ' c3' : '';
     const pic = (it, k) => '<div class="fgp fgp' + k + '"><picture>'
         + '<source srcset="img/' + esc(it.p) + '.webp" type="image/webp">'
         + '<img src="img/' + esc(it.p) + '.jpg" alt="" loading="lazy" decoding="async">'
         + '</picture></div>';
-    return '<div class="fg ' + esc(g.c) + c3 + '">'
+    return '<div class="fg ' + esc(g.c) + '">'
       + '<div class="fgcat">' + g.cat.map(t => '<i>' + esc(t) + '</i>').join('') + '</div>'
       + pic(g.items[0], 1) + pic(g.items[1], 2)
       + '<b class="b1">' + esc(g.items[0].n) + '</b>'
