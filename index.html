@@ -1695,6 +1695,12 @@ const FQ = {
      見出しから切り離されて見えるので、せまいときは左に寄せてくっつける */
   @media(max-width:620px){ .sec-h{gap:10px;} .sec-h .where{margin-left:0;} }
   .sec-t{white-space:pre-line;font-size:14.5px;font-weight:700;margin:16px 0 22px;line-height:1.9;}
+  /* ★★fq-onepane-v1: チラシ2ページ目のいちばん上の見出し。
+     紙では枠もフチも無く、こげ茶の太字が2行だけ。同じにしている。
+     ★2行の折れ方は <span> で決めている。まかせると変なところで折れる。 */
+  .pagelead{font-size:clamp(19px,5.4vw,30px);font-weight:900;line-height:1.5;
+        letter-spacing:.01em;margin:0;text-wrap:balance;}
+  .pagelead span{display:inline-block;}
 
   /* ══════════ ステージ ══════════ */
   .acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
@@ -1972,7 +1978,7 @@ const FQ = {
 
   /* ══ トップのゲスト紹介（fq-guest-top-v1）══
      トップは「顔と名前と一言」だけ。くわしい話はステージのタブに置いてある。
-     ★カード全体が「ステージのタブへ行くボタン」になっている（href="#stage"）。
+     ★カード全体が「イベントのタブへ行くボタン」になっている（href="#event"）。
        タブの切りかえは #◯◯ で動いているので、ふつうのリンクで飛べる。
      ★写真は contain（枠いっぱいに切らない）。イラストは全身が見えないと意味がないため。 */
   .gteaser{background:var(--blue);color:#fff;border-radius:20px;padding:16px 15px;
@@ -2409,7 +2415,7 @@ const FQ = {
 
 <section class="wrap">
   <div class="sec-h"><h2 class="h-flyer">SPECIAL GUEST</h2><span class="sub">– 1F 大ホール –</span></div>
-  <a class="gteaser" id="gteaser" href="#stage"></a>
+  <a class="gteaser" id="gteaser" href="#event"></a><!-- fq-onepane-v1 -->
 </section>
 
 <section class="wrap">
@@ -2418,8 +2424,18 @@ const FQ = {
 </section>
 </div><!-- /pane-home -->
 
-<!-- ══ ステージ ══ -->
-<div class="pane" id="pane-stage">
+<!-- ══ イベント（fq-onepane-v1）══
+     ★★「ステージ」と「みどころ」を1つのタブにまとめました。
+       並びは **チラシ2ページ目と同じ**:
+         SPECIAL STAGE → DISCOVER → ガチャ → SPECIAL GUEST
+     ★タブの名前は event。**quest.html の .tabbar も同じにすること。**
+     ★古い #stage / #see のリンクも開けるようにしてあります（下のJSの ALIAS）。
+       人に送ったリンクや印刷物が古いままでも、ここに来ます。 -->
+<div class="pane" id="pane-event">
+<section class="wrap">
+  <p class="pagelead"><span>人がつながれば、</span><span>できることがもっと広がる！</span></p>
+</section>
+
 <section class="wrap">
   <!-- ★fq-nosub-v1: 「– 見る・聞く –」はやめました（見出しと階の札だけにする） -->
   <div class="sec-h"><h2 class="h-pink">SPECIAL STAGE</h2>
@@ -2427,14 +2443,6 @@ const FQ = {
   <div class="acts" id="acts"></div>
 </section>
 
-<section class="wrap">
-  <!-- ★fq-gpanel-v1: 見出しは枠の中（.gp-h）に入れたので、ここには出しません -->
-  <div class="guest gp" id="guest"></div>
-</section>
-</div><!-- /pane-stage -->
-
-<!-- ══ みどころ ══ -->
-<div class="pane" id="pane-see">
 <section class="wrap">
   <!-- ★fq-nosub-v1: 「– 出会う・知る・体験する・相談する –」はやめました -->
   <div class="sec-h"><h2 class="h-blue">DISCOVER</h2>
@@ -2448,7 +2456,12 @@ const FQ = {
 <section class="wrap">
   <div class="gacha" id="gacha"></div>
 </section>
-</div><!-- /pane-see -->
+
+<section class="wrap">
+  <!-- ★fq-gpanel-v1: 見出しは枠の中（.gp-h）に入れたので、ここには出しません -->
+  <div class="guest gp" id="guest"></div>
+</section>
+</div><!-- /pane-event -->
 
 <!-- ══ クエスト ══ -->
 <div class="pane" id="pane-quest">
@@ -2536,8 +2549,7 @@ const FQ = {
        ボタン（<button data-tab>）にすると、このページの中を探しにいってしまう。 -->
 <nav class="tabbar" id="tabbar" role="tablist" aria-label="ページの切りかえ">
   <button role="tab" data-tab="home"  aria-selected="true"><span class="ic">🏠</span>ホーム</button>
-  <button role="tab" data-tab="stage" aria-selected="false"><span class="ic">🎤</span>ステージ</button>
-  <button role="tab" data-tab="see"   aria-selected="false"><span class="ic">🔍</span>みどころ</button>
+  <button role="tab" data-tab="event" aria-selected="false"><span class="ic">🎪</span>イベント</button><!-- fq-onepane-v1: ステージ＋みどころ。quest.html の .tabbar と同じにすること -->
   <button role="tab" data-tab="quest" aria-selected="false"><span class="ic">📜</span>クエスト</button>
   <a href="quest.html#shindan"><span class="ic">🔮</span>診断</a>
   <a href="quest.html#zukan"  ><span class="ic">📖</span>図鑑</a>
@@ -3107,7 +3119,14 @@ const FQ = {
     const TABS = [...document.querySelectorAll('#tabbar button')];
     const KEYS = TABS.map(b => b.dataset.tab);
     const key0 = KEYS[0];
-    const now  = () => { const k = location.hash.slice(1); return KEYS.includes(k) ? k : key0; };
+    /* ★★fq-onepane-v1: 「ステージ」と「みどころ」を1つにまとめたので、
+         古い #stage / #see も新しい #event として開く。
+         人に送ったリンクや、刷ってしまった紙が古いままでも たどり着けるようにするため。
+       ★★タブをまとめたり名前を変えたときは、ここに1行足すこと。
+         足さないと、古いリンクは黙ってホームに落ちる（エラーも出ない）。 */
+    const ALIAS = { stage:'event', see:'event' };
+    const now  = () => { const h = location.hash.slice(1); const k = ALIAS[h] || h;
+                         return KEYS.includes(k) ? k : key0; };
 
     function show(key, toTop){
       TABS.forEach(b => {
@@ -3127,8 +3146,7 @@ const FQ = {
          『診断』『図鑑』はクエスト側のページなので、ここは <a> でないと飛べない。
        ★下のメニュー（#tabbar）と並びをそろえること。2つで1組。 */
     const MENU = [
-      ['stage', '🎤', 'ステージ',  '出演者とタイムテーブル'],
-      ['see',   '🔍', 'みどころ',  'ブース・相談・フード'],
+      ['event', '🎪', 'イベント',  'ステージ・ブース・ガチャ・ゲスト'],
       ['quest', '📜', 'クエスト',  'QRを集めてガチャ'],
       ['shindan', '🔮', 'タイプ診断', '生年月日で7つのタイプ', 'quest.html#shindan'],
       ['zukan',   '📖', 'キャラ図鑑', 'QRでなかまが増える', 'quest.html#zukan'],
