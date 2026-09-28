@@ -325,12 +325,17 @@ const FQ = {
        戻したくなったら git の履歴から拾えます（fq-fcircle-v1 の1つ前）。 */
   },
 
-  /* ── FOOD（駐車場・1F・3F） ── */
-  food: {
-    text: '会場にはキッチンカーが大集合！\nおいしいものを片手に、フェスタを楽しもう。',
-    items: ['（キッチンカー名）','（キッチンカー名）','（キッチンカー名）',
-            '（キッチンカー名）','（キッチンカー名）'],
-    note:  '他にも美味しいフードが盛りだくさん！',
+  /* ── ガチャの告知（fq-gacha-v1）──
+     チラシの「会場をまわって ガチャ をまわそう！」と同じ中身です。
+     ★「ガチャ」の飾り文字（img/gacha_w.png）とガチャガチャの絵（img/gacha_m.png）は
+       チラシから切り出したもの。文字のほうは絵なので、言いまわしを変えるときは
+       前後の文（head1 / head2）だけ直せます。 */
+  gacha: {
+    head1: '会場をまわって',
+    head2: 'をまわそう！',
+    text:  '会場のQRコードを読み取ってポイントを集めると、ガチャが引けます！\n人と出会うほど、いいことがあるかも。',
+    bubble: '豪華景品が盛りだくさん！',
+    prize:  'ディズニーペアチケット',
   },
 
   /* ── 協賛・協力（会社名でもお店の名前でもOK） ── */
@@ -1752,7 +1757,7 @@ const FQ = {
   /* ★fq-gfix-v1: チラシは見出しが枠の上に はみ出している。
      ★★そのため overflow は hidden にしないこと。切ると はみ出しが消える。
      ★枠の上に余白（margin-top）を取って、はみ出した文字の場所を空けている。 */
-  .guest.gp{padding:0;overflow:visible;margin-top:26px;}
+  .guest.gp{padding:0;overflow:visible;margin-top:40px;}
   .gp-in{padding:2px 16px 18px;}
   /* ★スマホでは見出しと吹き出しを上下に。横に並べると
      「SPECIAL GUEST」が2行に折れてしまう（390pxで実測）。 */
@@ -1797,25 +1802,34 @@ const FQ = {
           0.193em -0.052em 0 var(--blue);}
   @media(min-width:560px){ .gp-top{flex-wrap:nowrap;} }
   /* 吹き出し。しっぽは ::after の三角形 */
-  /* ★吹き出しはチラシの実測に合わせた よこ長の楕円（およそ 2.8 : 1）。
-     ★★しっぽは三角形ではなく「小さな楕円を左下に傾けて置く」。
-       三角形だと とげのように見えて、チラシの丸いしっぽと形が違う。
-       本体と同じ白なので、重ねてもつなぎ目は出ない。 */
-  .gp-bub{position:relative;background:#fff;border-radius:50%;
-          padding:9px clamp(16px,4.8vw,28px) 10px;text-align:center;flex:0 0 auto;
-          max-width:80%;margin:2px 2px 0 auto;}
-  .gp-bub::after{content:'';position:absolute;left:-7%;bottom:-4%;
-          width:23%;height:44%;background:#fff;
-          border-radius:58% 42% 46% 54% / 44% 56% 44% 56%;
-          transform:rotate(26deg);}
-  /* ★しっぽは字より後ろに描かれるので、字のほうを前に出す。
-     書かないと「326」の左はしがしっぽに隠れる。 */
+  /* ══ 吹き出し（チラシと同じ形）══
+     ★★チラシの吹き出しは **白い楕円に青いフチ**、そして左下に丸いしっぽ。
+       さらに **枠の上のふちをまたいで** 置かれている（上半分は紙、下半分は青の上）。
+       だから青いフチが見える。枠の中に収めてしまうと、青の上に青のフチで見えない。
+     ★★形は SVG のひと続きの線で描いている。
+       前は「楕円＋小さな楕円」を重ねていたが、フチを付けると重なりの線が出る。
+       ひと続きの形なら、フチもきれいに1本になる。
+     ★大きさの比は チラシ実測（楕円の部分がおよそ 2.8 : 1）。 */
+  .gp-bub{position:relative;flex:0 0 auto;
+          width:clamp(162px,48vw,232px);aspect-ratio:210 / 86;
+          display:flex;flex-direction:column;align-items:center;justify-content:center;
+          padding-left:5%;margin:2px 2px 0 auto;}
+  .gp-bub svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .gp-bub svg path{fill:#fff;stroke:var(--blue);stroke-width:3;stroke-linejoin:round;}
+  /* ★SVGは字より後に描かれるので、字のほうを前に出す。
+     書かないと吹き出しの中の字がSVGの下に隠れる。 */
   .gp-bub i,.gp-bub b{position:relative;z-index:1;}
+  /* ★★色は必ず書くこと。書かないと枠の白い字を受けついで、
+     白い吹き出しに白い字＝見えなくなる。 */
   .gp-bub i{display:block;font-style:normal;color:var(--ink);font-weight:900;
           font-size:clamp(10px,3vw,13px);letter-spacing:.02em;line-height:1.2;}
   .gp-bub b{display:block;color:var(--blue);font-weight:900;line-height:1.05;
           font-size:clamp(17px,5.4vw,26px);letter-spacing:.01em;margin-top:1px;}
   .gp-bub b em{font-style:normal;font-size:.58em;letter-spacing:.02em;margin-left:.15em;}
+  /* ★560px以上では見出しと横ならびになり、上に空きができる。
+     そこではチラシと同じく、枠の上のふちをまたがせる（青いフチが見える）。
+     ★スマホでは見出しの下に置くので、またがせない（見出しと重なるため）。 */
+  @media(min-width:560px){ .gp-bub{margin-top:-2.4em;} }
   /* 絵と ito を横ならび */
   .gp-figs{display:flex;flex-wrap:wrap;align-items:flex-end;
           gap:6px clamp(10px,3.4vw,18px);margin-top:10px;}
@@ -1843,8 +1857,12 @@ const FQ = {
          そこだけぽっかり空いて見える。
          **背の違う2つを横に並べるときは、低いほうをまん中ぞろえにする。** */
     .gp-body{display:flex;align-items:stretch;gap:24px;}
-    .gp-figs{flex:0 1 auto;max-width:46%;align-content:flex-start;}
+    /* ★名前の行があると列が広がって、絵と本文の間が空きすぎる（実測114px）。
+       名前を折り返させてでも列をせばめ、絵を本文側へ寄せる。 */
+    .gp-figs{flex:0 1 auto;max-width:min(46%,250px);align-content:flex-start;}
     .gp-text{flex:1;min-width:0;margin:0;align-self:center;}
+    /* ★列をせばめたぶん、名前が2行に折れる。広い画面だけ少し小さくして1行に収める */
+    .gp-name h3{font-size:17.5px;}
   }
   /* ══ fq-326move-v2 : 白い枠は固定、326さんの首から上だけが動く ══
      ★動かすのは絵だけ。**白い枠（.ph）は動かさない。**
@@ -2054,6 +2072,25 @@ const FQ = {
         padding:8px 14px;font-size:13.5px;font-weight:900;}
 
   /* ══════════ フード ══════════ */
+  /* ══════════ fq-gacha-v1 : チラシと同じガチャの告知 ══════════
+     ★「ガチャ」の飾り文字とガチャガチャの絵は、チラシから切り出した絵。
+       文字を絵にしているのは、あの色とりどりの形がWebの書体では出せないため。
+     ★チラシにあるお城の写真は載せていない。紙とウェブで権利の扱いが別のため。
+       景品は文字だけで、チラシと同じリボン風に出している。 */
+  .gacha{background:var(--yellow-l);border:3px solid var(--ink);border-radius:20px;
+         box-shadow:5px 6px 0 var(--ink);padding:16px 14px 18px;}
+  .gc-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+        gap:2px 8px;font-size:clamp(16px,4.6vw,22px);font-weight:900;line-height:1.3;}
+  .gc-w{width:clamp(80px,24vw,124px);height:auto;display:block;}
+  .gc-b{display:flex;align-items:center;gap:clamp(10px,3vw,18px);margin-top:12px;}
+  .gc-m{width:clamp(54px,16vw,88px);height:auto;flex:0 0 auto;display:block;}
+  .gc-tx{min-width:0;font-size:13.5px;font-weight:700;line-height:1.85;}
+  .gc-pz{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:10px;}
+  .gc-pz b{background:var(--orange);color:#fff;border-radius:999px;
+           padding:3px 12px;font-size:12.5px;font-weight:900;}
+  .gc-pz span{border:2px dashed var(--orange);color:#a8420a;border-radius:8px;
+              padding:3px 10px;font-size:12.5px;font-weight:900;background:#fff;}
+
   .foods{display:flex;flex-wrap:wrap;gap:8px;}
   .foods span{background:#fff;border:2px dashed var(--orange);border-radius:10px;
               padding:7px 13px;font-size:13px;font-weight:800;color:#a8420a;}
@@ -2346,17 +2383,16 @@ const FQ = {
 <!-- ══ みどころ ══ -->
 <div class="pane" id="pane-see">
 <section class="wrap">
-  <div class="sec-h"><h2 class="h-blue">DISCOVER</h2><span class="sub">– 知る・出会う・相談する・つながる –</span>
-    <span class="where w-blue">3F・4F フロア</span></div>
+  <div class="sec-h"><h2 class="h-blue">DISCOVER</h2><span class="sub">– 出会う・知る・体験する・相談する –</span>
+    <span class="where w-blue">1F・3F・4F フロア</span></div>
   <div class="sec-t" id="discoverText"></div>
   <div class="fband" id="fband"></div>
 </section>
 
+<!-- ★fq-gacha-v1: チラシと同じガチャの告知。FOOD の節はチラシに無いのでやめました
+     （キッチンカーは みどころの「出会う・味わう」の丸に入っています）。 -->
 <section class="wrap">
-  <div class="sec-h"><h2 class="h-orange">FOOD</h2><span class="sub">– 食べる・楽しむ –</span>
-    <span class="where w-orange">駐車場・1F・3F</span></div>
-  <div class="sec-t" id="foodText"></div>
-  <div class="foods" id="foods"></div>
+  <div class="gacha" id="gacha"></div>
 </section>
 </div><!-- /pane-see -->
 
@@ -2873,10 +2909,17 @@ const FQ = {
          上に「見出し＋吹き出し」、下に「名札つきの絵」と「ito」、その下に本文。
        ★吹き出しの中身は FQ.guest.bubble（2行）。 */
     const bub = g.bubble || [];
+    /* ★吹き出しの形。ひと続きの線なので、フチが1本できれいに出る。
+       左下の出っぱりがしっぽ。 */
+    const BUBSVG =
+      '<svg viewBox="0 0 210 86" aria-hidden="true" focusable="false"><path d="'
+      + 'M112 6 C164 6 206 21 206 40 C206 59 164 74 112 74 '
+      + 'C84 74 59 70 40 62 C30 70 18 78 4 84 C10 72 15 56 18 43 '
+      + 'C18 42 18 41 18 40 C18 21 60 6 112 6 Z"/></svg>';
     $('#guest').innerHTML =
         '<div class="gp-in">'
       +   '<div class="gp-top"><span class="gp-h">SPECIAL GUEST</span>'
-      +     (bub.length ? '<div class="gp-bub"><i>'+esc(bub[0])+'</i>'
+      +     (bub.length ? '<div class="gp-bub">' + BUBSVG + '<i>'+esc(bub[0])+'</i>'
       +       '<b>'+esc(bub[1])+'<em>'+esc(bub[2]||'')+'</em></b></div>' : '')
       +   '</div>'
       +   '<div class="gp-body"><div class="gp-figs">'
@@ -2909,9 +2952,20 @@ const FQ = {
       + '<b class="b2">' + esc(g.items[1].n) + '</b></div>';
   }).join('');
   /* ── FOOD ── */
-  $('#foodText').textContent = FQ.food.text;
-  $('#foods').innerHTML = FQ.food.items.map(x => '<span>'+esc(x)+'</span>').join('')
-    + '<span style="border-style:solid;background:var(--orange);color:#fff;border-color:var(--orange)">'+esc(FQ.food.note)+'</span>';
+  /* ── ガチャの告知（fq-gacha-v1）── */
+  (function(){
+    const g = FQ.gacha; if (!g) return;
+    $('#gacha').innerHTML =
+        '<h3 class="gc-h">' + esc(g.head1)
+      +   '<img class="gc-w" src="img/gacha_w.png" alt="ガチャ" decoding="async">'
+      +   esc(g.head2) + '</h3>'
+      + '<div class="gc-b">'
+      +   '<img class="gc-m" src="img/gacha_m.png" alt="" loading="lazy" decoding="async">'
+      +   '<div class="gc-tx"><p>' + esc(g.text).replace(/\n/g,'<br>') + '</p>'
+      +     '<p class="gc-pz"><b>' + esc(g.bubble) + '</b>'
+      +       '<span>' + esc(g.prize) + '</span></p></div>'
+      + '</div>';
+  })();
 
   /* ── 協賛・協力 ── */
   $('#orgs').innerHTML = FQ.sponsors.map(s => {
