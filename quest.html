@@ -437,9 +437,15 @@
        あとに置くと、中身が一瞬ちらっと見えてしまう。 -->
 <script>
 (function(){
-  var OPEN_AT = Date.parse('2026-12-13T00:00:00+09:00');  /* ←★ここを過ぎたら開く */
+  /* ★★fq-opencfg-v1: ここが「みんなに効く」開く日時。**index.html と quest.html の2か所**。
+     関係者用の設定でコピーできる1行は、この行のことです。 */
+  var OPEN_DEF = '2026-12-13T00:00:00+09:00';   /* ←★本番に開く日時（みんなに効く） */
+
   var HOLDKEY = 'fq_open_until';         /* リハーサルの期限。この端末だけが覚えている */
+  var ATKEY   = 'fq_open_at';            /* ★試す用の日時。**この端末だけ**。みんなには効かない */
   var now = Date.now(), hold = 0;
+  var OPEN_AT = Date.parse(OPEN_DEF);
+  try{ var a = parseInt(localStorage.getItem(ATKEY) || '0', 10) || 0; if (a) OPEN_AT = a; }catch(e){}
 
   try{ hold = parseInt(localStorage.getItem(HOLDKEY) || '0', 10) || 0; }catch(e){}
   if (hold && hold <= now){ try{ localStorage.removeItem(HOLDKEY); }catch(e){} hold = 0; }
@@ -473,7 +479,8 @@
   }
 
   /* 関係者用の設定から読む（同じ日時・同じ名前を2度書かないため） */
-  window.FQ_OPEN = { at: OPEN_AT, key: HOLDKEY, hold: hold, soon: SOON };
+  window.FQ_OPEN = { at: OPEN_AT, def: OPEN_DEF, defAt: Date.parse(OPEN_DEF),
+                     key: HOLDKEY, atKey: ATKEY, hold: hold, soon: SOON };   /* ★fq-opencfg-v1 */
 })();
 </script>
 </head>
@@ -672,14 +679,34 @@ window.__FQ_Q0 = location.search;</script>
            全員ぶん一度に開けるには通信が要り、会場にWi-Fiが無いためやめています。
          ★ほかの端末で見たいときは、その端末で ?open=30 を付けて開く。
          ★期限が来ると ひとりでに準備中へ戻ります。押し忘れても事故になりません。 -->
-    <h4>リハーサル（準備中を仮に開ける）</h4>
-    <p class="adm-note">この端末だけ、決めた時間のあいだ本番の画面にします。<b>時間が過ぎると、ひとりでに準備中へ戻ります。</b><br>本番の <b>12/13</b> は、押さなくても日時で自動的に開きます。<br>ほかの端末でも見たいときは、その端末で URL のうしろに <code>?open=30</code>（30分ぶん）を付けて開いてください。閉じるときは <code>?open=0</code> です。</p>
+    <!-- ★★fq-opencfg-v1: 本番に開く日時。
+         ★**押して効くのはこの端末だけ**（会議の場で見せる・試すため）。
+           来場者ぜんぶに効かせるには、下に出る1行をコードに入れて公開し直すこと。
+           日時を各自の端末の中に持たせているのは、会場にWi-Fiが無いから。
+           サーバーに聞く作りだと、電波の届かない人にはいつまでも開かない。 -->
+    <h4>準備中を解除する日時（本番）</h4>
+    <p class="adm-note">この日時を過ぎると、来場者の画面が<b>ひとりでに</b>本番へ切り替わります。通信は使いません。<br>★<b>入れて押しても、効くのはこの端末だけです（試す用）。</b>みんなに効かせるには、下に出る<b>1行</b>をコピーして、<code>index.html</code> と <code>quest.html</code> の<b>2か所とも</b>入れ替えてから公開し直してください。</p>
     <div class="att-row">
-      <button class="btn2" data-act="openHold" data-min="15">15分ひらく</button>
-      <button class="btn2" data-act="openHold" data-min="60">60分ひらく</button>
-      <button class="btn2" data-act="openHold" data-min="0">いま閉じる</button>
+      <label class="att-l">開く日時<input type="datetime-local" id="openAt"></label>
+      <button class="btn2" data-act="openTry">この端末で試す</button>
+      <button class="btn2" data-act="openTryOff">試すのをやめる</button>
     </div>
     <div class="tot-box" id="openState">–</div>
+    <div class="adm-note" style="margin-top:8px;">みんなに効かせる1行（2か所とも）</div>
+    <textarea id="openLine" readonly rows="2" style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.7;border:2px solid var(--line);border-radius:var(--r2);background:#fbf6ea;padding:9px 10px;"></textarea>
+    <button class="btn2" data-act="openCopy" style="margin-top:6px;">この1行をコピー</button>
+
+    <!-- ★★fq-opencfg-v1: リハーサル。好きな分数を入れられるようにした。
+         ★期限が来ると ひとりでに準備中へ戻る。押し忘れても事故にならない。 -->
+    <h4>リハーサル（準備中を仮に開ける）</h4>
+    <p class="adm-note">この端末だけ、決めた時間のあいだ本番の画面にします。<b>時間が過ぎると、ひとりでに準備中へ戻ります。</b><br>ほかの端末でも見たいときは、その端末で URL のうしろに <code>?open=30</code>（30分ぶん）を付けて開いてください。閉じるときは <code>?open=0</code> です。</p>
+    <div class="att-row">
+      <label class="att-l">何分ひらく<input type="number" id="openMin" min="1" max="1440" step="5" value="60"></label>
+      <button class="btn2" data-act="openHold">この時間ひらく</button>
+      <button class="btn2" data-act="openHold" data-min="15">15分</button>
+      <button class="btn2" data-act="openHold" data-min="60">60分</button>
+      <button class="btn2" data-act="openHold" data-min="0">いま閉じる</button>
+    </div>
 
     <h4>景品と当たる確率</h4>
     <p class="adm-note">それぞれの景品の<b>個数</b>と<b>想定来場者数</b>を入れると、ハズレの数と各当選確率が自動で計算されます。数字はあとから自由に微調整できます（レア度＝演出の色：青1／緑2／赤3／虹4）。<br><b>★1人が最大3回引くので、ガチャの総回数は「来場者数×3」です。</b>ハズレの個数はその回数から計算されます。</p>
@@ -1317,16 +1344,31 @@ function adminToggle(){ var el=document.getElementById('adminPanel'); if(el.styl
      そのまま確かめるため。付け外しだけを画面上でやると、そこが試せない。 */
 function fqWhen(t){ var d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
 function renderOpenState(){
-  var el=document.getElementById('openState'); if(!el) return;
+  var el=document.getElementById('openState');
   var F=window.FQ_OPEN||{}, at=F.at||0, k=F.key||'fq_open_until', now=Date.now(), u=0;
+  /* ★fq-opencfg-v1: 入力欄とコピー用の1行も、いまの日時に合わせておく */
+  var f=document.getElementById('openAt');
+  if(f && !f.value) f.value=fqLocalVal(at);
+  renderOpenLine(at);
+  if(!el) return;
   try{ u=parseInt(localStorage.getItem(k)||'0',10)||0; }catch(e){}
-  if(now>=at){ el.textContent='いまは本番です（'+fqWhen(at)+' を過ぎています）'; return; }
+  /* ★この端末だけ日時を上書きしているときは、そうと分かるように書く */
+  var tryOn = (at !== (F.defAt||at));
+  var note = tryOn ? '（★この端末だけ の日時です。みんなには効いていません）' : '';
+  if(now>=at){ el.textContent='いまは本番です（'+fqWhen(at)+' を過ぎています）'+note; return; }
   el.textContent = (u && now<u)
     ? 'いま ひらいています。あと '+Math.ceil((u-now)/60000)+'分で 準備中へ戻ります'
-    : 'いまは 準備中です。'+fqWhen(at)+' になると、ひとりでに開きます';
+    : 'いまは 準備中です。'+fqWhen(at)+' になると、ひとりでに開きます'+note;
 }
 function openHold(min){
   var F=window.FQ_OPEN||{}, k=F.key||'fq_open_until';
+  /* ★fq-opencfg-v1: data-min が無いボタンは、入力欄の分数を使う */
+  if(min===null){
+    var f=document.getElementById('openMin');
+    min=parseInt(f&&f.value,10);
+    if(!(min>0)){ toast('何分ひらくか入れてください'); return; }
+    if(min>1440) min=1440;
+  }
   try{
     if(min>0) localStorage.setItem(k, String(Date.now()+min*60000));
     else       localStorage.removeItem(k);
@@ -1335,12 +1377,59 @@ function openHold(min){
   toast(min>0 ? ('✅ '+min+'分ひらきます') : '準備中に戻します');
   setTimeout(function(){ location.reload(); }, 900);
 }
+/* == fq-opencfg-v1 : 本番に開く日時 ==
+   ★入力欄 → その端末だけの上書き（localStorage の fq_open_at）。試す用。
+   ★同じ画面に「コードに入れる1行」を出す。**みんなに効かせるのはこちら**。
+     日時は各自の端末の中に持たせている（会場にWi-Fiが無いため）ので、
+     サーバーに保存して全員に配る、という形にはできない。 */
+function fqLocalVal(t){                      /* datetime-local の欄に入れる形 */
+  var d=new Date(t), p=function(n){return ('0'+n).slice(-2);};
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());
+}
+function fqOffset(d){                        /* +09:00 のような時差の文字 */
+  var m=-d.getTimezoneOffset(), s=(m<0?'-':'+'), a=Math.abs(m), p=function(n){return ('0'+n).slice(-2);};
+  return s+p(Math.floor(a/60))+':'+p(a%60);
+}
+function fqIso(t){ var d=new Date(t); return fqLocalVal(t)+':00'+fqOffset(d); }
+function renderOpenLine(t){
+  var el=document.getElementById('openLine'); if(!el) return;
+  el.value = "  var OPEN_DEF = '"+fqIso(t)+"';   /* ←★本番に開く日時（みんなに効く） */";
+}
+function openTry(){
+  var f=document.getElementById('openAt'); if(!f||!f.value){ toast('日時を入れてください'); return; }
+  var t=Date.parse(f.value); if(isNaN(t)){ toast('日時が読めません'); return; }
+  var F=window.FQ_OPEN||{}, k=F.atKey||'fq_open_at';
+  try{ localStorage.setItem(k, String(t)); }catch(e){ toast('この端末では覚えられません'); return; }
+  renderOpenLine(t); toast('✅ この端末だけ その日時にしました');
+  setTimeout(function(){ location.reload(); }, 900);
+}
+function openTryOff(){
+  var F=window.FQ_OPEN||{}, k=F.atKey||'fq_open_at';
+  try{ localStorage.removeItem(k); }catch(e){}
+  toast('コードの日時に戻します');
+  setTimeout(function(){ location.reload(); }, 900);
+}
+function openCopy(){
+  var el=document.getElementById('openLine'); if(!el) return;
+  var done=function(){ toast('✅ コピーしました'); };
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(el.value).then(done, function(){ el.select(); toast('長押しでコピーしてください'); });
+      return;
+    }
+  }catch(e){}
+  try{ el.select(); document.execCommand('copy'); done(); }
+  catch(e){ toast('長押しでコピーしてください'); }
+}
 function prizeAdd(){ readAdminForm(); CFG.prizes.push({em:'🎁',name:'',kind:'',r:1,count:0}); renderAdmin(); }
 function prizeDel(i){ readAdminForm(); CFG.prizes.splice(i,1); renderAdmin(); }
 function cfgSave(){ readAdminForm(); CFG.prizes=CFG.prizes.filter(function(p){return (p.name||'').length||(p.em||'').length;}).map(function(p){return {kind:p.kind||'賞',name:p.name||'景品',em:p.em||'🎁',r:p.r||1,count:p.count||0};}); if(!CFG.prizes.length) CFG.prizes=defCfg().prizes; saveCfg(); renderAdmin(); render(); toast('✅ 設定を保存しました'); }
 function cfgReset(){ if(!confirm('景品・個数・確率を初期設定に戻しますか？'))return; CFG=defCfg(); saveCfg(); renderAdmin(); render(); toast('初期設定に戻しました'); }
 var pendingConfirm=null;
-document.addEventListener('input', function(ev){ var t=ev.target; if(!t) return; if(t.id==='playerName'){ S.name=t.value; save(); return; } if((t.getAttribute&&t.getAttribute('data-fld')==='count')||t.id==='loseCount'||t.id==='attendees') recalcProbs(); });
+document.addEventListener('input', function(ev){ var t=ev.target; if(!t) return; if(t.id==='playerName'){ S.name=t.value; save(); return; } /* ★fq-opencfg-v1: 日時を打ち直したら、コピー用の1行もその場で合わせる。
+     ★合わせないと、打ち直したのに古い日時をコピーしてしまう。 */
+  if(t.id==='openAt'){ var tt=Date.parse(t.value); if(!isNaN(tt)) renderOpenLine(tt); return; }
+  if((t.getAttribute&&t.getAttribute('data-fld')==='count')||t.id==='loseCount'||t.id==='attendees') recalcProbs(); });
 document.addEventListener('click', function(ev){
   var el=ev.target.closest('[data-act]'); if(!el) return;
   var act=el.getAttribute('data-act');
@@ -1351,7 +1440,11 @@ document.addEventListener('click', function(ev){
   else if(act==='prizeDel'){ prizeDel(parseInt(el.getAttribute('data-idx'),10)); }
   else if(act==='cfgSave'){ cfgSave(); }
   else if(act==='cfgReset'){ cfgReset(); }
-  else if(act==='openHold'){ openHold(parseInt(el.getAttribute('data-min'),10)||0); }   /* ★fq-openat-v1 */
+  else if(act==='openHold'){ var dm=el.getAttribute('data-min');
+    openHold(dm===null ? null : (parseInt(dm,10)||0)); }                 /* ★fq-openat-v1 */
+  else if(act==='openTry'){ openTry(); }                                 /* ★fq-opencfg-v1 */
+  else if(act==='openTryOff'){ openTryOff(); }
+  else if(act==='openCopy'){ openCopy(); }
   else if(act==='gacha'){ drawGacha(); }
   else if(act==='scan'){ scan(el.getAttribute('data-code')); }
   else if(act==='reset'){ resetAll(); }

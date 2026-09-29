@@ -2365,9 +2365,15 @@ const FQ = {
        あとに置くと、中身が一瞬ちらっと見えてしまう。 -->
 <script>
 (function(){
-  var OPEN_AT = Date.parse('2026-12-13T00:00:00+09:00');  /* ←★ここを過ぎたら開く */
+  /* ★★fq-opencfg-v1: ここが「みんなに効く」開く日時。**index.html と quest.html の2か所**。
+     関係者用の設定でコピーできる1行は、この行のことです。 */
+  var OPEN_DEF = '2026-12-13T00:00:00+09:00';   /* ←★本番に開く日時（みんなに効く） */
+
   var HOLDKEY = 'fq_open_until';         /* リハーサルの期限。この端末だけが覚えている */
+  var ATKEY   = 'fq_open_at';            /* ★試す用の日時。**この端末だけ**。みんなには効かない */
   var now = Date.now(), hold = 0;
+  var OPEN_AT = Date.parse(OPEN_DEF);
+  try{ var a = parseInt(localStorage.getItem(ATKEY) || '0', 10) || 0; if (a) OPEN_AT = a; }catch(e){}
 
   try{ hold = parseInt(localStorage.getItem(HOLDKEY) || '0', 10) || 0; }catch(e){}
   if (hold && hold <= now){ try{ localStorage.removeItem(HOLDKEY); }catch(e){} hold = 0; }
@@ -2401,7 +2407,8 @@ const FQ = {
   }
 
   /* 関係者用の設定から読む（同じ日時・同じ名前を2度書かないため） */
-  window.FQ_OPEN = { at: OPEN_AT, key: HOLDKEY, hold: hold, soon: SOON };
+  window.FQ_OPEN = { at: OPEN_AT, def: OPEN_DEF, defAt: Date.parse(OPEN_DEF),
+                     key: HOLDKEY, atKey: ATKEY, hold: hold, soon: SOON };   /* ★fq-opencfg-v1 */
 })();
 </script>
 </head>
