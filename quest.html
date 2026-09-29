@@ -2212,7 +2212,8 @@ if ('serviceWorker' in navigator) {
        **JSが動かない端末でも必ず飛べる**。 -->
 <nav class="tabbar" id="tabbar" role="tablist" aria-label="ページの切りかえ">
   <a href="index.html"        ><span class="ic">🏠</span>ホーム</a>
-  <a href="index.html#event"  ><span class="ic">🎪</span>イベント</a><!-- fq-onepane-v1: ステージ＋みどころ。index.html の .tabbar と同じにすること -->
+  <!-- ★fq-onehome-v1: 「イベント」のタブはやめました（中身はホームに入っています）。
+       ★★下のタブバーは index.html と 2つで 1組。必ず両方同じにすること。 -->
   <button type="button" role="tab" data-tab="quest"   aria-selected="true"><span class="ic">📜</span>クエスト</button>
   <button type="button" role="tab" data-tab="shindan" aria-selected="false"><span class="ic">🔮</span>診断</button>
   <button type="button" role="tab" data-tab="zukan"   aria-selected="false"><span class="ic">📖</span>図鑑</button>
