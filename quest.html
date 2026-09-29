@@ -420,22 +420,60 @@
   }
 </style>
 
-<!-- == fq-soon-v1 : 準備中（工事中）のスイッチ ==
-     ★★当日は下の true を **false** にするだけ。中身は消していません。
-       index.html と quest.html の 2か所とも false にすること。
-     ★?dev=1 を付けて開くと、true のままでも中身が見られます（動作確認用）。
-       ?soon=1 を付けると、逆に準備中の画面を見られます。
+<!-- == fq-soon-v1 / fq-openat-v1 : 準備中（工事中）のスイッチ ==
+     ★★開けかたは3つ。**通信は一切しません。**
+       会場にWi-Fiが無く、当日は1500人が各自の回線です。「サーバーに聞いてから開ける」
+       作りにすると、電波が届かない人には開きません。だから端末の中だけで決めています。
+
+       ① 日時       下の OPEN_AT を過ぎたら、ひとりでに開く（これが本命）
+       ② リハーサル  この端末が覚えている期限。期限が来ると自動で準備中へ戻る
+                     関係者用の設定のボタン、または URL に ?open=30（分）／?open=0 で解除
+       ③ URL        ?soon=0 で開く／?soon=1 で準備中／?dev=1 でも開く（自分だけ）
+
+     ★★OPEN_AT は index.html と quest.html の **2か所とも同じ日時**にすること。
+       いまは「12/13 になった瞬間」。開場は10:00だが、朝の準備と早く着いた方のぶん。
+     ★どうしても今すぐ開けたいときは、OPEN_AT を過去の日時にすれば開きます。
      ★ここは <head> の中（絵を描く前）に置くこと。
        あとに置くと、中身が一瞬ちらっと見えてしまう。 -->
 <script>
 (function(){
-  var SOON = true;                        /* ←★当日ここを false に */
+  var OPEN_AT = Date.parse('2026-12-13T00:00:00+09:00');  /* ←★ここを過ぎたら開く */
+  var HOLDKEY = 'fq_open_until';         /* リハーサルの期限。この端末だけが覚えている */
+  var now = Date.now(), hold = 0;
+
+  try{ hold = parseInt(localStorage.getItem(HOLDKEY) || '0', 10) || 0; }catch(e){}
+  if (hold && hold <= now){ try{ localStorage.removeItem(HOLDKEY); }catch(e){} hold = 0; }
+
+  /* ?open=30 … 30分だけ開ける／?open=0 … いま閉じる。ほかの端末で試すとき用 */
+  try{
+    var o = /[?&]open=(\d{1,4})/.exec(location.search);
+    if (o){
+      var mm = parseInt(o[1], 10) || 0;
+      if (mm > 0){ hold = now + mm * 60000; localStorage.setItem(HOLDKEY, String(hold)); }
+      else { hold = 0; localStorage.removeItem(HOLDKEY); }
+    }
+  }catch(e){}
+
+  var SOON = !(now >= OPEN_AT || hold);          /* 日時 か リハーサル で開く */
   try{
     var m = /[?&]soon=([01])/.exec(location.search);
     if (m)                                  SOON = (m[1] === '1');
     else if (/[?&]dev=1/.test(location.search)) SOON = false;
   }catch(e){}
   if (SOON) document.documentElement.className += ' soon-on';
+
+  /* ★★期限が来たら、開きっぱなしのタブでも その場で準備中へ戻す。
+     「終わったら自動で戻る」のを、画面を見ながら確かめられるようにするため。 */
+  if (!SOON && hold && now < OPEN_AT && !/[?&](soon=0|dev=1)/.test(location.search)){
+    setTimeout(function(){
+      try{ localStorage.removeItem(HOLDKEY); }catch(e){}
+      document.documentElement.className += ' soon-on';
+      try{ window.scrollTo(0, 0); }catch(e){}
+    }, Math.max(0, hold - Date.now()) + 400);
+  }
+
+  /* 関係者用の設定から読む（同じ日時・同じ名前を2度書かないため） */
+  window.FQ_OPEN = { at: OPEN_AT, key: HOLDKEY, hold: hold, soon: SOON };
 })();
 </script>
 </head>
@@ -628,6 +666,21 @@ window.__FQ_Q0 = location.search;</script>
   <section id="adminPanel" class="admin" style="display:none">
     <div class="sec-h hand"><span class="em">⚙️</span>主催者用の設定</div>
     <div class="adm-note">この設定はこの端末に保存されます。参加者には表示されません（この画面は下のボタンで閉じられます）。</div>
+
+    <!-- ★★fq-openat-v1: リハーサル用の仮ひらき。
+         ★**この端末だけ**が開きます。ほかの人の端末は開きません。
+           全員ぶん一度に開けるには通信が要り、会場にWi-Fiが無いためやめています。
+         ★ほかの端末で見たいときは、その端末で ?open=30 を付けて開く。
+         ★期限が来ると ひとりでに準備中へ戻ります。押し忘れても事故になりません。 -->
+    <h4>リハーサル（準備中を仮に開ける）</h4>
+    <p class="adm-note">この端末だけ、決めた時間のあいだ本番の画面にします。<b>時間が過ぎると、ひとりでに準備中へ戻ります。</b><br>本番の <b>12/13</b> は、押さなくても日時で自動的に開きます。<br>ほかの端末でも見たいときは、その端末で URL のうしろに <code>?open=30</code>（30分ぶん）を付けて開いてください。閉じるときは <code>?open=0</code> です。</p>
+    <div class="att-row">
+      <button class="btn2" data-act="openHold" data-min="15">15分ひらく</button>
+      <button class="btn2" data-act="openHold" data-min="60">60分ひらく</button>
+      <button class="btn2" data-act="openHold" data-min="0">いま閉じる</button>
+    </div>
+    <div class="tot-box" id="openState">–</div>
+
     <h4>景品と当たる確率</h4>
     <p class="adm-note">それぞれの景品の<b>個数</b>と<b>想定来場者数</b>を入れると、ハズレの数と各当選確率が自動で計算されます。数字はあとから自由に微調整できます（レア度＝演出の色：青1／緑2／赤3／虹4）。<br><b>★1人が最大3回引くので、ガチャの総回数は「来場者数×3」です。</b>ハズレの個数はその回数から計算されます。</p>
     <div class="att-row">
@@ -1255,7 +1308,33 @@ function readAdminForm(){
   });
   CFG.prizes=arr;
 }
-function adminToggle(){ var el=document.getElementById('adminPanel'); if(el.style.display==='none'||!el.style.display){ el.style.display='block'; renderAdmin(); el.scrollIntoView({behavior:'smooth',block:'start'}); } else { el.style.display='none'; } }
+function adminToggle(){ var el=document.getElementById('adminPanel'); if(el.style.display==='none'||!el.style.display){ el.style.display='block'; renderAdmin(); renderOpenState(); el.scrollIntoView({behavior:'smooth',block:'start'}); } else { el.style.display='none'; } }
+/* == fq-openat-v1 : リハーサル（準備中を仮に開ける） ==
+   ★期限だけを端末に置く。開いているかどうかは <head> が読み込みのたびに決める。
+     状態を2か所で持たないので、食い違いが起きない。
+   ★min=0 は「いま閉じる」。
+   ★押したあと読み込み直すのは、**本番と同じ道すじ**（最初の一瞬も含めて）を
+     そのまま確かめるため。付け外しだけを画面上でやると、そこが試せない。 */
+function fqWhen(t){ var d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+function renderOpenState(){
+  var el=document.getElementById('openState'); if(!el) return;
+  var F=window.FQ_OPEN||{}, at=F.at||0, k=F.key||'fq_open_until', now=Date.now(), u=0;
+  try{ u=parseInt(localStorage.getItem(k)||'0',10)||0; }catch(e){}
+  if(now>=at){ el.textContent='いまは本番です（'+fqWhen(at)+' を過ぎています）'; return; }
+  el.textContent = (u && now<u)
+    ? 'いま ひらいています。あと '+Math.ceil((u-now)/60000)+'分で 準備中へ戻ります'
+    : 'いまは 準備中です。'+fqWhen(at)+' になると、ひとりでに開きます';
+}
+function openHold(min){
+  var F=window.FQ_OPEN||{}, k=F.key||'fq_open_until';
+  try{
+    if(min>0) localStorage.setItem(k, String(Date.now()+min*60000));
+    else       localStorage.removeItem(k);
+  }catch(e){ toast('この端末では覚えられません'); return; }
+  renderOpenState();
+  toast(min>0 ? ('✅ '+min+'分ひらきます') : '準備中に戻します');
+  setTimeout(function(){ location.reload(); }, 900);
+}
 function prizeAdd(){ readAdminForm(); CFG.prizes.push({em:'🎁',name:'',kind:'',r:1,count:0}); renderAdmin(); }
 function prizeDel(i){ readAdminForm(); CFG.prizes.splice(i,1); renderAdmin(); }
 function cfgSave(){ readAdminForm(); CFG.prizes=CFG.prizes.filter(function(p){return (p.name||'').length||(p.em||'').length;}).map(function(p){return {kind:p.kind||'賞',name:p.name||'景品',em:p.em||'🎁',r:p.r||1,count:p.count||0};}); if(!CFG.prizes.length) CFG.prizes=defCfg().prizes; saveCfg(); renderAdmin(); render(); toast('✅ 設定を保存しました'); }
@@ -1272,6 +1351,7 @@ document.addEventListener('click', function(ev){
   else if(act==='prizeDel'){ prizeDel(parseInt(el.getAttribute('data-idx'),10)); }
   else if(act==='cfgSave'){ cfgSave(); }
   else if(act==='cfgReset'){ cfgReset(); }
+  else if(act==='openHold'){ openHold(parseInt(el.getAttribute('data-min'),10)||0); }   /* ★fq-openat-v1 */
   else if(act==='gacha'){ drawGacha(); }
   else if(act==='scan'){ scan(el.getAttribute('data-code')); }
   else if(act==='reset'){ resetAll(); }
@@ -1320,7 +1400,8 @@ document.addEventListener('click', function(ev){
       why:'地道に巣を作り上げる確かな技術や、物事を深く見つめて本質を探求する知性、一歩引いたところから冷静に状況を分析する職人気質にぴったりです。',
       work:'体の動きを見立てたり、記録から根拠を組み立てる仕事。機能訓練指導員やリハビリ職、専門職の道。',
       ask:'「その人に合わせて、どこを見て決めていますか？」'},
-    challenger:{no:'⑤',name:'イケイケモンスター',role:'チャレンジャー型',em:'⚡',
+    /* ★fq-chal-v1: 呼び名は「チャレンジ型」。モンスター名と数秘の割り当て（5→⑤）は変えていない。 */
+    challenger:{no:'⑤',name:'イケイケモンスター',role:'チャレンジ型',em:'⚡',
       cat:'動きながら考える人',
       chips:['変化','冒険','突破力'],
       why:'風のように素早く環境の変化に適応し、未知の世界へ迷わず飛び出していく、圧倒的なスピード感と行動力のエネルギッシュさを体現しています。',
