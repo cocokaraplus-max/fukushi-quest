@@ -2140,14 +2140,26 @@ const FQ = {
   .gc-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
         gap:2px 8px;font-size:clamp(16px,4.6vw,22px);font-weight:900;line-height:1.3;}
   .gc-w{width:clamp(80px,24vw,124px);height:auto;display:block;}
-  .gc-b{display:flex;align-items:center;gap:clamp(10px,3vw,18px);margin-top:12px;}
+  .gc-b{display:flex;flex-wrap:wrap;align-items:center;gap:clamp(10px,3vw,18px);margin-top:12px;}
   .gc-m{width:clamp(54px,16vw,88px);height:auto;flex:0 0 auto;display:block;}
-  .gc-tx{min-width:0;font-size:13.5px;font-weight:700;line-height:1.85;}
-  .gc-pz{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:10px;}
-  .gc-pz b{background:var(--orange);color:#fff;border-radius:999px;
+  .gc-tx{flex:1 1 170px;min-width:0;font-size:13.5px;font-weight:700;line-height:1.85;}
+  /* ★★fq-prize-v1: 景品の列（帯 → 絵 → 景品名）。
+     ★絵は **飾り** です。実物のチケットの写真ではありません。
+       alt もそう書いてあります（読み上げでも「絵」と分かるように）。
+     ★スマホでは本文の下に1列で、620px以上では本文の右にならびます。
+       3つ横ならびはスマホだと本文がつぶれるため。 */
+  .gc-pr{flex:1 0 100%;text-align:center;}
+  @media(min-width:620px){ .gc-pr{flex:0 0 auto;width:min(34%,220px);}
+                           .gc-pr picture{max-width:none;} }
+  .gc-pr b{display:inline-block;background:var(--orange);color:#fff;border-radius:999px;
            padding:3px 12px;font-size:12.5px;font-weight:900;}
-  .gc-pz span{border:2px dashed var(--orange);color:#a8420a;border-radius:8px;
-              padding:3px 10px;font-size:12.5px;font-weight:900;background:#fff;}
+  /* ★スマホでは本文の下に1列になるので、絵が枠いっぱいに広がって主役に見えてしまう。
+     幅に上限をつけて、まん中に置く。620px以上では上限を外す（列が細いため）。 */
+  .gc-pr picture{display:block;margin:7px auto 6px;max-width:min(80%,270px);}
+  .gc-pr img{width:100%;height:auto;display:block;border:3px solid var(--ink);
+             border-radius:14px;box-shadow:4px 5px 0 var(--ink);}
+  .gc-pr span{display:inline-block;border:2px dashed var(--orange);color:#a8420a;
+              border-radius:8px;padding:3px 10px;font-size:12.5px;font-weight:900;background:#fff;}
 
   .foods{display:flex;flex-wrap:wrap;gap:8px;}
   .foods span{background:#fff;border:2px dashed var(--orange);border-radius:10px;
@@ -3031,9 +3043,12 @@ const FQ = {
       +   esc(g.head2) + '</h3>'
       + '<div class="gc-b">'
       +   '<img class="gc-m" src="img/gacha_m.png" alt="" loading="lazy" decoding="async">'
-      +   '<div class="gc-tx"><p>' + esc(g.text).replace(/\n/g,'<br>') + '</p>'
-      +     '<p class="gc-pz"><b>' + esc(g.bubble) + '</b>'
-      +       '<span>' + esc(g.prize) + '</span></p></div>'
+      +   '<div class="gc-tx"><p>' + esc(g.text).replace(/\n/g,'<br>') + '</p></div>'
+      +   '<div class="gc-pr"><b>' + esc(g.bubble) + '</b>'
+      +     '<picture><source srcset="img/prize.webp" type="image/webp">'
+      +       '<img src="img/prize.jpg" alt="金色のペアチケットとリボンのかかった箱の絵" '
+      +       'width="560" height="338" loading="lazy" decoding="async"></picture>'
+      +     '<span>' + esc(g.prize) + '</span></div>'
       + '</div>';
   })();
 
