@@ -251,7 +251,9 @@ const FQ = {
      長いままでも開きますが、短いほうが安全で見やすいです。 */
   stage: [
     { time:'10:30〜11:10', name:'豊田大谷高校ダンス部', note:'ダンス',
-      insta:'https://www.instagram.com/toyotaotani_dance/', photo:'img/otani_dance.jpg' },
+      insta:'https://www.instagram.com/toyotaotani_dance/', photo:'img/otani_dance2.jpg' },
+      /* ★fq-square-v1: 新しい集合写真に差し替え。前のは img/otani_dance.jpg として残してあります。
+         ★45人の集合写真なので、正方形に切ると顔が見えなくなる。カードの枠（.act .ph）は 4:3 のまま。 */
     { time:'12:00〜12:45', name:'ウォルターズ',         note:'ライブ',
       insta:'https://www.instagram.com/walters0830/',      photo:'img/walters.jpg', pos:'center top' },
     { time:'13:30〜14:30', name:'かすこんねぅ',         note:'ライブ',
@@ -307,18 +309,21 @@ const FQ = {
   /* ── DISCOVER（3F・4F フロア） ── */
   discover: {
     text: '地域の魅力や福祉の仕事にふれる、たくさんのブースが大集合！\n新しい発見や、人とのつながりを見つけよう！',
-    /* ★チラシの「丸が重なった絵」。4つのまとまり × 2つずつ。
-       cat … 丸の中の2行  ／ items … 写真と、その上にのせる名前
-       ★写真は img/dc_◯◯.jpg（と同じ名前の .webp）。 */
+    /* ★★fq-square-v1: 4つのまとまり × 2つずつ。
+       cat … まとまりの見出し（2語）  ／ items … 写真と名前
+       ★写真は img/sq_◯◯.jpg（と同じ名前の .webp）。**正方形**。
+         前はチラシから切り出した dc_◯◯ を丸で出していた。
+         本物の写真をもらったので、四角のカードに置きかえた。
+       ★写真を差し替えるときは、**別の名前**で置くこと（CACHE を上げずに済む）。 */
     flyer: [
       { cat:['体験','交流'],   c:'or',
-        items:[{n:'車イス体験', p:'dc_wheel'},  {n:'eスポーツ',    p:'dc_esports'}] },
+        items:[{n:'車イス体験', p:'sq_wheel'},  {n:'eスポーツ',    p:'sq_esports'}] },
       { cat:['相談','知る'],   c:'gr',
-        items:[{n:'仕事相談',   p:'dc_soudan'}, {n:'トークショー', p:'dc_talk'}] },
+        items:[{n:'仕事相談',   p:'sq_soudan'}, {n:'トークショー', p:'sq_talk'}] },
       { cat:['つくる','楽しむ'], c:'bl',
-        items:[{n:'ワークショップ', p:'dc_work'}, {n:'ボッチャ体験', p:'dc_boccia'}] },
+        items:[{n:'ワークショップ', p:'sq_work'}, {n:'ボッチャ体験', p:'sq_boccia'}] },
       { cat:['出会う','味わう'], c:'pk',
-        items:[{n:'マルシェ',   p:'dc_marche'}, {n:'キッチンカー', p:'dc_kitchen'}] },
+        items:[{n:'マルシェ',   p:'sq_marche'}, {n:'キッチンカー', p:'sq_kitchen'}] },
     ],
     /* ★ここには前まで「出展事業所（一例）」「相談・体験コーナー」の
        四角いチップが並んでいました。チラシの丸に置きかえたので外しています。
@@ -335,7 +340,7 @@ const FQ = {
     head2: 'をまわそう！',
     text:  '会場のQRコードを読み取ってポイントを集めると、ガチャが引けます！\n人と出会うほど、いいことがあるかも。',
     bubble: '豪華景品が\n盛りだくさん！',   /* ★fq-rbcloud-v1: 改行で2行に。チラシと同じ2行組み */
-    prize:  'ディズニーペアチケット',
+    prize:  'ディズニーペアチケットなど',   /* ★fq-rbpink-v1 */
   },
 
   /* ── 協賛・協力（会社名でもお店の名前でもOK） ── */
@@ -392,6 +397,11 @@ const FQ = {
                              画面で見るとくすむので fq-flyer2-v1 で明るいほうへ寄せた。
                              ★img/date.png の「日」の丸も同じ色。片方だけ直さないこと */
     --ink:#36271E; --paper:#FFFDF5; --line:#E4DCC8; --muted:#8B7F6E;
+    /* ★★fq-square-v1: 角の丸みは **この2つ** で決める。
+       四角いデザインにそろえるため、カードは --r、小さな札は --r2 を使う。
+       ★★全体をもっと角ばらせたい／丸めたいときは、この2つの数だけ動かせばよい。
+       ★丸いまま残すもの: 顔写真(50%)、ボタンの丸帯(999px)、ヒーローの飾り。 */
+    --r:5px; --r2:3px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
   html{scroll-behavior:smooth;}
@@ -1623,7 +1633,7 @@ const FQ = {
      ★tabular-nums ＝ 数字の幅をぜんぶ同じにする指定。
        これが無いと、1秒ごとに数字の幅が変わって枠がぴくぴく動きます。 */
   .cd{display:inline-flex;gap:6px;margin-top:16px;}
-  .cd div{background:#fff;border:2.5px solid var(--ink);border-radius:12px;
+  .cd div{background:#fff;border:2.5px solid var(--ink);border-radius:var(--r);
           min-width:clamp(54px,15.5vw,68px);padding:6px 3px;line-height:1.2;}
   .cd b{display:block;font-size:clamp(21px,6.2vw,26px);font-weight:900;
         font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
@@ -1667,7 +1677,7 @@ const FQ = {
      ★傾けないこと（前に傾けたら読みにくいと言われたため）。 */
   .sec-h{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
   .sec-h h2{font-size:clamp(24px,6.5vw,34px);font-weight:900;letter-spacing:.02em;
-            border:3px solid var(--ink);border-radius:12px;padding:5px 16px;background:#fff;
+            border:3px solid var(--ink);border-radius:var(--r);padding:5px 16px;background:#fff;
             box-shadow:5px 6px 0 var(--ink);}
   .h-pink{color:var(--pink);}  .h-blue{color:var(--blue);}
   .h-green{color:var(--green);} .h-orange{color:var(--orange);}
@@ -1687,7 +1697,7 @@ const FQ = {
   .guest p mark{background:none;color:#F7E36B;font-weight:900;}
   .sec-h .sub{font-size:13.5px;font-weight:700;color:var(--muted);}
   .sec-h .where{margin-left:auto;font-size:12px;font-weight:900;color:#fff;
-                border:2.5px solid var(--ink);border-radius:9px;padding:4px 11px;
+                border:2.5px solid var(--ink);border-radius:var(--r2);padding:4px 11px;
                 white-space:nowrap;box-shadow:3px 4px 0 var(--ink);}
   .w-pink{background:var(--pink);} .w-blue{background:var(--blue);}
   .w-green{background:var(--green);} .w-orange{background:var(--orange);}
@@ -1704,7 +1714,7 @@ const FQ = {
 
   /* ══════════ ステージ ══════════ */
   .acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
-  .act{background:#fff;border:2.5px solid var(--ink);border-radius:16px;overflow:hidden;
+  .act{background:#fff;border:2.5px solid var(--ink);border-radius:var(--r);overflow:hidden;
        display:block;text-decoration:none;transition:.14s;}
   a.act:active{transform:translateY(2px);}
   .act .t{background:var(--pink);color:#fff;text-align:center;font-size:12.5px;
@@ -1715,7 +1725,7 @@ const FQ = {
            border-bottom:2.5px solid var(--ink);}
   .act .ph .ini{display:flex;flex-direction:column;align-items:center;gap:4px;}
   .act .ph .ini small{font-size:10px;font-weight:700;opacity:.65;letter-spacing:.08em;}
-  .act .ig{position:absolute;right:7px;bottom:7px;width:26px;height:26px;border-radius:8px;
+  .act .ig{position:absolute;right:7px;bottom:7px;width:26px;height:26px;border-radius:var(--r2);
            background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;
            box-shadow:0 1px 4px rgba(0,0,0,.25);}
   .act .n{padding:9px 8px;text-align:center;font-size:13.5px;font-weight:900;line-height:1.45;}
@@ -1727,18 +1737,18 @@ const FQ = {
   /* ══════════ ゲスト ══════════ */
   /* ★スマホで写真と名前が上下に割れないよう、この2つを必ず横並びにする。
      説明文だけを下に回すと、狭い画面でも読みやすく、見た目も揃う。 */
-  .guest{background:var(--blue);color:#fff;border-radius:20px;padding:20px 18px;}
+  .guest{background:var(--blue);color:#fff;border-radius:var(--r);padding:20px 18px;}
   .ghead{display:flex;gap:14px;align-items:center;margin-bottom:14px;}
   /* ★写真は cover（枠いっぱいに切り取る）だが、ここだけ contain。
      326さんのイラストは全身が見えないと意味がないため。 */
   /* 326さんのイラストは縦長なので、枠も縦長にして大きく見せる */
-  .guest .ph{width:100px;height:138px;border-radius:14px;
+  .guest .ph{width:100px;height:138px;border-radius:var(--r);
              background-color:rgba(255,255,255,.93);
              background-size:contain;background-repeat:no-repeat;background-position:center;
              flex:0 0 auto;display:flex;align-items:center;justify-content:center;
              font-size:28px;font-weight:900;
              border:3px solid #fff;position:relative;text-decoration:none;color:#fff;}
-  .guest .ph .ig{position:absolute;right:-7px;bottom:-7px;width:28px;height:28px;border-radius:9px;
+  .guest .ph .ig{position:absolute;right:-7px;bottom:-7px;width:28px;height:28px;border-radius:var(--r2);
                  background:#fff;display:flex;align-items:center;justify-content:center;
                  box-shadow:0 2px 6px rgba(0,0,0,.3);}
   .gname{flex:1;min-width:0;}          /* min-width:0 が無いと、はみ出して折り返してしまう */
@@ -1902,7 +1912,7 @@ const FQ = {
   .guest.gp .ph{background:none;border:0;border-radius:0;
           width:clamp(84px,26vw,132px);height:auto;aspect-ratio:100/138;}
   .guest.gp .ph .gwrap{border-radius:0;}
-  .guest.gp .ph .ig{right:0;bottom:0;width:24px;height:24px;border-radius:8px;}
+  .guest.gp .ph .ig{right:0;bottom:0;width:24px;height:24px;border-radius:var(--r2);}
   .gp-text{margin-top:14px;}
   /* ★広い画面ではチラシと同じく、絵の右に本文を置く */
   @media(min-width:700px){
@@ -1981,11 +1991,11 @@ const FQ = {
      ★カード全体が「イベントのタブへ行くボタン」になっている（href="#event"）。
        タブの切りかえは #◯◯ で動いているので、ふつうのリンクで飛べる。
      ★写真は contain（枠いっぱいに切らない）。イラストは全身が見えないと意味がないため。 */
-  .gteaser{background:var(--blue);color:#fff;border-radius:20px;padding:16px 15px;
+  .gteaser{background:var(--blue);color:#fff;border-radius:var(--r);padding:16px 15px;
            display:flex;gap:14px;align-items:flex-start;text-align:left;text-decoration:none;
            box-shadow:4px 5px 0 var(--ink);transition:.12s;}
   .gteaser:active{transform:translate(2px,3px);box-shadow:2px 2px 0 var(--ink);}
-  .gteaser .ph{width:78px;height:107px;border-radius:12px;flex:0 0 auto;border:3px solid #fff;
+  .gteaser .ph{width:78px;height:107px;border-radius:var(--r);flex:0 0 auto;border:3px solid #fff;
                background-color:rgba(255,255,255,.93);background-size:contain;
                background-repeat:no-repeat;background-position:center;
                display:flex;align-items:center;justify-content:center;
@@ -2013,7 +2023,7 @@ const FQ = {
        ずっと外側の箱を基準にしてしまい、**絵がどこかへ飛んでいく**。
        （.guest .ph には元から付いていたが、.gteaser .ph には無かった） */
   .gteaser .ph{position:relative;}
-  .ph .gwrap{position:absolute;inset:0;overflow:hidden;border-radius:9px;}
+  .ph .gwrap{position:absolute;inset:0;overflow:hidden;border-radius:var(--r2);}
   .ph .gimg{position:absolute;left:0;bottom:0;width:100%;height:100%;
             object-fit:contain;object-position:center bottom;}
 
@@ -2060,73 +2070,45 @@ const FQ = {
     .gteaser.walkin .gimg{animation:none;}
   }
 
-  /* ══════════ fq-fcircle-v1 : チラシの「丸が重なった絵」 ══════════
-     チラシ2ページめの DISCOVER にある、丸を3つ重ねたあの形。
-     絵を1枚貼るのではなく、**丸と帯はCSSで描き、写真だけ絵**にしている。
-     こうすると、画面の幅に合わせて名前の字が大きくなるので、
-     スマホでも読める（1枚絵だと字がつぶれて読めない）。
+  /* ══════════ fq-fcircle-v1 は fq-square-v1 に置きかわりました ══════════
+     チラシの「丸が重なった絵」をCSSで描いていた指定は、すべて外しました。
+     本物の写真をもらって四角のカードに変えたためです（下の fq-square-v1）。
+     ★丸の作り方が要るときは、git の履歴（fq-rbpink-v1 の版）から拾えます。 */
+  /* ══ みどころ（fq-square-v1）══
+     ★★チラシは「丸が重なった絵」だったが、四角いカードに変えた。
+       理由: ①本物の写真を丸に切ると、端の人や物が落ちる
+             ②丸・楕円・もこもこ・角丸が混ざって画面が散らかって見えていた
+     ★組み立て: まとまり（色の見出し）→ その下に正方形のカード2枚。
+       チラシの「4つのまとまり × 2つずつ」という意味はそのまま残している。
+     ★色はサイトの5色から取っている（チラシ印刷用のくすんだ色はやめた）。 */
+  .fband{display:grid;grid-template-columns:1fr;gap:20px;margin:14px 0 4px;}
+  @media(min-width:700px){ .fband{grid-template-columns:1fr 1fr;gap:22px 20px;} }
+  .fgrp.or{--c:var(--orange);} .fgrp.gr{--c:var(--green);}
+  .fgrp.bl{--c:var(--blue);}   .fgrp.pk{--c:var(--pink);}
+  .fgh{display:inline-block;background:var(--c);color:#fff;
+       border:2.5px solid var(--ink);border-radius:var(--r2);
+       box-shadow:3px 3px 0 var(--ink);padding:3px 12px;margin-bottom:10px;
+       font-size:13px;font-weight:900;letter-spacing:.09em;}
+  .fgc{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .fg{background:#fff;border:2.5px solid var(--ink);border-radius:var(--r);
+      overflow:hidden;box-shadow:4px 5px 0 var(--ink);}
+  .fg picture{display:block;}
+  /* ★★height:auto を必ず書くこと。
+     <img> に width/height を書くと、それが高さの指定として効いてしまい、
+     aspect-ratio が負ける（実際に 168×520 の縦長になった）。 */
+  .fg img{width:100%;height:auto;aspect-ratio:1;object-fit:cover;display:block;
+          border-bottom:2.5px solid var(--ink);}
+  .fg b{display:block;background:var(--c);color:#fff;text-align:center;
+        padding:6px 3px;font-weight:900;letter-spacing:.03em;
+        font-size:clamp(10.5px,3vw,13px);line-height:1.3;}
 
-     ★寸法はぜんぶ「1つぶんの幅 --gw」に対する割合。チラシを実測した値。
-         写真の丸   直径 63.4% ／ 中心 (31.7%, 30.4%) と (68.3%, 68.4%)
-         言葉の丸   直径 36.2% ／ 中心 (79.3%, 25.3%)
-         名前の帯   幅 64% ／ 高さ 15.5% ／ 写真の中心から下へ 19.5%
-     ★重なりの順番（下から）… 言葉の丸 → 写真1 → 写真2 → 名前の帯
-       帯を写真の中に入れると、写真2が帯の上に乗ってしまい、
-       「車イス体験」の右はしが隠れる。だから帯だけ外に出して z-index を上げている。
-     ★写真には、チラシの帯が写り込んでいる（切り抜けない位置にあるため）。
-       CSSの帯を **チラシの帯より少し大きく**描いて、上から隠している。
-       ★帯の大きさを小さくすると、下から古い帯がはみ出して二重に見える。
-     ★★fq-cfont-v1: 書体は **丸ゴシック（Zen Maru Gothic）**。チラシと同じ形。
-       前は角ゴシック（Zen Kaku Gothic New）で、字の形がチラシと違っていた。
-     ★★言葉の字の大きさは **4つとも同じ**。
-       前は2文字と3文字で変えていたが、チラシは4つとも同じ大きさだった。
-       3文字（つくる・出会う）が丸に収まるよう、全体を少し小さくしてある。
-       ★これ以上大きくすると、3文字が丸からはみ出す。 */
-  .fband{display:grid;justify-items:center;justify-content:center;
-         margin:14px 0 4px;
-         /* スマホは2つずつ2段。左右の余白ぶんだけ外へ広げて、写真を少しでも大きく取る */
-         margin-inline:-18px;padding-inline:6px;
-         grid-template-columns:1fr 1fr;gap:12px 6px;--gw:min(46.5vw,200px);}
-  @media(min-width:560px){.fband{margin-inline:0;padding-inline:0;
-         --gw:min(40vw,280px);gap:14px 10px;}}
-  @media(min-width:900px){.fband{grid-template-columns:repeat(4,1fr);--gw:min(21.5vw,236px);
-         gap:0 14px;}}
-  .fg{position:relative;width:var(--gw);aspect-ratio:1;}
-  .fg.or{--c:#D4532A;} .fg.gr{--c:#5F9E45;} .fg.bl{--c:#4A9AC6;} .fg.pk{--c:#CE5C87;}
-  .fgcat{position:absolute;left:61.2%;top:7.2%;width:36.2%;aspect-ratio:1;
-         border-radius:50%;background:var(--c);color:#fff;}
-  .fgcat i{position:absolute;font-style:normal;white-space:nowrap;line-height:1;
-           font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
-           font-weight:700;font-size:calc(var(--gw) * .086);letter-spacing:.04em;}
-  /* ★fq-cfit-v1: 本物の書体で測り直したら、3文字が丸からはみ出していた。
-     ★★確認するときは必ず本物の書体を入れること。
-       代わりの書体は字幅がせまいので、はみ出しが見つからない。
-     ★これ以上大きくすると、3文字（つくる・出会う）がまたはみ出す。
-       大きくしたいときは、丸（36.2%）のほうを大きくすること。 */
-  .fgcat i:nth-child(1){left:48%;top:30%;transform:translate(-50%,-50%);}
-  .fgcat i:nth-child(2){left:52%;top:70%;transform:translate(-50%,-50%);}
-  .fgp{position:absolute;width:63.4%;aspect-ratio:1;border-radius:50%;
-       background:var(--c);padding:3.6%;box-sizing:border-box;}
-  .fgp img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
-  .fgp1{left:0;top:0;} .fgp2{left:36.6%;top:36.6%;}
-  .fg b{position:absolute;transform:translate(-50%,-50%);z-index:3;
-        width:67%;height:18%;background:var(--c);color:#fff;border-radius:999px;
-        border:calc(var(--gw) * .009) solid #fff;box-sizing:border-box;
-        display:flex;align-items:center;justify-content:center;white-space:nowrap;
-        font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
-        font-weight:700;font-size:calc(var(--gw) * .055);letter-spacing:.07em;}
-  /* ★fq-pill-v1: 写真に写り込んだチラシの帯を、確実に隠すための位置と大きさ。
-     写真の帯（白フチ込み）は 1つぶんの幅に対して 46.3%〜58.7% にある。
-     ★★帯そのもの（width / height）を小さくすると、また二重に見える。
-       字だけ小さくするのは安全。帯の大きさは下げないこと。 */
-  .fg b.b1{left:32.5%;top:52.2%;} .fg b.b2{left:67.3%;top:87.8%;}
 
   /* ══════════ チップ ══════════ */
   .grp{margin-bottom:16px;}
   .grp .gl{display:inline-block;font-size:11.5px;font-weight:900;color:#fff;
-           border-radius:6px;padding:3px 10px;margin-bottom:8px;}
+           border-radius:var(--r2);padding:3px 10px;margin-bottom:8px;}
   .chips{display:flex;flex-wrap:wrap;gap:8px;}
-  .chip{background:#fff;border:2.5px solid var(--ink);border-radius:10px;
+  .chip{background:#fff;border:2.5px solid var(--ink);border-radius:var(--r);
         padding:8px 14px;font-size:13.5px;font-weight:900;}
 
   /* ══════════ フード ══════════ */
@@ -2135,7 +2117,7 @@ const FQ = {
        文字を絵にしているのは、あの色とりどりの形がWebの書体では出せないため。
      ★チラシにあるお城の写真は載せていない。紙とウェブで権利の扱いが別のため。
        景品は文字だけで、チラシと同じリボン風に出している。 */
-  .gacha{background:var(--yellow-l);border:3px solid var(--ink);border-radius:20px;
+  .gacha{background:var(--yellow-l);border:3px solid var(--ink);border-radius:var(--r);
          box-shadow:5px 6px 0 var(--ink);padding:16px 14px 18px;}
   .gc-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
         gap:2px 8px;font-size:clamp(16px,4.6vw,22px);font-weight:900;line-height:1.3;}
@@ -2154,13 +2136,17 @@ const FQ = {
   @media(min-width:620px){ .gc-pr{flex:0 0 auto;width:min(34%,220px);min-width:164px;}
                            .gc-ph{max-width:none;} }
   /* ★★fq-rbcloud-v1: 「豪華景品が盛りだくさん！」はチラシと同じ **もこもこの吹き出し**。
-     ★形は円を7つ並べた閉じた線（SVG）。**フチは無く**、色は --orange のべた塗り。
-       チラシの色をスキャンから起こすと約 rgb(245,87,20) で、--orange(#E75409) とほぼ同じ。
+     ★形は円を7つ並べた閉じた線（SVG）。**フチは無く**、べた塗り。
+     ★★fq-rbpink-v1: 色は --pink。チラシのもこもこは --orange とほぼ同じ色だったが、
+       **チラシの隣は城の写真、こちらの隣は金色のチケットの絵**。
+       金色の上にオレンジを置くと溶けて読みにくかった。
+       ★★**紙とウェブで隣の絵が違うときは、色も合わせ直すこと。**
+         「チラシと同じ色にした」だけでは読みやすさは保証されない。
+     ★★fq-rbpink-v1: 絵の **右上** に重ねる。しっぽが絵のほうを向く。
      ★★こぶの深さは「円の半径 ÷ こぶの幅」で決まる。
        **半径を大きくするほど、こぶは浅くなる**（逆に思いこみやすい）。今回は 0.95 倍。
      ★チラシと同じく少し傾け（-5度）、2行を左右にずらして置いている。
-     ★スマホでは絵が枠いっぱいに広がって主役に見えるので、絵の幅に上限をつけている。
-     ★絵の左上に重ねる。しっぽが絵のほうを向く。 */
+     ★スマホでは絵が枠いっぱいに広がって主役に見えるので、絵の幅に上限をつけている。 */
   .gc-ph{position:relative;display:block;margin:7px auto 6px;max-width:min(80%,270px);
          container-type:inline-size;}
   .gc-ph picture{display:block;}
@@ -2170,34 +2156,34 @@ const FQ = {
      ★★1行めの clamp は **古い端末むけの控え**。cqw が読めないとそちらが効く。
        2行で1組。片方だけ直さないこと。
      ★max() の下限は、620〜700px で列が細くなったときの読めなくなり防止。 */
-  .gc-rb{position:absolute;left:-12%;top:-23%;z-index:2;
-         width:clamp(102px,27vw,148px);
-         width:max(112px, 62cqw);
+  .gc-rb{position:absolute;right:-8%;top:-26%;z-index:2;
+         width:clamp(115px,30vw,167px);
+         width:max(126px, 70cqw);
          aspect-ratio:520 / 330;
          display:flex;align-items:center;justify-content:center;
          transform:rotate(-5deg);pointer-events:none;}
   .gc-rb svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
   .gc-rb i{position:relative;z-index:1;font-style:normal;color:#fff;font-weight:900;
-           font-size:clamp(8.4px,2.25vw,12.4px);
-           font-size:max(9.5px, 5.2cqw);
+           font-size:clamp(10.3px,2.77vw,15.3px);
+           font-size:max(11.7px, 6.4cqw);
            line-height:1.3;letter-spacing:.01em;
            text-align:center;white-space:nowrap;margin-top:-5%;}
   .gc-rb i span{display:block;}
   .gc-rb i span:first-child{transform:translateX(8%);}
   .gc-rb i span:last-child{transform:translateX(-6%);}
   .gc-pr img{width:100%;height:auto;display:block;border:3px solid var(--ink);
-             border-radius:14px;box-shadow:4px 5px 0 var(--ink);}
+             border-radius:var(--r);box-shadow:4px 5px 0 var(--ink);}
   /* ★★> を付けて「直接の子」だけにすること。付けないと、もこもこの中の
      2行の字にも点線の枠が付いてしまう（実際に一度そうなった）。 */
   .gc-pr > span{display:inline-block;border:2px dashed var(--orange);color:#a8420a;
-              border-radius:8px;padding:3px 10px;font-size:12.5px;font-weight:900;background:#fff;}
+              border-radius:var(--r2);padding:3px 10px;font-size:12.5px;font-weight:900;background:#fff;}
 
   .foods{display:flex;flex-wrap:wrap;gap:8px;}
-  .foods span{background:#fff;border:2px dashed var(--orange);border-radius:10px;
+  .foods span{background:#fff;border:2px dashed var(--orange);border-radius:var(--r);
               padding:7px 13px;font-size:13px;font-weight:800;color:#a8420a;}
 
   /* ══════════ クエスト導線 ══════════ */
-  .quest{background:var(--yellow);border:3px solid var(--ink);border-radius:20px;
+  .quest{background:var(--yellow);border:3px solid var(--ink);border-radius:var(--r);
          padding:22px 18px;text-align:center;}
   .quest h3{font-size:clamp(19px,5vw,25px);font-weight:900;margin-bottom:6px;}
   .quest p{font-size:13.5px;font-weight:700;margin-bottom:14px;line-height:1.8;}
@@ -2212,7 +2198,7 @@ const FQ = {
      html に soon-on が付いているときだけ、中身とさしかえて これを出す。
      付け外しは <head> の SOON（true/false）。当日は false に。 */
   .soonbox{display:none;background:var(--yellow-l);border:3px dashed var(--ink);
-           border-radius:20px;padding:24px 18px;text-align:center;}
+           border-radius:var(--r);padding:24px 18px;text-align:center;}
   html.soon-on .soonbox{display:block;}
   html.soon-on #qReal{display:none;}
   .soonbox .sn-em{font-size:38px;line-height:1;}
@@ -2221,7 +2207,7 @@ const FQ = {
                   color:var(--muted);margin-bottom:14px;}
   .soonbox p{font-size:13.5px;font-weight:700;line-height:1.85;margin:0 0 14px;}
   .soonbox .sn-when{display:inline-block;background:#fff;border:2px solid var(--ink);
-           border-radius:14px;padding:11px 16px;font-size:13.5px;font-weight:900;
+           border-radius:var(--r);padding:11px 16px;font-size:13.5px;font-weight:900;
            line-height:1.8;margin-bottom:4px;}
   .soonbox .sn-note{margin-top:14px;font-size:11.5px;font-weight:700;
            line-height:1.75;opacity:.72;}
@@ -2249,7 +2235,7 @@ const FQ = {
          display:flex;align-items:center;justify-content:center;padding:20px;}
   .pcard[hidden]{display:none;}
   .pcard-in{position:relative;width:100%;max-width:340px;text-align:center;
-            background:var(--paper);border:3px solid var(--ink);border-radius:20px;
+            background:var(--paper);border:3px solid var(--ink);border-radius:var(--r);
             padding:26px 20px 22px;box-shadow:0 10px 0 rgba(0,0,0,.18);}
   .pcard-x{position:absolute;top:9px;right:11px;width:34px;height:34px;border-radius:50%;
            border:2.5px solid var(--ink);background:#fff;font:inherit;font-size:15px;
@@ -2268,22 +2254,22 @@ const FQ = {
   .pcard-ig[hidden]{display:none;}
 
   .orgs{display:flex;flex-wrap:wrap;gap:9px;}
-  .org{background:#fff;border:2.5px solid var(--line);border-radius:12px;padding:10px 15px;
+  .org{background:#fff;border:2.5px solid var(--line);border-radius:var(--r);padding:10px 15px;
        text-decoration:none;display:flex;align-items:center;gap:8px;}
   .org .k{font-size:10px;font-weight:900;color:#fff;background:var(--green);
-          border-radius:5px;padding:2px 7px;}
+          border-radius:var(--r2);padding:2px 7px;}
   .org .k.協力{background:var(--blue);}
   .org .nm{font-size:13.5px;font-weight:900;}
 
   /* ══════════ アクセス ══════════ */
-  .acc{background:#fff;border:2.5px solid var(--ink);border-radius:18px;padding:18px;}
+  .acc{background:#fff;border:2.5px solid var(--ink);border-radius:var(--r);padding:18px;}
   .acc h3{font-size:18px;font-weight:900;margin-bottom:4px;}
   .acc .ad{font-size:13.5px;font-weight:700;margin-bottom:4px;}
   .acc .st{font-size:13.5px;font-weight:700;margin-bottom:12px;}
   .acc ul{list-style:none;font-size:12px;color:var(--muted);font-weight:700;line-height:1.85;}
   .acc ul li:before{content:"※ ";}
   .mapbtn{display:inline-block;margin-top:12px;background:var(--blue);color:#fff;
-          text-decoration:none;border-radius:10px;padding:11px 20px;font-size:14px;font-weight:900;}
+          text-decoration:none;border-radius:var(--r);padding:11px 20px;font-size:14px;font-weight:900;}
 
   footer{background:var(--ink);color:#fff;text-align:center;padding:26px 18px 34px;margin-top:44px;}
   footer .h{font-size:15px;font-weight:900;}
@@ -2309,7 +2295,7 @@ const FQ = {
   .tabbar a,.tabbar button{flex:1 1 auto;min-width:0;position:relative;
                  background:none;border:0;cursor:pointer;color:#fff;opacity:.62;
                  font-family:inherit;font-weight:900;font-size:10px;line-height:1.25;
-                 padding:6px 3px 4px;border-radius:11px;white-space:nowrap;
+                 padding:6px 3px 4px;border-radius:var(--r2);white-space:nowrap;
                  text-decoration:none;
                  display:flex;flex-direction:column;align-items:center;gap:3px;}
   /* とてもせまい画面（iPhone SEなど）では、字だけ少し小さくして8つ収める */
@@ -2320,7 +2306,7 @@ const FQ = {
   .tabbar [aria-selected="true"] .ic{transform:translateY(-1px);}
   body{padding-bottom:calc(66px + env(safe-area-inset-bottom));}
   @media(min-width:761px){
-    .tabbar{max-width:760px;margin:0 auto;border-radius:18px 18px 0 0;}
+    .tabbar{max-width:760px;margin:0 auto;border-radius:var(--r) var(--r) 0 0;}
     .tabbar a,.tabbar button{font-size:12px;} .tabbar .ic{font-size:21px;}
   }
 
@@ -2334,7 +2320,7 @@ const FQ = {
   .short{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
   /* ★fq-menu-v1: 『診断』『図鑑』はクエスト側のページなので <a> で置く。
        見た目はボタンと同じにそろえたいので、まとめて書いてある。 */
-  .short button,.short a{background:#fff;border:2.5px solid var(--ink);border-radius:16px;
+  .short button,.short a{background:#fff;border:2.5px solid var(--ink);border-radius:var(--r);
                 box-shadow:4px 5px 0 var(--ink);padding:15px 13px;cursor:pointer;
                 font-family:inherit;font-weight:900;color:var(--ink);text-align:left;
                 text-decoration:none;
@@ -3050,19 +3036,19 @@ const FQ = {
   /* ── DISCOVER ── */
   $('#discoverText').textContent = FQ.discover.text;
 
-  /* ★fq-fcircle-v1: チラシの「丸が重なった絵」。
+  /* ★★fq-square-v1: まとまり（色の見出し）→ 正方形のカード2枚。
      写真は <picture> で WebP を先に出し、読めない端末には .jpg を出す。
-     ★3文字の言葉のときだけ class="c3" を付ける（字を小さくするため）。 */
+     ★alt には名前を入れている（読み上げで何の写真か分かるように）。
+     ★width / height を書いておくと、読み込み中に画面がガタつかない。 */
   $('#fband').innerHTML = (FQ.discover.flyer || []).map(g => {
-    const pic = (it, k) => '<div class="fgp fgp' + k + '"><picture>'
+    const card = it => '<div class="fg"><picture>'
         + '<source srcset="img/' + esc(it.p) + '.webp" type="image/webp">'
-        + '<img src="img/' + esc(it.p) + '.jpg" alt="" loading="lazy" decoding="async">'
-        + '</picture></div>';
-    return '<div class="fg ' + esc(g.c) + '">'
-      + '<div class="fgcat">' + g.cat.map(t => '<i>' + esc(t) + '</i>').join('') + '</div>'
-      + pic(g.items[0], 1) + pic(g.items[1], 2)
-      + '<b class="b1">' + esc(g.items[0].n) + '</b>'
-      + '<b class="b2">' + esc(g.items[1].n) + '</b></div>';
+        + '<img src="img/' + esc(it.p) + '.jpg" alt="' + esc(it.n) + '" '
+        + 'width="520" height="520" loading="lazy" decoding="async">'
+        + '</picture><b>' + esc(it.n) + '</b></div>';
+    return '<div class="fgrp ' + esc(g.c) + '">'
+      + '<span class="fgh">' + g.cat.map(esc).join('・') + '</span>'
+      + '<div class="fgc">' + g.items.map(card).join('') + '</div></div>';
   }).join('');
   /* ── FOOD ── */
   /* ── ガチャの告知（fq-gacha-v1）── */
@@ -3072,7 +3058,7 @@ const FQ = {
        小さい三角がしっぽ（絵のほうを向く）。フチは無いので重なりは見えない。 */
     const RBCLOUD =
       '<svg viewBox="0 0 520 330" aria-hidden="true" focusable="false" '
-      + 'preserveAspectRatio="none"><g fill="var(--orange)">'
+      + 'preserveAspectRatio="none"><g fill="var(--pink)">'
       + '<path d="M150 245 L214 256 L112 330 Z"/>'
       + '<path d="M512 158 A143.3 143.3 0 0 1 417.1 275.3 A204.4 204.4 0 0 1 203.9 304.2 '
       +   'A179.8 179.8 0 0 1 33 223.1 A123.7 123.7 0 0 1 33 92.9 '
