@@ -334,7 +334,7 @@ const FQ = {
     head1: '会場をまわって',
     head2: 'をまわそう！',
     text:  '会場のQRコードを読み取ってポイントを集めると、ガチャが引けます！\n人と出会うほど、いいことがあるかも。',
-    bubble: '豪華景品が盛りだくさん！',
+    bubble: '豪華景品が\n盛りだくさん！',   /* ★fq-rbcloud-v1: 改行で2行に。チラシと同じ2行組み */
     prize:  'ディズニーペアチケット',
   },
 
@@ -2149,16 +2149,47 @@ const FQ = {
      ★スマホでは本文の下に1列で、620px以上では本文の右にならびます。
        3つ横ならびはスマホだと本文がつぶれるため。 */
   .gc-pr{flex:1 0 100%;text-align:center;}
-  @media(min-width:620px){ .gc-pr{flex:0 0 auto;width:min(34%,220px);}
-                           .gc-pr picture{max-width:none;} }
-  .gc-pr b{display:inline-block;background:var(--orange);color:#fff;border-radius:999px;
-           padding:3px 12px;font-size:12.5px;font-weight:900;}
-  /* ★スマホでは本文の下に1列になるので、絵が枠いっぱいに広がって主役に見えてしまう。
-     幅に上限をつけて、まん中に置く。620px以上では上限を外す（列が細いため）。 */
-  .gc-pr picture{display:block;margin:7px auto 6px;max-width:min(80%,270px);}
+  /* ★min-width を付けているのは、620〜700px のあたりで列が細くなりすぎて
+     吹き出しの字が7px台まで落ちるため（読めない大きさ）。 */
+  @media(min-width:620px){ .gc-pr{flex:0 0 auto;width:min(34%,220px);min-width:164px;}
+                           .gc-ph{max-width:none;} }
+  /* ★★fq-rbcloud-v1: 「豪華景品が盛りだくさん！」はチラシと同じ **もこもこの吹き出し**。
+     ★形は円を7つ並べた閉じた線（SVG）。**フチは無く**、色は --orange のべた塗り。
+       チラシの色をスキャンから起こすと約 rgb(245,87,20) で、--orange(#E75409) とほぼ同じ。
+     ★★こぶの深さは「円の半径 ÷ こぶの幅」で決まる。
+       **半径を大きくするほど、こぶは浅くなる**（逆に思いこみやすい）。今回は 0.95 倍。
+     ★チラシと同じく少し傾け（-5度）、2行を左右にずらして置いている。
+     ★スマホでは絵が枠いっぱいに広がって主役に見えるので、絵の幅に上限をつけている。
+     ★絵の左上に重ねる。しっぽが絵のほうを向く。 */
+  .gc-ph{position:relative;display:block;margin:7px auto 6px;max-width:min(80%,270px);
+         container-type:inline-size;}
+  .gc-ph picture{display:block;}
+  /* ★★吹き出しの大きさは **絵の幅に対する割合** で決めたい。
+     だが font-size に % は使えない（% は親の **字の大きさ** に対する割合になる）。
+     そこで cqw（＝この箱の幅の1%）を使っている。
+     ★★1行めの clamp は **古い端末むけの控え**。cqw が読めないとそちらが効く。
+       2行で1組。片方だけ直さないこと。
+     ★max() の下限は、620〜700px で列が細くなったときの読めなくなり防止。 */
+  .gc-rb{position:absolute;left:-12%;top:-23%;z-index:2;
+         width:clamp(102px,27vw,148px);
+         width:max(112px, 62cqw);
+         aspect-ratio:520 / 330;
+         display:flex;align-items:center;justify-content:center;
+         transform:rotate(-5deg);pointer-events:none;}
+  .gc-rb svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .gc-rb i{position:relative;z-index:1;font-style:normal;color:#fff;font-weight:900;
+           font-size:clamp(8.4px,2.25vw,12.4px);
+           font-size:max(9.5px, 5.2cqw);
+           line-height:1.3;letter-spacing:.01em;
+           text-align:center;white-space:nowrap;margin-top:-5%;}
+  .gc-rb i span{display:block;}
+  .gc-rb i span:first-child{transform:translateX(8%);}
+  .gc-rb i span:last-child{transform:translateX(-6%);}
   .gc-pr img{width:100%;height:auto;display:block;border:3px solid var(--ink);
              border-radius:14px;box-shadow:4px 5px 0 var(--ink);}
-  .gc-pr span{display:inline-block;border:2px dashed var(--orange);color:#a8420a;
+  /* ★★> を付けて「直接の子」だけにすること。付けないと、もこもこの中の
+     2行の字にも点線の枠が付いてしまう（実際に一度そうなった）。 */
+  .gc-pr > span{display:inline-block;border:2px dashed var(--orange);color:#a8420a;
               border-radius:8px;padding:3px 10px;font-size:12.5px;font-weight:900;background:#fff;}
 
   .foods{display:flex;flex-wrap:wrap;gap:8px;}
@@ -3037,6 +3068,16 @@ const FQ = {
   /* ── ガチャの告知（fq-gacha-v1）── */
   (function(){
     const g = FQ.gacha; if (!g) return;
+    /* ★fq-rbcloud-v1: もこもこの吹き出しの形。円を7つ並べた閉じた線。
+       小さい三角がしっぽ（絵のほうを向く）。フチは無いので重なりは見えない。 */
+    const RBCLOUD =
+      '<svg viewBox="0 0 520 330" aria-hidden="true" focusable="false" '
+      + 'preserveAspectRatio="none"><g fill="var(--orange)">'
+      + '<path d="M150 245 L214 256 L112 330 Z"/>'
+      + '<path d="M512 158 A143.3 143.3 0 0 1 417.1 275.3 A204.4 204.4 0 0 1 203.9 304.2 '
+      +   'A179.8 179.8 0 0 1 33 223.1 A123.7 123.7 0 0 1 33 92.9 '
+      +   'A179.8 179.8 0 0 1 203.9 11.8 A204.4 204.4 0 0 1 417.1 40.7 '
+      +   'A143.3 143.3 0 0 1 512 158 Z"/></g></svg>';
     $('#gacha').innerHTML =
         '<h3 class="gc-h">' + esc(g.head1)
       +   '<img class="gc-w" src="img/gacha_w.png" alt="ガチャ" decoding="async">'
@@ -3044,10 +3085,13 @@ const FQ = {
       + '<div class="gc-b">'
       +   '<img class="gc-m" src="img/gacha_m.png" alt="" loading="lazy" decoding="async">'
       +   '<div class="gc-tx"><p>' + esc(g.text).replace(/\n/g,'<br>') + '</p></div>'
-      +   '<div class="gc-pr"><b>' + esc(g.bubble) + '</b>'
+      +   '<div class="gc-pr"><div class="gc-ph">'
       +     '<picture><source srcset="img/prize.webp" type="image/webp">'
       +       '<img src="img/prize.jpg" alt="金色のペアチケットとリボンのかかった箱の絵" '
       +       'width="560" height="338" loading="lazy" decoding="async"></picture>'
+      +     '<div class="gc-rb">' + RBCLOUD + '<i>'
+      +       esc(g.bubble).split('\n').map(s => '<span>'+s+'</span>').join('')
+      +     '</i></div></div>'
       +     '<span>' + esc(g.prize) + '</span></div>'
       + '</div>';
   })();
