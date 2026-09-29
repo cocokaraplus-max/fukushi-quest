@@ -285,7 +285,10 @@
   .sd-locked b{color:var(--ink);}
   .sd-card{border:2px solid var(--line);border-radius:var(--r);background:#fbf6ea;padding:16px 14px 14px;position:relative;overflow:hidden;}
   /* == fq-shindan-mon-v1 : モンスターの絵を中央に大きく出す ==
-     絵が無い型は .sd-img が読み込みに失敗するので、JS側で絵文字に切り替える。 */
+     絵が無い型は .sd-img が読み込みに失敗するので、JS側で絵文字に切り替える。
+     ★fq-monster-v1: 絵は <picture> で webp を先に、読めない端末には png を出している。
+       .sd-img は CSS で 150×150 に決めているので、<img> に width/height は付けない
+       （★付けると CSS の指定より <img> の属性が勝ってしまう場面がある）。 */
   .sd-hero{text-align:center;margin-bottom:2px;}
   .sd-img{width:150px;height:150px;object-fit:contain;display:block;margin:0 auto;
     filter:drop-shadow(0 4px 4px rgba(70,58,44,.16));}
@@ -298,6 +301,8 @@
   .sd-chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:800;}
   .sd-blk{margin-top:11px;background:var(--card);border:2px solid var(--line);border-radius:var(--r);padding:10px 12px;}
   .sd-blk h5{margin:0 0 4px;font-size:11.5px;font-weight:900;color:var(--mustard);letter-spacing:.02em;}
+  /* ★fq-monster-v1: 「なぜこのモンスター？」だけ見出しの色を変えて、下の2枠と見分けやすくする */
+  .sd-blk.sd-why h5{color:var(--teal);}
   .sd-blk p{margin:0;font-size:12.5px;line-height:1.85;color:var(--ink);font-weight:600;}
   .sd-blk p.sd-ask{color:var(--red);font-weight:800;}
   .sd-again{margin-top:10px;text-align:center;}
@@ -1283,42 +1288,54 @@ document.addEventListener('click', function(ev){
    元の分類案は 1 が①と⑤、5 が③と⑤に重複していて型が一つに決まらなかったので、
    特徴の濃い方に寄せて重複をなくしてある。詳細は README の fq-shindan-v1 を参照。 */
 (function(){
-  /* == fq-shindan-mon-v1 : 型はモンスター。名前はモンスター名、role が福祉の仕事のタイプ ==
-     絵は img/mon_1.png 〜 img/mon_7.png（tno の番号）。無い型は em の絵文字が出る。 */
+  /* == fq-shindan-mon-v1 / fq-monster-v1 : 型はモンスター。名前はモンスター名、role が福祉の仕事のタイプ ==
+     絵は img/mon_1 〜 img/mon_7（tno の番号）。webp と png の2つずつ置いてある。
+     ★★どの番号がどの子か。**入れ替えないこと**:
+         ①ライオン ②タツノオトシゴ ③さる ④骨のパンダ ⑤チーター ⑥クラゲ ⑦ユニコーン
+     ★why は「なぜこのモンスターなのか」。HIROさんの文をそのまま置いている。
+       生きものの生態の話（②のオスが育てる話など）が入っていて、読みものとして効く。
+     ★em は絵が出せなかったときの控え。7体そろったが、消さずに残してある。 */
   var T={
     leader:{no:'①',name:'ガツガツモンスター',role:'リーダー型',em:'🔥',
       cat:'決めて、前に出せる人',
       chips:['行動力','決断力','やりきる'],
+      why:'群れの先頭に立って切り拓く強烈な統率力と、目標に向かって真っ直ぐ突き進む圧倒的な突破力は、百獣の王や統率された群れを率いるリーダーの気質そのものです。',
       work:'迷う場面で判断して、まわりを動かしていく仕事に力が出ます。現場をまとめる管理者やサービス提供責任者、リーダー職。',
       ask:'「ここでは誰が、何を決めているんですか？」'},
     supporter:{no:'②',name:'ヨシヨシモンスター',role:'サポーター型',em:'🌿',
       cat:'となりに居られる人',
       chips:['優しさ','協調性','世話好き'],
+      why:'母性や包容力にあふれ、周囲を優しく包み込んで育てる姿は、我が子をしっかりと抱きしめて守り育てる温かい動物たちの生態に重なります。タツノオトシゴはオスがお腹の育児嚢にメスから受け取った卵を入れ、自分の体内で大切に守りながら出産します。',
       work:'毎日のちいさな関わりが、そのまま仕事になります。介護職や生活支援員など、人のそばに立ち続ける現場。',
       ask:'「利用者さんと、いちばん嬉しかった瞬間は？」'},
     creator:{no:'③',name:'ウキウキモンスター',role:'クリエイター型',em:'🎨',
       cat:'場を明るくする人',
       chips:['表現力','自由','楽しさ'],
+      why:'好奇心が旺盛で、自由気ままに遊び心を表現しながら周囲を楽しませる、ムードメーカーとしての軽やかさと躍動感を持っています。',
       work:'レクや行事、日々の暮らしに楽しみを作る役割。あなたが居るだけで空気が変わる現場は多いです。',
       ask:'「どんなレクリエーションをやっていますか？」'},
     takumi:{no:'④',name:'コツコツモンスター',role:'職人気質型',em:'🔍',
       cat:'とことん突きつめる人',
       chips:['分析','探究','専門性'],
+      why:'地道に巣を作り上げる確かな技術や、物事を深く見つめて本質を探求する知性、一歩引いたところから冷静に状況を分析する職人気質にぴったりです。',
       work:'体の動きを見立てたり、記録から根拠を組み立てる仕事。機能訓練指導員やリハビリ職、専門職の道。',
       ask:'「その人に合わせて、どこを見て決めていますか？」'},
     challenger:{no:'⑤',name:'イケイケモンスター',role:'チャレンジャー型',em:'⚡',
       cat:'動きながら考える人',
       chips:['変化','冒険','突破力'],
+      why:'風のように素早く環境の変化に適応し、未知の世界へ迷わず飛び出していく、圧倒的なスピード感と行動力のエネルギッシュさを体現しています。',
       work:'新しい取り組みを立ち上げたり、地域に出ていく仕事。訪問系や、これから作っていく事業と相性が良いです。',
       ask:'「最近はじめた新しいこと、ありますか？」'},
     visionary:{no:'⑥',name:'フワフワモンスター',role:'ビジョナリー型',em:'🌙',
       cat:'先を見て、想いで動く人',
       chips:['理想','直感','影響力'],
+      why:'物質世界を超えた高い視座から全体を見渡し、独自の直感と美意識ですべてを包み込むような、どこか神秘的で自由な精神の持ち主です。',
       work:'その人の暮らし全体を描いて組み立てる仕事。相談支援専門員やケアマネジャーなど、絵を描く側の役割。',
       ask:'「この仕事で、いちばん大事にしていることは？」'},
     messenger:{no:'⑦',name:'ハピハピモンスター',role:'メッセンジャー型',em:'🌈',
       cat:'人と人をつなぐ人',
       chips:['導く力','社会への貢献','伝える'],
+      why:'大きなスケールで社会全体を見つめ、仲間や次世代へと愛や知恵を語り継ぎながら導いていく、圧倒的な存在感と包容力を秘めています。',
       work:'事業所と地域をつなぎ、福祉の面白さを外に伝えていく役割。地域連携や広報、これから福祉を広げる側。',
       ask:'「この仕事の面白さを、どう伝えていますか？」'}
   };
@@ -1355,18 +1372,24 @@ document.addEventListener('click', function(ev){
     box.innerHTML =
       '<div class="sd-card">'
       + '<div class="sd-hero">'
-      +   '<img class="sd-img" alt="" src="img/mon_'+tno+'.png">'
+      +   '<picture>'                                       /* ★fq-monster-v1 */
+      +     '<source srcset="img/mon_'+tno+'.webp" type="image/webp">'
+      +     '<img class="sd-img" alt="" src="img/mon_'+tno+'.png">'
+      +   '</picture>'
       +   '<span class="sd-em" style="display:none">'+t.em+'</span>'
       + '</div>'
       + '<div class="sd-name">'+esc(t.name)+'</div>'
       + '<div class="sd-role">タイプ<b>'+tno+'</b>　'+esc(t.role)+'</div>'
       + '<p class="sd-catch">「'+esc(t.cat)+'」</p>'
       + '<div class="sd-chips">'+t.chips.map(function(c){return '<span class="sd-chip">'+esc(c)+'</span>';}).join('')+'</div>'
+      + (t.why ? '<div class="sd-blk sd-why"><h5>なぜこのモンスター？</h5><p>'+esc(t.why)+'</p></div>' : '')
       + '<div class="sd-blk"><h5>福祉の現場では</h5><p>'+esc(t.work)+'</p></div>'
       + '<div class="sd-blk"><h5>ブースで聞いてみよう</h5><p class="sd-ask">'+esc(t.ask)+'</p></div>'
       + '</div>'
       + '<div class="sd-again"><button class="linkbtn" data-act="sdOpen">生年月日を入れ直す</button></div>';
-    /* 絵がまだ無い型は、読み込みに失敗したら絵文字に切り替える。
+    /* ★fq-monster-v1: 7体そろったが、この控えは残してある。
+       絵が落ちてこなかった端末（通信が細い・キャッシュが壊れた）でも、
+       絵文字が出て画面が崩れないようにするため。
        ★インラインの onerror は使わない（このファイルはCSPセーフの方針） */
     var im = box.querySelector('.sd-img');
     if(im){
