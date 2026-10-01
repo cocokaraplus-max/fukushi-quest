@@ -271,7 +271,7 @@
       <div id="gacha-dome"></div>
       <div id="gacha-base">
         <div id="gacha-handle"></div>
-        <p style="font-size:12px; margin-top:8px; color:#fff;">ハンドルを押してガラガラ回す！</p>
+        <div id="gacha-exit"><div id="drop-capsule"></div></div>
       </div>
     </div>
   </div>
@@ -313,6 +313,46 @@
     </div>
   </div>
 
+  <div id="revival-overlay">
+    <div id="zawa"><span>ざわ…</span><span>ざわ…</span><span>ざわ…</span><span>ざわ…</span></div>
+    <div id="revival-crack">
+      <div id="revival-glow"></div>
+      <svg id="revival-svg" viewBox="0 0 520 660" preserveAspectRatio="none">
+        <g stroke="#000000" stroke-width="7" fill="none" opacity="0.8">
+          <path d="M 260 330 L 200 170 L 90 120 L 10 20" />
+          <path d="M 260 330 L 360 470 L 470 520 L 515 640" />
+          <path d="M 260 330 L 330 110 L 470 40" />
+          <path d="M 260 330 L 130 500 L 40 560" />
+          <path d="M 260 330 L 60 380 L 5 350" />
+          <polygon points="260,330 220,290 280,275 305,315" />
+          <polygon points="260,330 290,375 235,390 222,345" />
+        </g>
+        <g stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none">
+          <polygon points="260,330 220,290 280,275 305,315" fill="rgba(255,255,255,0.4)" />
+          <polygon points="260,330 290,375 235,390 222,345" fill="rgba(255,255,255,0.2)" />
+          <path d="M 260 330 L 200 170 L 90 120 L 10 20" />
+          <path d="M 200 170 L 240 40" />
+          <path d="M 90 120 L 60 230" />
+          <path d="M 260 330 L 360 470 L 470 520 L 515 640" />
+          <path d="M 360 470 L 400 620" />
+          <path d="M 470 520 L 510 430" />
+          <path d="M 260 330 L 330 110 L 470 40" />
+          <path d="M 330 110 L 290 15" />
+          <path d="M 260 330 L 130 500 L 40 560" />
+          <path d="M 130 500 L 155 630" />
+          <path d="M 260 330 L 60 380 L 5 350" />
+          <path d="M 175 230 L 130 150" />
+          <path d="M 315 400 L 370 350" />
+          <path d="M 300 215 L 375 225" />
+        </g>
+      </svg>
+    </div>
+    <div id="revival-cutin">
+      <div id="revival-title">⚡ 極 限 復 活 ⚡</div>
+      <div id="revival-sub">OVERRIDE ULTRA RARE</div>
+    </div>
+  </div>
+
   <div id="result-overlay">
     <div id="result-title">WIN!!</div>
     <img id="result-img" src="" alt="">
@@ -335,7 +375,7 @@
   .symbol{ width:100%; height:min(110px,16vh); }
   #gacha-machine{ width:min(320px,100%); height:auto; }
   #gacha-dome{ width:min(270px,74vw); height:min(270px,74vw); }
-  #gacha-base{ width:min(290px,80vw); }
+  #gacha-base{ width:min(290px,80vw); height:auto; min-height:min(190px,54vw); padding:10px 0 8px; }
   #sea-area{ height:min(400px,50vh); }
   #mash-progress-bar{ width:min(400px,92%); }
   /* ★連打バトルの帯とボタンは、海の上にかぶせる。
@@ -366,12 +406,119 @@
   #crack-overlay.reveal #rainbow-burst-glow{ transition:opacity .55s ease-out; opacity:.18; }
   #crack-overlay.reveal #crack-svg{ transition:opacity .55s ease-out; opacity:.3; }
 
+
+  /* ══════════ ガチャに足した演出（いただいたHTMLから） ══════════ */
+  /* ガチャの取り出し口と、落ちてくる立体カプセル */
+  #gacha-exit{ width:min(132px,36vw); height:min(74px,20vw); margin-top:10px;
+               background:#0b0d12; border:3px solid #7a1414; border-top:none;
+               border-radius:0 0 14px 14px;
+               box-shadow:inset 0 10px 18px rgba(0,0,0,.9), inset 0 -14px 20px rgba(255,255,255,.07);
+               display:flex; align-items:flex-end; justify-content:center; overflow:hidden; }
+  /* ★カプセルの受け皿。高さ0のままだと取り出し口の下にはみ出して、ほとんど見えませんでした。 */
+  #drop-capsule{ width:100%; display:flex; justify-content:center; align-items:flex-end; }
+  .capsule-sphere{ width:min(62px,17vw); height:min(62px,17vw); border-radius:50%;
+                   position:relative; overflow:hidden; margin-bottom:5px;
+                   box-shadow:inset -7px -7px 16px rgba(0,0,0,.6), inset 7px 7px 16px rgba(255,255,255,.4),
+                              0 8px 18px rgba(0,0,0,.5); }
+  .capsule-top{ position:absolute; top:0; left:0; width:100%; height:50%; border-bottom:3px solid rgba(0,0,0,.3); }
+  .capsule-bottom{ position:absolute; bottom:0; left:0; width:100%; height:50%; background:rgba(255,255,255,.85); }
+  .capsule-shine{ position:absolute; top:12%; left:18%; width:35%; height:20%;
+                  background:rgba(255,255,255,.6); border-radius:50%; transform:rotate(-30deg); }
+  /* ★暗いカプセルは 黒い取り出し口にまぎれて見えなかったので、ふちと赤い光を足す */
+  .capsule-dark{ border:2px solid #4b4f59;
+                 box-shadow:inset -7px -7px 16px rgba(0,0,0,.95), inset 4px 4px 10px rgba(255,255,255,.08),
+                            0 0 14px rgba(180,30,30,.55); }
+  .capsule-dark .capsule-top{ background:#24262c; border-bottom-color:#5a0e0e; }
+  .capsule-dark .capsule-bottom{ background:#15171c; }
+  .capsule-dark .capsule-shine{ background:rgba(255,255,255,.1); }
+  .capsule-rb{ animation:capRainbow 1.1s infinite linear; }
+  @keyframes capRainbow{
+    0%{ box-shadow:0 0 16px #ff0055, inset -7px -7px 16px rgba(0,0,0,.5); }
+    33%{ box-shadow:0 0 16px #00ffcc, inset -7px -7px 16px rgba(0,0,0,.5); }
+    66%{ box-shadow:0 0 16px #ffcc00, inset -7px -7px 16px rgba(0,0,0,.5); }
+    100%{ box-shadow:0 0 22px #ff00ff, inset -7px -7px 16px rgba(0,0,0,.5); }
+  }
+  .drop-in{ animation:dropCapsule .85s ease-out forwards; }
+  @keyframes dropCapsule{
+    0%{ transform:translateY(-120px) rotate(0deg); opacity:0; }
+    50%{ transform:translateY(0) rotate(180deg); opacity:1; }
+    70%{ transform:translateY(-22px) rotate(270deg); }
+    85%{ transform:translateY(0) rotate(340deg); }
+    95%{ transform:translateY(-7px) rotate(355deg); }
+    100%{ transform:translateY(0) rotate(360deg); }
+  }
+  /* ハンドルのガラガラ回転 */
+  .crank-spin{ animation:crankSpin 1.2s cubic-bezier(0.4,0,0.2,1) forwards; }
+  @keyframes crankSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(720deg); } }
+  /* ドームのガタガタ */
+  .rumble{ animation:rumble .1s infinite; }
+  @keyframes rumble{
+    0%{ transform:translate(0,0) rotate(0deg); }   25%{ transform:translate(-3px,3px) rotate(-2deg); }
+    50%{ transform:translate(3px,-2px) rotate(2deg); } 75%{ transform:translate(-2px,-3px) rotate(-1deg); }
+    100%{ transform:translate(0,0) rotate(0deg); }
+  }
+
+  /* ざわ…ざわ… → ひび割れ → 極限復活 */
+  #revival-overlay{ position:absolute; top:0; left:0; width:100%; height:100%;
+                    z-index:96; display:none; pointer-events:none; overflow:hidden; }
+  #revival-overlay.on{ display:block; }
+  #zawa{ position:absolute; inset:0; display:none; }
+  #zawa.on{ display:block; }
+  #zawa span{ position:absolute; font-weight:900; color:#a855f7; opacity:0;
+              text-shadow:0 0 12px rgba(0,0,0,.9); animation:zawaFloat 2s infinite ease-in-out; }
+  #zawa span:nth-child(1){ top:22%; left:8%;  font-size:clamp(20px,6vw,30px); animation-delay:0s; }
+  #zawa span:nth-child(2){ top:34%; right:10%; font-size:clamp(26px,8vw,40px); color:#7e22ce; animation-delay:.35s; }
+  #zawa span:nth-child(3){ bottom:32%; left:24%; font-size:clamp(32px,10vw,50px); color:#9333ea; animation-delay:.7s; }
+  #zawa span:nth-child(4){ bottom:18%; right:18%; font-size:clamp(22px,7vw,34px); color:#6b21a8; animation-delay:1.05s; }
+  @keyframes zawaFloat{
+    0%{ opacity:0; transform:translateY(10px) scale(.8); }
+    50%{ opacity:1; transform:translateY(-10px) scale(1.2); }
+    100%{ opacity:0; transform:translateY(-30px) scale(1); }
+  }
+  #revival-crack{ position:absolute; inset:0; display:none; }
+  #revival-crack.on{ display:block; }
+  #revival-glow{ position:absolute; top:-50%; left:-50%; width:200%; height:200%;
+    background:conic-gradient(from 0deg, rgba(255,0,0,.8), rgba(255,255,0,.8), rgba(0,255,0,.8),
+      rgba(0,255,255,.8), rgba(0,0,255,.8), rgba(255,0,255,.8), rgba(255,0,0,.8));
+    mix-blend-mode:color-dodge; opacity:0; transition:opacity 1.2s ease-in-out; animation:rotatePrism 2.5s linear infinite; }
+  #revival-svg{ position:absolute; inset:0; width:100%; height:100%; opacity:0;
+    transition:opacity .6s ease-in;
+    filter:drop-shadow(0 0 8px rgba(255,255,255,.95)) drop-shadow(0 0 18px rgba(0,255,255,.8)); }
+  #revival-crack.lit #revival-svg{ opacity:1; }
+  #revival-crack.lit #revival-glow{ opacity:.9; }
+  #revival-cutin{ position:absolute; inset:0; display:none; flex-direction:column;
+                  align-items:center; justify-content:center; text-align:center; z-index:2; }
+  #revival-cutin.on{ display:flex; }
+  #revival-title{ font-size:clamp(30px,10vw,58px); font-weight:900; letter-spacing:2px;
+    background:linear-gradient(90deg,#fde047,#ef4444,#ec4899); -webkit-background-clip:text;
+    background-clip:text; color:transparent; filter:drop-shadow(0 0 22px rgba(255,215,0,.9)); }
+  #revival-sub{ font-size:clamp(13px,4vw,20px); font-weight:900; color:#67e8f9; letter-spacing:4px; margin-top:6px;
+                text-shadow:0 0 12px rgba(0,0,0,.9); }
+  .violent-shake{ animation:violentShake .8s infinite; }
+  @keyframes violentShake{
+    0%{ transform:translate(0,0) scale(1); }      20%{ transform:translate(7px,-6px) scale(1.08) rotate(4deg); }
+    40%{ transform:translate(-9px,7px) scale(1.14) rotate(-6deg); }
+    60%{ transform:translate(10px,-5px) scale(1.2) rotate(7deg); }
+    80%{ transform:translate(-12px,8px) scale(1.26) rotate(-8deg); }
+    100%{ transform:translate(0,0) scale(1.32) rotate(0deg); }
+  }
+  /* 復活であたったときだけ、結果カードの絵が虹色に光る */
+  #result-img.revival{ animation:rainbowGlow 1.5s infinite linear; }
+  @keyframes rainbowGlow{
+    0%{ filter:drop-shadow(0 0 15px #ff0000) drop-shadow(0 0 30px #ff0000); }
+    25%{ filter:drop-shadow(0 0 15px #ffff00) drop-shadow(0 0 30px #ffff00); }
+    50%{ filter:drop-shadow(0 0 15px #00ff00) drop-shadow(0 0 30px #00ff00); }
+    75%{ filter:drop-shadow(0 0 15px #00ffff) drop-shadow(0 0 30px #00ffff); }
+    100%{ filter:drop-shadow(0 0 15px #ff00ff) drop-shadow(0 0 30px #ff00ff); }
+  }
+
   /* ★ハズレのときの絵（キャラは出しません） */
   #result-img.lose{ filter:none; }
   /* ★[hidden] は後から書いた display:flex に負けるので、ここで打ち消しておく */
   [hidden]{ display:none !important; }
   @media (prefers-reduced-motion: reduce){
-    .slot-frame.rainbow-border,.shake-screen,#hit-indicator,#rainbow-burst-glow{ animation:none; }
+    .slot-frame.rainbow-border,.shake-screen,#hit-indicator,#rainbow-burst-glow,
+    .rumble,.violent-shake,#zawa span,#revival-glow,.capsule-rb,#result-img.revival{ animation:none; }
   }
 </style>
 
@@ -448,11 +595,14 @@
     $('crack-overlay').style.display='none';
     $('crack-overlay').classList.remove('crack-active');
     $('crack-overlay').classList.remove('reveal');
+    revivalReset();
     var f=onClosed; onClosed=null; if(f) f();
   });
 
   /* ══════════ 1. 超演出スロット ══════════ */
-  var STRIP_LEN = 30, STOP_AT = 2;
+  /* ★止まる絵柄を帯のうしろの方に置く。手前だと「1コマ動いただけ」になって回って見えません。
+       STOP_AT-1 コマ分（約24コマ）を流すので、3秒まわすとしっかり回転して見えます。 */
+  var STRIP_LEN = 52, STOP_AT = 25;
   function initSlot(){
     [1,2,3].forEach(function(n){
       var strip=$('strip'+n); strip.innerHTML='';
@@ -495,14 +645,14 @@
         $('game-stage').classList.remove('shake-screen');
         ov.style.display='none';
         frame.classList.add('rainbow-border');
-        runReels(res, winChar, true, 2.5);
+        runReels(res, winChar, true, 3.0);
       }, 3200);
     } else if(res.mode===2){
       /* 【虹色・反転停止】 */
       frame.classList.add('rainbow-border');
-      runReels(res, winChar, true, 2.8);
+      runReels(res, winChar, true, 3.2);
     } else {
-      runReels(res, winChar, false, 2.5);
+      runReels(res, winChar, false, 3.0);
     }
   });
 
@@ -521,7 +671,7 @@
       sym[STOP_AT].src = faces[idx];
       var end = -(STOP_AT-1)*h;
       strip.style.transition='none';
-      strip.style.top = reverse ? (end-h*3)+'px' : '0px';   /* 反転は下から上へ */
+      strip.style.top = reverse ? (end-(STOP_AT-1)*h)+'px' : '0px';   /* 反転は逆からまわす */
       void strip.offsetHeight;
       setTimeout(function(){
         strip.style.transition='top '+(dur+idx*0.8)+'s cubic-bezier(0.1,0.85,0.15,1.0)';
@@ -535,7 +685,7 @@
       } else {
         showResult('😭 残念 😭', LOSE_X, '揃わなかった…　もう一度チャレンジしよう！', true);
       }
-    }, (dur+1.8)*1000);
+    }, (dur+1.6+0.6)*1000);   /* 3つめ（dur+1.6秒）が止まってから 0.6秒おいて結果 */
   }
 
   /* ★★ロングリーチ → ハズレで止まる → ネガ反転 → ガラスがひび割れる
@@ -555,8 +705,8 @@
     [s1,s2,s3].forEach(function(st){ st.style.transition='none'; st.style.top='0px'; });
     void s1.offsetHeight;
 
-    s1.style.transition='top 1.5s ease-out'; s1.style.top=end+'px';
-    s2.style.transition='top 2.2s ease-out'; s2.style.top=end+'px';
+    s1.style.transition='top 2.0s ease-out'; s1.style.top=end+'px';
+    s2.style.transition='top 2.8s ease-out'; s2.style.top=end+'px';
     setTimeout(function(){                     /* 3つめだけ、ゆっくり長く滑る */
       s3.style.transition='top 4.2s cubic-bezier(0.05,0.9,0.1,1.0)'; s3.style.top=end+'px';
     }, 1200);
@@ -604,24 +754,83 @@
     el.style.left=((0.5+Math.cos(a)*rr)*W - W*0.09)+'px';
     el.style.top =((0.52+Math.sin(a)*rr*0.92)*W - W*0.09)+'px';
   }
+  /* ★ガチャの流れ
+       クランクをガラガラ回す → ドームがガタガタ鳴る → 取り出し口に立体カプセルが落ちてくる
+       → 暗いカプセルのときは「ざわ…ざわ…」→ ひび割れ → ⚡極限復活⚡ → キャラ
+     ★暗いカプセルは **ハズレのときにも出ます**。必ず復活するなら、ざわついても意味がないので。
+       出るか出ないかは見た目だけで、当たりはずれは decide() が決めています。 */
+  function capsuleHTML(kind){
+    var top = (kind==='dark') ? '#24262c' : COLORS[Math.floor(Math.random()*COLORS.length)];
+    return '<div class="capsule-sphere'+(kind==='dark'?' capsule-dark':'')+(kind==='rb'?' capsule-rb':'')+'">'
+         + '<div class="capsule-top" style="background:'+top+'"></div>'
+         + '<div class="capsule-bottom"></div><div class="capsule-shine"></div></div>';
+  }
   function gachaGo(){
     if(gachaBusy) return; gachaBusy=true;
     var res=decide(), winChar=pick();
-    var handle=$('gacha-handle'), dome=$('gacha-dome');
+    var handle=$('gacha-handle'), dome=$('gacha-dome'), exit=$('drop-capsule');
     var W=dome.getBoundingClientRect().width||270;
-    rot+=720; handle.style.transition='transform 1.8s ease-out';
-    handle.style.transform='rotate('+rot+'deg)';
+
+    /* 暗いカプセル：大逆転のときは必ず、ハズレのときは半分くらい */
+    var dark = (res.mode===4) || (res.mode===0 && Math.random()<0.5);
+    var kind = dark ? 'dark' : ((res.mode===2||res.mode===3) ? 'rb' : 'normal');
+
+    exit.innerHTML=''; exit.classList.remove('drop-in');
+    handle.classList.remove('crank-spin'); void handle.offsetWidth;
+    handle.classList.add('crank-spin');
+    dome.classList.add('rumble');
+
     var n=0, iv=setInterval(function(){
       n++; caps.forEach(function(c){ place(c, W); });
-      if(n>18){
+      if(n>20){
         clearInterval(iv);
-        setTimeout(function(){
-          onClosed=function(){ gachaBusy=false; };
-          if(res.win) showResult('🎉 GET!! 🎉', winChar, 'カプセルが開いた！ '+res.prize+' をGET！', false);
-          else        showResult('😭 残念 😭', LOSE_CAP, 'カプセルは空っぽだった…', true);
-        }, 300);
+        dome.classList.remove('rumble');
+        handle.classList.remove('crank-spin');
+        /* 取り出し口にカプセルが落ちてくる */
+        exit.innerHTML=capsuleHTML(kind);
+        void exit.offsetWidth; exit.classList.add('drop-in');
+        setTimeout(function(){ dark ? revival(res, winChar) : finishGacha(res, winChar, false); }, 1000);
       }
     }, 80);
+  }
+  function finishGacha(res, winChar, viaRevival){
+    onClosed=function(){
+      gachaBusy=false;
+      $('drop-capsule').innerHTML=''; $('drop-capsule').classList.remove('drop-in');
+      $('result-img').classList.remove('revival');
+    };
+    if(res.win) showResult(viaRevival?'⚡ 極限復活！ ⚡':'🎉 GET!! 🎉', winChar,
+      (viaRevival?'空っぽに見えたカプセルが割れた！ ':'カプセルが開いた！ ')+res.prize+' をGET！', false);
+    else showResult('😭 残念 😭', LOSE_CAP, 'カプセルは空っぽだった…', true);
+    if(viaRevival) $('result-img').classList.add('revival');
+  }
+  function revivalReset(){
+    $('revival-overlay').classList.remove('on');
+    $('zawa').classList.remove('on');
+    $('revival-crack').classList.remove('on','lit');
+    $('revival-cutin').classList.remove('on','violent-shake');
+  }
+  function revival(res, winChar){
+    var ov=$('revival-overlay'), stage=$('game-stage');
+    revivalReset();
+    ov.classList.add('on'); $('zawa').classList.add('on');      /* ① ざわ…ざわ… */
+    setTimeout(function(){
+      $('zawa').classList.remove('on');
+      if(!res.win){                                            /* ハズレ：ざわついて終わり */
+        revivalReset(); finishGacha(res, winChar, false); return;
+      }
+      $('revival-crack').classList.add('on');                  /* ② 画面がひび割れる */
+      stage.classList.add('shake-screen');
+      setTimeout(function(){ $('revival-crack').classList.add('lit'); }, 60);
+      setTimeout(function(){                                   /* ③ ⚡極限復活⚡ */
+        $('revival-cutin').classList.add('on','violent-shake');
+      }, 1000);
+      setTimeout(function(){
+        stage.classList.remove('shake-screen');
+        revivalReset();
+        finishGacha(res, winChar, true);
+      }, 2400);
+    }, 1500);
   }
   $('gacha-handle').addEventListener('click', gachaGo);
 
