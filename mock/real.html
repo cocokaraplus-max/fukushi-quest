@@ -660,8 +660,9 @@
     var winChar=pick();
 
     if(res.mode>=3){
-      /* ★フリーズ系は「まずリールが普通に回って、揃って止まって、
-           ひと呼吸おいてから」発動する。止まる前に出すと、ただの飾りに見えます。 */
+      /* ★フリーズ系は「リーチして **ハズレ目で止まって** から」発動する。
+           揃ってから出すと、もう当たったあとなので盛り上がりません。
+           最後にフリーズが3つめを書きかえて揃う、という順番にしています。 */
       spinAndStop(winChar, function(){
         if(res.mode===4) crackSeq(res, winChar); else freezeSeq(res, winChar);
       });
@@ -673,62 +674,73 @@
     }
   });
 
-  /* 3つとも同じ絵柄で、普通に回して止める（フリーズ系の前半） */
+  /* 2つ揃いのリーチ → 3つめが外れて止まる（フリーズ系の前半） */
+  var DUR = [1.8, 2.4, 3.8];     /* 3つめだけ ゆっくり長く滑らせてリーチにする */
   function spinAndStop(winChar, done){
     var h=symH(), end=-(STOP_AT-1)*h;
+    var loseChar=winChar; while(loseChar===winChar) loseChar=pick();
+    var faces=[winChar, winChar, loseChar];
     [1,2,3].forEach(function(n,idx){
       var strip=$('strip'+n);
-      strip.querySelectorAll('.symbol')[STOP_AT].src=winChar;
+      strip.querySelectorAll('.symbol')[STOP_AT].src=faces[idx];
       strip.style.transition='none'; strip.style.top='0px';
       void strip.offsetHeight;
       setTimeout(function(){
-        strip.style.transition='top '+(1.8+idx*0.5)+'s cubic-bezier(0.1,0.85,0.15,1.0)';
+        strip.style.transition='top '+DUR[idx]+'s cubic-bezier(0.1,0.85,0.15,1.0)';
         strip.style.top=end+'px';
       }, 50);
     });
-    setTimeout(function(){ setTimeout(done, 1200); }, 2800);  /* 止まってから1.2秒の静寂 */
+    setTimeout(function(){ done(); }, (DUR[2]+1.2)*1000);   /* 止まってから1.2秒の静寂 */
+  }
+  /* 3つめを当たり図柄に書きかえて揃える */
+  function fillWin(winChar){
+    $('strip3').querySelectorAll('.symbol')[STOP_AT].src=winChar;
   }
 
   /* 【ロングフリーズ】画面を落として ためてから 発動 */
   function freezeSeq(res, winChar){
     var ov=$('freeze-overlay'), tx=$('freeze-text');
-    ov.style.display='flex';
-    setTimeout(function(){ tx.style.opacity='1'; }, 1000);
+    ov.style.display='flex';                       /* ハズレ目のまま画面が落ちる */
+    setTimeout(function(){ tx.style.opacity='1'; }, 800);
     setTimeout(function(){
       tx.textContent='⚡ LONG FREEZE ⚡\n極限フリーズ発生！';
       tx.style.color='#ffd700';
       $('game-stage').classList.add('shake-screen');
-    }, 3000);
-    setTimeout(function(){
+    }, 2600);
+    setTimeout(function(){                         /* 明けたら3つ揃いに書きかわっている */
       $('game-stage').classList.remove('shake-screen');
       ov.style.display='none';
+      fillWin(winChar);
       $('slot-frame').classList.add('rainbow-border');
+    }, 5600);
+    setTimeout(function(){
       onClosed=function(){ $('slot-btn').disabled=false; slotBusy=false; initSlot(); };
       showResult('🎉 超大当り(フリーズ)!! 🎉', winChar,
-                 '全画面の暗転フリーズを経て大当たり！ '+res.prize+' をGET！', false);
-    }, 6500);
+                 'ハズレ目からのロングフリーズ！ '+res.prize+' をGET！', false);
+    }, 7200);
   }
 
   /* 【ネガ反転 → ひび割れ → 虹色が溢れる】いちばん重い演出 */
   function crackSeq(res, winChar){
     var panel=$('slot-panel'), frame=$('slot-frame'), crack=$('crack-overlay'), stage=$('game-stage');
-    panel.classList.add('nega-mode');
+    panel.classList.add('nega-mode');        /* ハズレ目のままネガ反転 */
     stage.classList.add('shake-screen');
     setTimeout(function(){
       crack.style.display='block';
       setTimeout(function(){ crack.classList.add('crack-active'); }, 200);
-    }, 1500);
-    setTimeout(function(){
+    }, 1300);
+    setTimeout(function(){                   /* 光がピークで3つめが書きかわる */
+      fillWin(winChar);
       frame.classList.add('rainbow-border');
       panel.classList.remove('nega-mode');   /* 色を戻して */
       crack.classList.add('reveal');         /* 光を引かせて 揃った絵を見せる */
       stage.classList.remove('shake-screen');
-    }, 6000);
+    }, 5200);
     setTimeout(function(){
       onClosed=function(){ $('slot-btn').disabled=false; slotBusy=false; initSlot(); };
       showResult('🎉 超絶神引き大当り!! 🎉', winChar,
-                 '静寂を打ち破るフリーズ＆プリズムひび割れ炸裂！ '+res.prize+' をGET！', false);
-    }, 9500);
+                 'ハズレ目を割って大逆転！ '+res.prize+' をGET！', false);
+    }, 8000);
   }
 
   function runReels(res, winChar, reverse, dur, step){
