@@ -1060,7 +1060,7 @@
 
     function finish(){
       if(done) return; done=true;
-      clearInterval(iv); track.classList.remove('shake-screen');
+      clearInterval(iv);
       setTimeout(function(){
         onClosed=function(){ $('race-btn').disabled=false; raceBusy=false; initRace(); };
         if(res.win) showResult(
@@ -1074,7 +1074,7 @@
 
     /* 第1幕：逆転演出があるときは、わざとライバルに先行させる */
     var fired=false;
-    track.classList.add('shake-screen');
+    /* ★レース中は揺らさない。揺らすと走者が見えなくなります。 */
     iv=setInterval(function(){
       for(var i=0;i<4;i++){
         var sp=rnd(3,10)*k;
@@ -1084,7 +1084,7 @@
         wraps[i].style.left=pos[i]+'px';
       }
       if(rev && !fired && pos[ME]>=goal*0.46){
-        fired=true; clearInterval(iv); track.classList.remove('shake-screen');
+        fired=true; clearInterval(iv);
         if(kaku) cutinKaku(function(){ if(baku) cutinBaku(wraps,pos,ME,goal,k,function(){ act2(28); }); else act2(28); });
         else     cutinBaku(wraps,pos,ME,goal,k,function(){ act2(15); });
         return;
@@ -1094,7 +1094,6 @@
 
     /* 第2幕：超スピードでゴールまで */
     function act2(mySpeed){
-      track.classList.add('shake-screen');
       iv=setInterval(function(){
         for(var i=0;i<4;i++){
           var sp = (i===ME) ? mySpeed*k : rnd(2,8)*k;
@@ -1113,8 +1112,6 @@
     $('cutin-sub').textContent='目が光った！ ここからごぼう抜きだ！';
     $('cutin-eye-glow').style.display='block';
     ov.style.display='flex';
-    setTimeout(function(){ $('game-stage').classList.add('shake-screen'); }, 500);
-    setTimeout(function(){ $('game-stage').classList.remove('shake-screen'); }, 1400);
     setTimeout(function(){
       ov.style.display='none'; $('cutin-eye-glow').style.display='none';
       next();
@@ -1139,11 +1136,9 @@
         pos[i]=Math.max(10, pos[i]-60*k);     /* 吹き飛ばされて後ろへ */
         wraps[i].style.left=pos[i]+'px';
       }
-      $('game-stage').classList.add('shake-screen');
-      setTimeout(function(){
-        $('game-stage').classList.remove('shake-screen');
-        next();
-      }, 500);
+      $('game-stage').classList.add('shake-screen');   /* ★揺らすのはここだけ（爆発） */
+      setTimeout(function(){ $('game-stage').classList.remove('shake-screen'); }, 700);
+      setTimeout(function(){ next(); }, 800);
     }, 3500);   /* ★文字を読む間をとる */
   }
 
