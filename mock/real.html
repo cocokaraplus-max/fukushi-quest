@@ -30,7 +30,7 @@
   .game-panel.active { display:flex; }
 
   /* ── 1. スロット ── */
-  #slot-panel { background:linear-gradient(145deg,#111,#222); position:relative; transition:filter .2s; }
+  #slot-panel { background:linear-gradient(145deg,#111,#222); position:relative; transition:filter .8s ease; }
   #slot-panel.nega-mode { filter:invert(100%) hue-rotate(180deg) contrast(150%); }
   .slot-frame {
     width:100%; height:290px; background:#000; border:6px solid #ffd700; border-radius:15px;
@@ -58,18 +58,18 @@
   }
   #rainbow-burst-glow {
     position:absolute; top:-50%; left:-50%; width:200%; height:200%;
-    background:conic-gradient(from 0deg, rgba(255,0,0,.6), rgba(255,255,0,.6), rgba(0,255,0,.6),
-      rgba(0,255,255,.6), rgba(0,0,255,.6), rgba(255,0,255,.6), rgba(255,0,0,.6));
-    mix-blend-mode:color-dodge; opacity:0; transition:opacity .3s ease-in; animation:rotatePrism 2s linear infinite;
+    background:conic-gradient(from 0deg, rgba(255,0,0,.8), rgba(255,255,0,.8), rgba(0,255,0,.8),
+      rgba(0,255,255,.8), rgba(0,0,255,.8), rgba(255,0,255,.8), rgba(255,0,0,.8));
+    mix-blend-mode:color-dodge; opacity:0; transition:opacity 2.2s ease-in-out; animation:rotatePrism 2.5s linear infinite;
   }
-  @keyframes rotatePrism { 0%{transform:rotate(0) scale(1);} 50%{transform:rotate(180deg) scale(1.1);} 100%{transform:rotate(360deg) scale(1);} }
+  @keyframes rotatePrism { 0%{transform:rotate(0) scale(1);} 50%{transform:rotate(180deg) scale(1.15);} 100%{transform:rotate(360deg) scale(1);} }
   #crack-svg {
     position:absolute; top:0; left:0; width:100%; height:100%;
-    filter:drop-shadow(0 0 6px rgba(255,255,255,.9)) drop-shadow(0 0 15px rgba(0,255,255,.7));
-    opacity:0; transition:opacity .15s ease-out;
+    filter:drop-shadow(0 0 8px rgba(255,255,255,.95)) drop-shadow(0 0 18px rgba(0,255,255,.8));
+    opacity:0; transition:opacity .8s ease-in;
   }
   .crack-active #crack-svg { opacity:1; }
-  .crack-active #rainbow-burst-glow { opacity:.85; }
+  .crack-active #rainbow-burst-glow { opacity:.95; }
 
   /* ── 2. ガチャポン ── */
   #gacha-panel { background:linear-gradient(135deg,#1f1c2c,#928dab); }
@@ -346,10 +346,8 @@
   .runner-img{ width:min(65px,15vw); height:min(65px,15vw); }
   .select-thumb{ width:min(48px,12vw); height:min(48px,12vw); }
   #cutin-img{ width:min(220px,52vw); height:min(220px,52vw); }
-  /* ★爆竹は走者の うしろで光らせる。前に出すとキャラが見えなくなります。 */
-  .explosion-effect{ width:min(64px,16vw); height:min(64px,16vw); z-index:5; }
-  .runner-wrapper{ z-index:20; }
   #cutin-text{ font-size:clamp(26px,8vw,42px); }
+  .explosion-effect{ width:min(90px,23vw); height:min(90px,23vw); }
   #result-title{ font-size:clamp(24px,7.4vw,46px); line-height:1.15; text-align:center; padding:0 12px; }
   #result-img{ width:min(180px,42vw); height:min(180px,42vw); }
   .action-btn{ width:min(240px,86%); }
@@ -363,6 +361,10 @@
   #testbar button{ padding:9px 4px; font:inherit; font-size:12px; font-weight:800;
                    border:2px solid #4a4b52; border-radius:9px; background:#1b1c20; color:#9a9aa2; cursor:pointer; }
   #testbar button[aria-pressed="true"]{ background:#d4af37; border-color:#ffe08a; color:#1b1c20; }
+
+  /* ★書きかわる瞬間は光を引かせる。真っ白のままだと「3つ揃った」ところが見えません。 */
+  #crack-overlay.reveal #rainbow-burst-glow{ transition:opacity .55s ease-out; opacity:.18; }
+  #crack-overlay.reveal #crack-svg{ transition:opacity .55s ease-out; opacity:.3; }
 
   /* ★ハズレのときの絵（キャラは出しません） */
   #result-img.lose{ filter:none; }
@@ -445,11 +447,12 @@
     $('slot-panel').classList.remove('nega-mode');
     $('crack-overlay').style.display='none';
     $('crack-overlay').classList.remove('crack-active');
+    $('crack-overlay').classList.remove('reveal');
     var f=onClosed; onClosed=null; if(f) f();
   });
 
   /* ══════════ 1. 超演出スロット ══════════ */
-  var STRIP_LEN = 20, STOP_AT = 2;
+  var STRIP_LEN = 30, STOP_AT = 2;
   function initSlot(){
     [1,2,3].forEach(function(n){
       var strip=$('strip'+n); strip.innerHTML='';
@@ -472,13 +475,14 @@
     $('slot-panel').classList.remove('nega-mode');
     $('crack-overlay').style.display='none';
     $('crack-overlay').classList.remove('crack-active');
+    $('crack-overlay').classList.remove('reveal');
 
     var res=decide();
     var winChar=pick();
 
     if(res.mode===4){
-      /* 【ロングリーチ → ハズレ停止 → ネガ反転＆ひび割れ → 復活】 */
-      runNega(res, winChar);
+      /* 【ロングリーチ → ハズレ停止 → ネガ反転 → ひび割れ → 虹色が溢れて復活】 */
+      runCrackGlow(res, winChar);
     } else if(res.mode===3){
       /* 【プレミアムフリーズ】いったん画面を落として ためる */
       ov.style.display='flex'; tx.style.opacity='0'; tx.textContent='……'; tx.style.color='#fff';
@@ -491,18 +495,18 @@
         $('game-stage').classList.remove('shake-screen');
         ov.style.display='none';
         frame.classList.add('rainbow-border');
-        runReels(res, winChar, true);
+        runReels(res, winChar, true, 2.5);
       }, 3200);
     } else if(res.mode===2){
       /* 【虹色・反転停止】 */
       frame.classList.add('rainbow-border');
-      runReels(res, winChar, true);
+      runReels(res, winChar, true, 2.8);
     } else {
-      runReels(res, winChar, false);
+      runReels(res, winChar, false, 2.5);
     }
   });
 
-  function runReels(res, winChar, reverse){
+  function runReels(res, winChar, reverse, dur){
     var h=symH();
     var faces=[];
     if(res.win){ faces=[winChar,winChar,winChar]; }
@@ -517,10 +521,10 @@
       sym[STOP_AT].src = faces[idx];
       var end = -(STOP_AT-1)*h;
       strip.style.transition='none';
-      strip.style.top = reverse ? (end-h*2)+'px' : '0px';   /* 反転は下から上へ */
+      strip.style.top = reverse ? (end-h*3)+'px' : '0px';   /* 反転は下から上へ */
       void strip.offsetHeight;
       setTimeout(function(){
-        strip.style.transition='top '+(1.2+idx*0.5)+'s cubic-bezier(0.1,0.9,0.2,1.0)';
+        strip.style.transition='top '+(dur+idx*0.8)+'s cubic-bezier(0.1,0.85,0.15,1.0)';
         strip.style.top = end+'px';
       }, 50);
     });
@@ -531,13 +535,14 @@
       } else {
         showResult('😭 残念 😭', LOSE_X, '揃わなかった…　もう一度チャレンジしよう！', true);
       }
-    }, 2500);
+    }, (dur+1.8)*1000);
   }
 
-  /* ★★ロングリーチ → ハズレで止まる → ネガ反転＆画面ひび割れ → 3つ揃いに書きかわる
+  /* ★★ロングリーチ → ハズレで止まる → ネガ反転 → ガラスがひび割れる
+       → 割れ目から虹色がじわじわ溢れる → 3つ揃いに書きかわる
      ★「外れた」と思わせてからひっくり返すので、**いったん必ずハズレ目で止める**。
        止めずに虹だけ出すと、ただ当たっただけになって気持ちが上がりません。 */
-  function runNega(res, winChar){
+  function runCrackGlow(res, winChar){
     var h=symH();
     var end=-(STOP_AT-1)*h;
     var s1=$('strip1'), s2=$('strip2'), s3=$('strip3');
@@ -550,30 +555,34 @@
     [s1,s2,s3].forEach(function(st){ st.style.transition='none'; st.style.top='0px'; });
     void s1.offsetHeight;
 
-    s1.style.transition='top 0.8s ease-out'; s1.style.top=end+'px';
-    s2.style.transition='top 1.0s ease-out'; s2.style.top=end+'px';
+    s1.style.transition='top 1.5s ease-out'; s1.style.top=end+'px';
+    s2.style.transition='top 2.2s ease-out'; s2.style.top=end+'px';
     setTimeout(function(){                     /* 3つめだけ、ゆっくり長く滑る */
-      s3.style.transition='top 3.5s cubic-bezier(0.05,0.8,0.1,1.0)'; s3.style.top=end+'px';
-    }, 800);
+      s3.style.transition='top 4.2s cubic-bezier(0.05,0.9,0.1,1.0)'; s3.style.top=end+'px';
+    }, 1200);
 
     setTimeout(function(){                     /* ここでいったん「ハズレ」で静止 */
-      setTimeout(function(){
-        panel.classList.add('nega-mode');      /* ① ネガ反転 */
-        stage.classList.add('shake-screen');
-        crack.style.display='block';           /* ② 画面がひび割れて虹色が漏れる */
-        setTimeout(function(){ crack.classList.add('crack-active'); }, 100);
-        setTimeout(function(){                 /* ③ 3つめが当たり図柄に書きかわる */
-          s3.querySelectorAll('.symbol')[STOP_AT].src=winChar;
-          frame.classList.add('rainbow-border');
-          stage.classList.remove('shake-screen');
-          setTimeout(function(){
-            onClosed=function(){ $('slot-btn').disabled=false; slotBusy=false; initSlot(); };
-            showResult('🎉 大当たり!! 🎉', winChar,
-                       'ハズレからの復活！ '+res.prize+' をGET！', false);
-          }, 1200);
-        }, 1500);
-      }, 600);
-    }, 4500);
+      panel.classList.add('nega-mode');        /* ① ネガ反転（0.8秒かけてじわっと） */
+      stage.classList.add('shake-screen');
+      setTimeout(function(){                   /* ② ガラスのひび割れが浮き上がる */
+        crack.style.display='block';
+        setTimeout(function(){
+          crack.classList.add('crack-active'); /* ③ 割れ目から虹色がじわじわ溢れる */
+          setTimeout(function(){               /* ④ 光がピークで 3つめが書きかわる */
+            s3.querySelectorAll('.symbol')[STOP_AT].src=winChar;
+            panel.classList.remove('nega-mode');   /* 色を戻して */
+            crack.classList.add('reveal');         /* 光を引かせて 揃った絵を見せる */
+            frame.classList.add('rainbow-border');
+            stage.classList.remove('shake-screen');
+            setTimeout(function(){
+              onClosed=function(){ $('slot-btn').disabled=false; slotBusy=false; initSlot(); };
+              showResult('🎉 大当たり!! 🎉', winChar,
+                         'ハズレからの大逆転！ '+res.prize+' をGET！', false);
+            }, 1200);
+          }, 1800);
+        }, 800);
+      }, 800);
+    }, 5800);
   }
 
   /* ══════════ 2. ガチャポン ══════════ */
@@ -588,7 +597,8 @@
       place(c, W); dome.appendChild(c); caps.push(c);
     }
   }
-  /* ドームは丸いので、まん中からの距離が外に出ないところに置く */
+  /* ★ドームは丸いので、まん中からの距離で置く。
+     決め打ちのピクセルだと、画面が小さいときカプセルが外にはみ出します。 */
   function place(el, W){
     var a=Math.random()*Math.PI*2, rr=Math.sqrt(Math.random())*0.34;
     el.style.left=((0.5+Math.cos(a)*rr)*W - W*0.09)+'px';
@@ -616,19 +626,23 @@
   $('gacha-handle').addEventListener('click', gachaGo);
 
   /* ══════════ 3. 影を選ぶリアル釣り ══════════
-     ★連打バトルは **見せ場だけ**。当たりはずれは決めません。
-       連打の速さで結果が変わると、小さい子やお年寄りに不公平になるため、
-       ゲージは押さなくても ゆっくり自分で上がり、必ず引き上げまで行きます。
-     ★「大物」のカットインが出るのは当たりのときだけ（大物なのに景品が無いのを防ぐ）。 */
-  var fishBusy=false, fishRes=null, mashOn=false, mashP=0, mashIv=null, mashCap=null;
+     ★大きい影（大物）は 最初から見えていて、選べます。
+       ただし 当たりはずれは decide() が決めます。大物を選んでも バラすことがある。
+     ★連打は **見せ場だけ**。速さで結果が変わると、小さい子やお年寄りに不公平になるため、
+       ゲージは押さなくても ゆっくり自分で上がり、必ず引き上げまで行きます。 */
+  var fishBusy=false, fishRes=null, fishBoss=false, mashOn=false, mashP=0, mashIv=null, mashCap=null;
   function initFish(){
     var sea=$('sea-area');
     [].slice.call(sea.querySelectorAll('.fish-shadow')).forEach(function(f){ f.remove(); });
     var r=sea.getBoundingClientRect();
     for(var i=0;i<4;i++){
-      var f=document.createElement('div'); f.className='fish-shadow';
-      var w=rnd(26,58); f.style.width=w+'px'; f.style.height=(w*0.4)+'px';
-      f.style.left=rnd(r.width*0.10, r.width*0.80)+'px';
+      var boss = (i===0 && Math.random()<0.4);
+      var f=document.createElement('div');
+      f.className='fish-shadow'+(boss?' boss-fish':'');
+      f.dataset.boss = boss ? '1' : '';
+      var w = boss ? 65 : rnd(26,52);
+      f.style.width=w+'px'; f.style.height=(w*0.4)+'px';
+      f.style.left=rnd(r.width*0.10, r.width*0.78)+'px';
       f.style.top =rnd(r.height*0.28, r.height*0.80)+'px';
       f.addEventListener('click', function(ev){ cast(ev.currentTarget, ev); });
       sea.appendChild(f);
@@ -637,6 +651,8 @@
     $('cast-btn-text').style.display='';
     $('fishing-battle-ui').style.display='none';
     $('fishing-cutin').style.display='none';
+    $('hit-indicator').style.display='none';
+    $('float-bobber').style.display='none';
     $('mash-progress-fill').style.width='0%';
   }
   setInterval(function(){
@@ -644,18 +660,18 @@
     var sea=$('sea-area'), r=sea.getBoundingClientRect();
     [].slice.call(sea.querySelectorAll('.fish-shadow')).forEach(function(f){
       var x=parseFloat(f.style.left), y=parseFloat(f.style.top);
-      var nx=Math.min(Math.max(x+rnd(-55,55), r.width*0.06), r.width*0.84);
+      var nx=Math.min(Math.max(x+rnd(-55,55), r.width*0.06), r.width*0.82);
       var ny=Math.min(Math.max(y+rnd(-32,32), r.height*0.24), r.height*0.84);
-      f.style.transition='left 1.1s ease-in-out, top 1.1s ease-in-out';
+      f.style.transition='left 1.2s ease-in-out, top 1.2s ease-in-out';
       f.style.left=nx+'px'; f.style.top=ny+'px';
       f.style.transform = (nx<x) ? 'scaleX(-1)' : 'scaleX(1)';
     });
-  }, 1200);
+  }, 1400);
 
   function cast(fish, ev){
     if(fishBusy) return; fishBusy=true;
     fishRes=decide();
-    var boss = (fishRes.mode>=2);
+    fishBoss = (fish.dataset.boss==='1');
     var sea=$('sea-area'), bob=$('float-bobber'), hit=$('hit-indicator');
     var r=sea.getBoundingClientRect();
     var x=(ev.clientX-r.left), y=(ev.clientY-r.top);
@@ -664,30 +680,28 @@
     fish.style.left=(x-15)+'px'; fish.style.top=(y-5)+'px';
     $('cast-btn-text').textContent='……アタリを待っている';
     setTimeout(function(){
-      if(boss){ fish.classList.add('boss-fish'); fish.style.width='74px'; fish.style.height='30px'; }
-      hit.textContent = boss ? '‼️ 大物だ ‼️' : '‼️ HIT ‼️';
+      hit.textContent = fishBoss ? '‼️ 大物だ ‼️' : '‼️ HIT ‼️';
       hit.style.left=(x-60)+'px'; hit.style.top=(y-70)+'px'; hit.style.display='block';
-      if(boss){
-        /* 【超大物カットイン】 */
-        setTimeout(function(){
-          hit.style.display='none';
+      setTimeout(function(){
+        hit.style.display='none';
+        if(fishBoss){
+          /* 【超大物カットイン】大きい影を選んだときだけ */
           var cut=$('fishing-cutin'); cut.style.display='flex';
           $('game-stage').classList.add('shake-screen');
           setTimeout(function(){
             $('game-stage').classList.remove('shake-screen');
-            cut.style.display='none'; startBattle(true);
-          }, 1300);
-        }, 500);
-      } else {
-        setTimeout(function(){ startBattle(false); }, 450);
-      }
-    }, rnd(1000,2500));
+            cut.style.display='none'; startBattle(fishBoss);
+          }, 1200);
+        } else {
+          startBattle(false);
+        }
+      }, 700);
+    }, rnd(800,2000));
   }
 
-  /* 連打バトル。押しても押さなくても上がるが、押すと速い。 */
+  /* 連打バトル。押すと速く上がる。押さなくても必ず最後まで上がる。 */
   function startBattle(boss){
     mashOn=true; mashP=0;
-    $('hit-indicator').style.display='none';
     $('cast-btn-text').style.display='none';
     $('fishing-battle-ui').style.display='flex';
     $('mash-progress-fill').style.width='0%';
@@ -713,41 +727,51 @@
       $('float-bobber').style.display='none';
       var winChar=pick();
       onClosed=function(){ fishBusy=false; initFish(); };
-      if(fishRes.win) showResult('🎣 釣り上げた！！ 🎣', winChar,
-        (fishRes.mode>=2 ? '超大物だった！ ' : '狙った魚影から！ ')+fishRes.prize+' をGET！', false);
-      else            showResult('😭 残念 😭', LOSE_BOOT, 'バラしてしまった…　ながぐつだけが残った。', true);
+      if(fishRes.win) showResult(fishBoss?'🎣 超大物を釣り上げた！！ 🎣':'🎣 釣り上げた！！ 🎣', winChar,
+        '激しい引きに打ち勝った！ '+fishRes.prize+' をGET！', false);
+      else            showResult('😭 残念 😭', LOSE_BOOT,
+        fishBoss?'あと少しでバラしてしまった…　ながぐつだけが残った。':'バラしてしまった…　ながぐつが釣れた。', true);
     }, 350);
   }
-  $('hook-btn').addEventListener('click', function(){ addMash(9); });
+  $('hook-btn').addEventListener('click', function(){
+    if(!mashOn) return;
+    addMash(9);
+    $('game-stage').classList.add('shake-screen');
+    setTimeout(function(){ $('game-stage').classList.remove('shake-screen'); }, 80);
+  });
 
   /* ══════════ 4. 激熱！運動会 ══════════
-     ★勝ち負けは decide() が決めます。選んだキャラや走りの速さでは変わりません。
-       当たりのとき「どの演出で勝つか」だけを mode で分けています。 */
-  var raceBusy=false, myChar=null, raceIv=null;
+     ★勝ち負けは decide() が決めます。選んだキャラや走りでは変わりません。
+       当たりのとき「どの演出で勝つか」だけを mode で分けています。
+       覚醒・爆竹は **勝ちが決まったときだけ** 出る演出です。 */
+  var raceBusy=false, myIdx=0, raceChars=[];
   function initRace(){
     var box=$('character-select-box'); box.innerHTML='';
-    var sh=shuffled().slice(0,4);
-    sh.forEach(function(src,i){
+    raceChars = shuffled().slice(0,4);
+    myIdx = 0;
+    raceChars.forEach(function(src,i){
       var im=document.createElement('img');
       im.className='select-thumb'+(i===0?' selected':''); im.src=src; im.alt='';
       im.addEventListener('click', function(){
         if(raceBusy) return;
-        [].slice.call(box.querySelectorAll('.select-thumb')).forEach(function(o){ o.classList.remove('selected'); });
-        im.classList.add('selected'); myChar=src;
+        myIdx=i;
+        [].slice.call(box.querySelectorAll('.select-thumb')).forEach(function(o,k){
+          o.classList.toggle('selected', k===i); });
+        badges();
       });
       box.appendChild(im);
+      /* ★走者の絵は、開いた時点から見えていること。
+         前は スタートを押すまで空のレーンだけが並んでいました。 */
+      $('runner'+(i+1)).src=src;
+      $('wrap'+(i+1)).style.left='10px';
     });
-    myChar = sh[0];
-    /* ★走者の絵は、開いた時点から見えていること。
-       前は スタートを押すまで空のレーンだけが並んでいました。 */
-    var others = CHARS.filter(function(c){ return c!==myChar; }).sort(function(){ return 0.5-Math.random(); });
-    [1,2,3,4].forEach(function(n,i){
-      $('runner'+n).src = (i===0) ? myChar : others[i-1];
-      $('wrap'+n).style.left='10px';
-      $('wrap'+n).querySelector('.player-badge').style.display = (i===0)?'block':'none';
-    });
+    badges();
     $('race-cutin-overlay').style.display='none';
+    $('cutin-eye-glow').style.display='none';
     [].slice.call($('stadium-track').querySelectorAll('.explosion-effect')).forEach(function(e){ e.remove(); });
+  }
+  function badges(){
+    for(var i=1;i<=4;i++) $('wrap'+i).querySelector('.player-badge').style.display = (i-1===myIdx)?'block':'none';
   }
 
   $('race-btn').addEventListener('click', function(){
@@ -757,74 +781,105 @@
     var track=$('stadium-track');
     [].slice.call(track.querySelectorAll('.explosion-effect')).forEach(function(e){ e.remove(); });
 
-    /* ★自分のレーンは毎回ちがう場所。いつも一番上だと先が読めてしまう。 */
-    var ME = Math.floor(Math.random()*4);
-    var others = CHARS.filter(function(c){ return c!==myChar; }).sort(function(){ return 0.5-Math.random(); });
-    var wraps=[], runners=[], oi=0;
-    for(var i=0;i<4;i++){
-      wraps.push($('wrap'+(i+1))); runners.push($('runner'+(i+1)));
-      runners[i].src = (i===ME) ? myChar : others[oi++];
-      wraps[i].style.left='10px';
-      wraps[i].querySelector('.player-badge').style.display = (i===ME)?'block':'none';
-    }
+    var wraps=[$('wrap1'),$('wrap2'),$('wrap3'),$('wrap4')];
+    wraps.forEach(function(w){ w.style.left='10px'; });
+
+    var ME=myIdx;
     var first = res.win ? ME : (function(){ var o=[0,1,2,3].filter(function(n){return n!==ME;});
-                                           return o[Math.floor(Math.random()*o.length)]; })();
-    /* 当たりのときだけ、mode で勝ちかたを変える */
+                                            return o[Math.floor(Math.random()*o.length)]; })();
     var kaku = res.win && (res.mode===3 || res.mode===4);   /* 覚醒カットイン */
-    var baku = res.win && (res.mode===2 || res.mode===4);   /* 爆竹ダッシュ */
+    var baku = res.win && (res.mode===2 || res.mode===4);   /* 爆竹カットイン */
+    var rev  = kaku || baku;
 
     var goal = Math.max(120, track.getBoundingClientRect().width - 85);
-    var pos=[10,10,10,10], boost=false, paused=false, cut=false;
-    track.classList.add('shake-screen');
+    var k = goal/380;                      /* 画面の幅に合わせて速さも伸び縮みさせる */
+    var pos=[10,10,10,10], done=false, iv=null;
 
-    raceIv = setInterval(function(){
-      if(paused) return;
+    function finish(){
+      if(done) return; done=true;
+      clearInterval(iv); track.classList.remove('shake-screen');
+      setTimeout(function(){
+        onClosed=function(){ $('race-btn').disabled=false; raceBusy=false; initRace(); };
+        if(res.win) showResult(
+          kaku?'🏆 覚醒！1位ゴール！ 🏆' : baku?'🏆 爆発一人勝ち！ 🏆' : '🏆 1位ゴール！ 🏆',
+          raceChars[ME],
+          (kaku?'目が光り 猛ダッシュでごぼう抜き！ ':baku?'邪魔者を吹き飛ばして堂々の1位！ ':'見事1位でゴールイン！ ')
+          +res.prize+' をGET！', false);
+        else showResult('😭 惜しくも敗北 😭', LOSE_X, 'ライバルに届かなかった…　もう一度チャレンジしよう！', true);
+      }, 450);
+    }
+
+    /* 第1幕：逆転演出があるときは、わざとライバルに先行させる */
+    var fired=false;
+    track.classList.add('shake-screen');
+    iv=setInterval(function(){
       for(var i=0;i<4;i++){
-        var sp=rnd(3,12);
-        if(i===first){
-          if(pos[i]>goal*0.5) sp+=5;
-          if(boost) sp+=9;
-        }
+        var sp=rnd(3,10)*k;
+        if(rev && !fired && i!==ME) sp+=3*k;
+        if(!rev && i===first && pos[i]>goal*0.5) sp+=5*k;
         pos[i]+=sp; if(pos[i]>goal) pos[i]=goal;
         wraps[i].style.left=pos[i]+'px';
       }
-      /* 【覚醒カットイン】いちどレースを止めて、ためてから一気に抜く */
-      if(kaku && !cut && pos[ME]>goal*0.42){
-        cut=true; paused=true;
-        var ov=$('race-cutin-overlay');
-        $('cutin-img').src=myChar; $('cutin-eye-glow').style.display='block';
-        $('cutin-text').textContent='⚡️ 覚 醒 ⚡️';
-        ov.style.display='flex';
-        $('game-stage').classList.add('shake-screen');
-        setTimeout(function(){
-          $('game-stage').classList.remove('shake-screen');
-          ov.style.display='none'; $('cutin-eye-glow').style.display='none';
-          boost=true; paused=false;
-        }, 1500);
+      if(rev && !fired && pos[ME]>=goal*0.46){
+        fired=true; clearInterval(iv); track.classList.remove('shake-screen');
+        if(kaku) cutinKaku(function(){ if(baku) cutinBaku(wraps,pos,ME,goal,k,function(){ act2(28); }); else act2(28); });
+        else     cutinBaku(wraps,pos,ME,goal,k,function(){ act2(15); });
+        return;
       }
-      /* 【爆竹ダッシュ】自分の後ろで次々に爆発しながら加速する */
-      if(baku && pos[ME]>goal*0.45){
-        if(!boost) boost=true;
-        if(Math.random()<0.45) bang(track, wraps[ME], ME);
-      }
-      if(pos[first]>=goal){
-        clearInterval(raceIv); track.classList.remove('shake-screen');
-        setTimeout(function(){
-          onClosed=function(){ $('race-btn').disabled=false; raceBusy=false; initRace(); };
-          if(res.win) showResult('🏆 1位ゴール！ 🏆', myChar,
-            (kaku?'覚醒して': baku?'爆走して':'')+'見事1位でゴールイン！ '+res.prize+' をGET！', false);
-          else        showResult('😭 残念 😭', LOSE_X, '惜しくも届かず…　もう一度チャレンジしよう！', true);
-        }, 500);
-      }
+      if(pos[first]>=goal) finish();
     }, 60);
+
+    /* 第2幕：超スピードでゴールまで */
+    function act2(mySpeed){
+      track.classList.add('shake-screen');
+      iv=setInterval(function(){
+        for(var i=0;i<4;i++){
+          var sp = (i===ME) ? mySpeed*k : rnd(2,8)*k;
+          pos[i]+=sp; if(pos[i]>goal) pos[i]=goal;
+          wraps[i].style.left=pos[i]+'px';
+        }
+        if(pos[ME]>=goal) finish();
+      }, 50);
+    }
   });
-  function bang(track, wrap, lane){
-    var e=document.createElement('div'); e.className='explosion-effect';
-    var L=parseFloat(wrap.style.left)||10;
-    e.style.left=Math.max(0,L-18)+'px';
-    e.style.top =(lane*25+7)+'%';
-    track.appendChild(e);
-    setTimeout(function(){ if(e.parentNode) e.parentNode.removeChild(e); }, 520);
+
+  function cutinKaku(next){
+    var ov=$('race-cutin-overlay');
+    $('cutin-img').src=raceChars[myIdx];
+    $('cutin-text').textContent='⚡️ 覚 醒 ⚡️';
+    $('cutin-eye-glow').style.display='block';
+    ov.style.display='flex';
+    setTimeout(function(){ $('game-stage').classList.add('shake-screen'); }, 400);
+    setTimeout(function(){
+      $('game-stage').classList.remove('shake-screen');
+      ov.style.display='none'; $('cutin-eye-glow').style.display='none';
+      next();
+    }, 1500);
+  }
+  function cutinBaku(wraps, pos, ME, goal, k, next){
+    var ov=$('race-cutin-overlay'), track=$('stadium-track');
+    $('cutin-img').src=raceChars[myIdx];
+    $('cutin-text').textContent='💣 爆竹投入！ 💣';
+    $('cutin-eye-glow').style.display='none';
+    ov.style.display='flex';
+    setTimeout(function(){
+      ov.style.display='none';
+      for(var i=0;i<4;i++){
+        if(i===ME) continue;
+        var e=document.createElement('div'); e.className='explosion-effect';
+        e.style.left=Math.max(0,pos[i]-10)+'px';
+        e.style.top =(i*25+2)+'%';
+        track.appendChild(e);
+        (function(el){ setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 600); })(e);
+        pos[i]=Math.max(10, pos[i]-60*k);     /* 吹き飛ばされて後ろへ */
+        wraps[i].style.left=pos[i]+'px';
+      }
+      $('game-stage').classList.add('shake-screen');
+      setTimeout(function(){
+        $('game-stage').classList.remove('shake-screen');
+        next();
+      }, 500);
+    }, 1200);
   }
 
   /* ══════════ 切りかえ ══════════ */
@@ -833,7 +888,7 @@
       [].slice.call(document.querySelectorAll('.game-panel')).forEach(function(p){ p.classList.remove('active'); });
       [].slice.call(document.querySelectorAll('.nav-btn')).forEach(function(o){ o.classList.remove('active'); });
       $(b.dataset.g+'-panel').classList.add('active'); b.classList.add('active');
-      if(b.dataset.g==='fishing' && !fishBusy) initFish();
+      if(b.dataset.g==='fishing' && !fishBusy)  initFish();
       if(b.dataset.g==='gacha'   && !gachaBusy) initDome();
       if(b.dataset.g==='slot'    && !slotBusy)  initSlot();
       if(b.dataset.g==='race'    && !raceBusy)  initRace();
