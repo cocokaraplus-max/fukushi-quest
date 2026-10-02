@@ -396,6 +396,25 @@
   .slot-frame{ height:min(290px,42vh); }
   .slot-reel{ width:31%; height:min(250px,37vh); }
   .symbol{ width:100%; height:min(110px,16vh); }
+  /* ★当たりのライン（真ん中の段）に枠をつける。どこが揃えばいいのか分かるように。
+     上下の段は暗く沈めて、まん中だけが見どころだと分かる形にしています。 */
+  .slot-reel{ position:relative; }
+  .slot-reel::before{
+    content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:linear-gradient(180deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 24%,
+                                        rgba(0,0,0,0) 76%, rgba(0,0,0,.6) 100%);
+  }
+  .slot-reel::after{
+    content:''; position:absolute; left:-1px; right:-1px; top:50%; transform:translateY(-50%);
+    height:min(110px,16vh); z-index:3; pointer-events:none;
+    border-top:2px solid rgba(255,215,0,.6); border-bottom:2px solid rgba(255,215,0,.6);
+    transition:border-color .25s, box-shadow .25s, background .25s;
+  }
+  /* 揃ったときは その段が白く光る */
+  .slot-frame.hit .slot-reel::after{
+    border-color:#fff; background:rgba(255,215,0,.15);
+    box-shadow:0 0 18px rgba(255,215,0,.9), inset 0 0 26px rgba(255,215,0,.45);
+  }
   #freeze-text{ font-size:clamp(22px,7vw,38px); letter-spacing:3px; }
   #gacha-machine{ width:min(320px,100%); height:auto; }
   #gacha-dome{ width:min(270px,74vw); height:min(270px,74vw); }
@@ -662,7 +681,7 @@
   var onClosed = null;
   $('result-close').addEventListener('click', function(){
     $('result-overlay').classList.remove('active');
-    $('slot-frame').classList.remove('rainbow-border');
+    $('slot-frame').classList.remove('rainbow-border','hit');
     $('slot-panel').classList.remove('nega-mode');
     $('crack-overlay').style.display='none';
     $('crack-overlay').classList.remove('crack-active');
@@ -684,15 +703,28 @@
         strip.appendChild(img);
       }
     });
+    /* ★回していないときも、絵柄が枠にぴたりと収まって見えるようにしておく */
+    var h=symH();
+    [1,2,3].forEach(function(n){
+      var strip=$('strip'+n);
+      strip.style.transition='none'; strip.style.top=endTop(h)+'px';
+    });
   }
   function symH(){ var s=$('strip1').querySelector('.symbol');
                    return s ? s.getBoundingClientRect().height : 110; }
+  /* ★止まったとき、当たりの段が窓のまん中に来るようにする。
+     前は1コマぶん下にずれていて、枠と合いませんでした。 */
+  function endTop(h){
+    var reel=$('strip1').parentElement;
+    var rh=reel.getBoundingClientRect().height || 250;
+    return -(STOP_AT*h) + (rh - h)/2;
+  }
 
   var slotBusy=false;
   $('slot-btn').addEventListener('click', function(){
     if(slotBusy) return; slotBusy=true;
     var btn=$('slot-btn'), frame=$('slot-frame');
-    btn.disabled=true; frame.classList.remove('rainbow-border');
+    btn.disabled=true; frame.classList.remove('rainbow-border','hit');
     $('slot-panel').classList.remove('nega-mode');
     $('crack-overlay').style.display='none';
     $('crack-overlay').classList.remove('crack-active','reveal');
@@ -720,7 +752,7 @@
   /* 2つ揃いのリーチ → 3つめが外れて止まる（フリーズ系の前半） */
   var DUR = [1.8, 2.4, 3.8];     /* 3つめだけ ゆっくり長く滑らせてリーチにする */
   function spinAndStop(winChar, done){
-    var h=symH(), end=-(STOP_AT-1)*h;
+    var h=symH(), end=endTop(h);
     var loseChar=winChar; while(loseChar===winChar) loseChar=pick();
     var faces=[winChar, winChar, loseChar];
     [1,2,3].forEach(function(n,idx){
@@ -754,7 +786,7 @@
       $('game-stage').classList.remove('shake-screen');
       ov.style.display='none';
       fillWin(winChar);
-      $('slot-frame').classList.add('rainbow-border');
+      $('slot-frame').classList.add('rainbow-border','hit');
     }, 5600);
     setTimeout(function(){
       onClosed=function(){ $('slot-btn').disabled=false; slotBusy=false; initSlot(); };
@@ -774,7 +806,7 @@
     }, 1300);
     setTimeout(function(){                   /* 光がピークで3つめが書きかわる */
       fillWin(winChar);
-      frame.classList.add('rainbow-border');
+      frame.classList.add('rainbow-border','hit');
       panel.classList.remove('nega-mode');   /* 色を戻して */
       crack.classList.add('reveal');         /* 光を引かせて 揃った絵を見せる */
       stage.classList.remove('shake-screen');
@@ -799,7 +831,7 @@
     [1,2,3].forEach(function(n,idx){
       var strip=$('strip'+n), sym=strip.querySelectorAll('.symbol');
       sym[STOP_AT].src = faces[idx];
-      var end = -(STOP_AT-1)*h;
+      var end = endTop(h);
       strip.style.transition='none';
       strip.style.top = reverse ? (end-(STOP_AT-1)*h)+'px' : '0px';   /* 反転は逆からまわす */
       void strip.offsetHeight;
@@ -811,6 +843,7 @@
     setTimeout(function(){
       onClosed=function(){ $('slot-btn').disabled=false; slotBusy=false; initSlot(); };
       if(res.win){
+        $('slot-frame').classList.add('hit');
         showResult('🎉 大当たり!! 🎉', winChar, '3つ揃った！ '+res.prize+' をGET！', false);
       } else {
         showResult('💀 惜しい！ハズレ 💀', pick(), 'もう一度挑戦して大当たりを狙おう！', true);
