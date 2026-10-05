@@ -1,5 +1,6 @@
 /* FUKUSHI QUEST PWA service worker
    fq-sw-v3 (2026-08-24)
+   fq-sw-nocache-v1 (2026-10-05) 画面はブラウザの控えを使わず毎回確かめる
    ------------------------------------------------------------------
    ★v2までの問題：すべての GET を「キャッシュ優先」で返していたため、
      1) Supabase の ranking / prizes 取得（GET）が最初の1回で固定され、
@@ -70,7 +71,8 @@ self.addEventListener('fetch', e => {
   if (isShell) {
     // ネットワーク優先：新しいのが取れたらそれを出し、控えも更新する
     e.respondWith(
-      fetch(req)
+      // ★fq-sw-nocache-v1: ブラウザの控え（最大10分）を使わず、毎回サーバーに確かめる
+      fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
         .then(res => {
           if (res && res.ok) {
             const cp = res.clone();
