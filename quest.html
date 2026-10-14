@@ -160,6 +160,26 @@
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
     background:#fffdf6;border:2px solid var(--mustard);color:var(--ink);border-radius:var(--r);padding:11px 18px;font-weight:900;font-size:13.5px;z-index:60;transition:.25s;box-shadow:var(--shadow);max-width:90%;text-align:center;}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* fq-voucher-v1: 引換券 */
+  .fqv-list{display:flex;flex-direction:column;gap:8px;width:100%;}
+  .fqv-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fffdf6;border:2px solid var(--mustard);border-radius:var(--r2);padding:10px 12px;font-family:inherit;cursor:pointer;}
+  .fqv-card.off{opacity:.55;border-color:#cfc6b6;}
+  .fqv-em{font-size:26px;}
+  .fqv-body{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .fqv-body b{font-size:15px;color:var(--ink);}
+  .fqv-body small{font-size:11.5px;color:var(--muted);font-weight:700;}
+  .fqv-st{font-size:11px;font-weight:900;color:#7a5300;background:#ffe9bf;border-radius:999px;padding:3px 9px;white-space:nowrap;}
+  .fqv-card.off .fqv-st{background:#eee;color:#777;}
+  .fqv-tip{font-size:11.5px;color:var(--muted);margin:6px 0 0;text-align:center;font-weight:700;}
+  .fqv-modal{max-height:92vh;overflow-y:auto;}
+  .fqv-h{font-weight:900;color:var(--red);font-size:15px;letter-spacing:.1em;}
+  .fqv-desc{font-size:12.5px;color:var(--ink);margin:6px 0;font-weight:700;}
+  .fqv-qr{width:220px;max-width:70vw;margin:8px auto 4px;background:#fff;padding:6px;border-radius:8px;}
+  .fqv-qr svg{width:100%;height:auto;display:block;}
+  .fqv-code{font-size:13px;color:var(--muted);font-weight:700;}
+  .fqv-code b{font-size:20px;color:var(--ink);letter-spacing:.08em;}
+  .fqv-state{display:none;margin:8px 0 0;font-weight:900;color:#fff;background:#8a8a8a;border-radius:8px;padding:6px;}
+  .fqv-note{text-align:left;font-size:12px;line-height:1.7;color:var(--ink);background:#fff6e2;border-radius:10px;padding:10px 12px;margin-top:10px;font-weight:600;}
   /* modal */
   .modal{position:fixed;inset:0;background:rgba(70,58,44,.55);display:none;align-items:center;justify-content:center;z-index:80;padding:22px;}
   .modal.show{display:flex;}
@@ -655,10 +675,10 @@ window.__FQ_Q0 = location.search;</script>
     <details>
       <summary>ガチャのルール（段階で解放）</summary>
       <div class="howto">
-        ・<b>1回目</b>：3ポイント貯めると引ける<br>
-        ・<b>2回目</b>：職員と会話して「会話QR」を読み取ると引ける<br>
-        ・<b>3回目</b>：さらにホールの「イベントQR」も読み取ると引ける<br><br>
-        回を重ねるほど会場を回って人と出会う必要がある設計です（ルールや必要数は後から調整できます）。
+        ・会場のQRを読み取ると<b>ポイント</b>がもらえます（同じQRは1回だけ）<br>
+        ・ガチャは<b>1回ごとにポイントを使います</b>。ポイントがある限り、何回でもまわせます<br>
+        ・当たったら「獲得した景品」に<b>引換券</b>が出ます。お店でQRを見せて使ってください<br>
+        ・引換券は<b>1回だけ</b>使えます。スクショを配っても、使えるのは最初の1人だけです<!-- fq-voucher-v1 -->
       </div>
     </details>
   </section>
@@ -864,11 +884,19 @@ function allDone(){return QUESTS.every(questDone);}
 function save(){store.set(S);}
 
 function scan(code){
-  if(VALID.indexOf(code)===-1){return;}
-  if(S.scanned.indexOf(code)!==-1){toast('このQRはもう読み取り済みだよ');render();return;}
+  /* fq-voucher-v1: 会場のQRは「呼び名.ランダムな文字」（例 talk_A.3f9c…）。
+     ★ランダムな部分の無い古い形（?q=talk_A）は、URLを手で打てば取れてしまうので受け付けない。
+     ★本当に正しいかはサーバー（fq_scan）が決める。ここでは待ち行列に入れるだけ。 */
+  code=String(code||'');
+  var base=code.split('.')[0];
+  if(VALID.indexOf(base)===-1){return;}
+  if(code.indexOf('.')<=0){toast('このQRは使えません');return;}
+  try{var _pq=JSON.parse(localStorage.getItem('fq_pending_codes_v1')||'[]')||[]; if(_pq.indexOf(code)===-1){_pq.push(code); localStorage.setItem('fq_pending_codes_v1',JSON.stringify(_pq));}}catch(e){}
+  if(window.fqFlushCodes) setTimeout(window.fqFlushCodes, 0);
+  if(S.scanned.indexOf(base)!==-1){toast('このQRはもう読み取り済みだよ');render();return;}
   var wasAll=allDone();
-  S.scanned.push(code); save();
-  var label={jigyosho:'事業所を訪問！',talk_A:'職員Aと会話！',talk_B:'職員Bと会話！',talk_C:'職員Cと会話！',check:'適性診断クリア！',event_1:'イベント参加①！',event_2:'イベント参加②！'}[code]||'スキャン！';
+  S.scanned.push(base); save();
+  var label={jigyosho:'事業所を訪問！',talk_A:'職員Aと会話！',talk_B:'職員Bと会話！',talk_C:'職員Cと会話！',check:'適性診断クリア！',event_1:'イベント参加①！',event_2:'イベント参加②！'}[base]||'スキャン！';
   toast('✅ '+label+'  +1pt');
   render();
   if(!wasAll && allDone()){ setTimeout(showRevive, 700); }
@@ -1623,7 +1651,7 @@ document.addEventListener('click', function(ev){
     var _scan=scan;
     window.scan=function(c){
       _scan(c); renderShindan();
-      if(c==='check' && !res()){ setTimeout(openShindan, 800); }
+      if(String(c||'').split('.')[0]==='check' && !res()){ setTimeout(openShindan, 800); } /* fq-voucher-v1 */
     };
   }
   if(typeof render==='function'){ var _render=render; window.render=function(){ _render(); renderShindan(); }; }
@@ -1647,52 +1675,116 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <!-- ===== 共有バックエンド（Supabase）配線：config.js が実値の時だけ有効。未設定なら演出はこれまで通りオフライン動作 ===== -->
+<script src="lib/qrcode.min.js"></script><!-- fq-voucher-v1: 引換券のQR（MIT・Kazuhiko Arase） -->
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
+  /* == fq-voucher-v1 : ポイント・抽選・引換券はサーバーが決める ==
+     ★景品が地域のお店のサービス＝本物になったので、端末の中では何も決めない。
+       ・端末ごとに「秘密の鍵」をもらう（fq_device_new）。認識番号と鍵がそろわないと動かない
+       ・会場のQRは推測できない文字列（例 talk_A.3f9c…）。読むと待ち行列に入れて、サーバーへ送る（fq_scan）
+       ・ポイントの残りはサーバーが数える。1回まわすと決まった数だけ減る（fq_draw）
+       ・当たったら引換券（推測できない番号＋QR）。お店が読んで、お店の暗証番号で使用済みにする
+     ★旧版の add_points / claim_prize / issue_recog は fq_voucher.sql で呼べなくしてある。
+       ここで呼び直さないこと（不正の入口だった）。
+     先に fq_voucher.sql を Supabase で Run しておくこと。 */
   var cfg = window.FQ_CONFIG || {};
   var REAL = !!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT')<0 && cfg.SUPABASE_ANON_KEY && cfg.SUPABASE_ANON_KEY.indexOf('YOUR-ANON')<0 && window.supabase);
   if(!REAL){ return; } // 未設定：オフラインの正本演出をそのまま使う
 
   var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
-  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function emojiByRarity(r){ return ({1:'🎁',2:'🎀',3:'🎫',4:'🌈'})[r]||'🎁'; }
   function kindByRarity(r){ return ({1:'イベント賞',2:'イベント賞',3:'地域協賛賞',4:'特賞'})[r]||'賞'; }
-  function prizeMeta(name, rarity){
-    var lists = [ (window.CFG&&CFG.prizes)||[], window.PRIZES||[] ];
-    for(var a=0;a<lists.length;a++){ for(var i=0;i<lists[a].length;i++){ if(lists[a][i].name===name){ return {em: lists[a][i].em||emojiByRarity(rarity), kind: lists[a][i].kind||kindByRarity(rarity)}; } } }
-    return { em: emojiByRarity(rarity), kind: kindByRarity(rarity) };
-  }
-  function rowFrom(res){ var d=res&&res.data; if(Array.isArray(d)) return d[0]||null; return d||null; }
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 
-  // ---- ポイント差分同期（add_pointsは加算式なので、同期済みポイントとの差分だけ送る）----
-  var LSKEY='fq_synced_pts';
-  function getLast(){ try{return parseInt(localStorage.getItem(LSKEY)||'0',10)||0;}catch(e){return 0;} }
-  function setLast(v){ try{localStorage.setItem(LSKEY,String(v));}catch(e){} }
-  function syncPoints(){
-    try{
-      var cur = points();
-      var delta = cur - getLast();
-      if(delta===0){ return; }
-      sb.rpc('add_points', {p_recog: DID, p_nick: (S.name||''), p_delta: delta})
-        .then(function(res){ if(res && res.error){ console.warn('add_points error', res.error); return; } setLast(cur); refreshRanking(); })
-        .catch(function(e){ console.warn('add_points失敗', e); });
-    }catch(e){ console.warn(e); }
+  var SECKEY='fq_secret_v1', VKEY='fq_vstate_v1', PENDKEY='fq_pending_codes_v1', SRVKEY='fukushi_quest_326_did_srv';
+  var SECRET = lsGet(SECKEY) || '';
+  var V = (function(){ try{ return JSON.parse(lsGet(VKEY)||'null') || {}; }catch(e){ return {}; } })();
+  if(!Array.isArray(V.vouchers)) V.vouchers = [];
+  if(typeof V.cost!=='number') V.cost = 1;
+  if(typeof V.balance!=='number') V.balance = null;      // null = まだサーバーから聞けていない
+  function saveV(){ lsSet(VKEY, JSON.stringify(V)); }
+  window.FQV = V;
+
+  function showDevId(){
+    var d=document.getElementById('devId'); if(!d) return;
+    d.textContent = SECRET ? DID : ('仮'+DID);
+    d.title = SECRET ? '' : 'まだ番号が確定していません。電波の良い場所で開き直してください。';
   }
 
-  // ---- なまえ（ニックネーム）を参加者に反映（デバウンス）----
+  // ---- 端末の鍵をもらう（1台に1回だけ） ----
+  var devP = null;
+  function ensureDevice(){
+    if(SECRET && lsGet(SRVKEY)==='1'){ showDevId(); return Promise.resolve(true); }
+    if(devP) return devP;
+    devP = sb.rpc('fq_device_new').then(function(res){
+      devP = null;
+      var d = res && res.data;
+      if(!d || !d.ok || !d.secret){ showDevId(); return false; }
+      DID = d.recog; window.DID = d.recog; SECRET = d.secret;
+      lsSet('fukushi_quest_326_did', d.recog); lsSet(SECKEY, d.secret); lsSet(SRVKEY, '1');
+      showDevId();
+      return true;
+    }).catch(function(e){ devP = null; console.warn('fq_device_new失敗（電波が戻ったらもう一度）', e); showDevId(); return false; });
+    return devP;
+  }
+  function forgetDevice(){ SECRET=''; lsSet(SECKEY,''); lsSet(SRVKEY,''); }
+
+  // ---- サーバーの状態（残りポイント・持っている引換券）を取り直す ----
+  var stBusy=false;
+  function refreshState(){
+    if(stBusy || !SECRET) return Promise.resolve();
+    stBusy=true;
+    return sb.rpc('fq_state', {p_recog:String(DID), p_secret:SECRET}).then(function(res){
+      stBusy=false;
+      var d = res && res.data; if(!d) return;
+      if(!d.ok && d.reason==='auth'){ forgetDevice(); return ensureDevice().then(function(ok){ if(ok) return refreshState(); }); }
+      if(!d.ok) return;
+      V.balance = d.balance|0; V.cost = Math.max(1, d.cost|0); V.vouchers = d.vouchers || []; V.bases = d.bases || [];
+      // クエストの「達成」表示は、サーバーに届いたQRで合わせる（端末を変えても戻る）
+      (d.bases||[]).forEach(function(b){ if(S.scanned.indexOf(b)===-1) S.scanned.push(b); });
+      save(); saveV(); render();
+    }).catch(function(e){ stBusy=false; console.warn('fq_state失敗', e); });
+  }
+
+  // ---- 会場のQR：待ち行列からサーバーへ送る（電波が悪くても、あとで送る） ----
+  function pget(){ try{ return JSON.parse(lsGet(PENDKEY)||'[]')||[]; }catch(e){ return []; } }
+  function pset(a){ lsSet(PENDKEY, JSON.stringify(a)); }
+  var flushing=false;
+  function flushCodes(){
+    if(flushing || !SECRET) return;
+    var q=pget(); if(!q.length) return;
+    flushing=true;
+    var code=q[0];
+    sb.rpc('fq_scan', {p_recog:String(DID), p_secret:SECRET, p_code:String(code), p_nick:(S.name||'')}).then(function(res){
+      flushing=false;
+      var d=res && res.data; if(!d) return;                     // 返事が無い＝通信の不調。次の機会に
+      if(!d.ok && d.reason==='auth'){ forgetDevice(); ensureDevice().then(function(ok){ if(ok) flushCodes(); }); return; }
+      pset(pget().filter(function(c){ return c!==code; }));
+      if(d.ok){ V.balance=d.balance|0; saveV(); render(); refreshRanking(); }
+      else if(d.reason==='bad_code'){
+        var bb=String(code).split('.')[0];
+        if((V.bases||[]).indexOf(bb)===-1){ S.scanned=S.scanned.filter(function(x){ return x!==bb; }); save(); render(); }
+        toast('このQRは使えませんでした（ポイントは入りません）');
+      }
+      if(pget().length) setTimeout(flushCodes, 400);
+    }).catch(function(){ flushing=false; });
+  }
+  window.fqFlushCodes = flushCodes;
+
+  // ---- なまえ（ニックネーム） ----
   var nameTimer=null;
   function syncName(){
-    if(!(S.name||'').trim()) return; // なまえ未入力の間は参加者を作らない（本部ランキングのゴースト防止）
-    sb.rpc('add_points', {p_recog: DID, p_nick: (S.name||''), p_delta: 0}).then(function(){ refreshRanking(); }).catch(function(){});
+    if(!(S.name||'').trim() || !SECRET) return;
+    sb.rpc('fq_set_name', {p_recog:String(DID), p_secret:SECRET, p_nick:(S.name||'')}).then(function(){ refreshRanking(); }).catch(function(){});
   }
   document.addEventListener('input', function(ev){ var t=ev.target; if(t && t.id==='playerName'){ clearTimeout(nameTimer); nameTimer=setTimeout(syncName, 600); } });
 
-  // ---- ランキング表示 ----
-  /* fq-rank-lite-v1: 全件ではなく「上位20人」と「自分の1行」だけを受け取る。
-     以前は全参加者ぶん（1500人なら1500行≒90KB）を毎回取り直していた。 */
+  // ---- ランキング表示（fq-rank-lite-v1 のまま。上位20人＋自分の1行） ----
   function renderRank(top, myRow){
     var me = document.getElementById('rankMe');
     if(me){ me.textContent = (myRow && (myRow.points||0)>0) ? (myRow.rank+'位 / '+myRow.points+'pt') : ((S.name||'')?'ランキング未反映':'なまえを入れてね'); }
@@ -1715,143 +1807,138 @@ if ('serviceWorker' in navigator) {
     ]).then(function(rs){
       rankBusy=false;
       if(rs[0] && rs[0].error){ console.warn('ranking取得エラー', rs[0].error); return; }
-      var top   = (rs[0] && rs[0].data) || [];
-      var myRow = (((rs[1] && rs[1].data) || [])[0]) || null;
-      renderRank(top, myRow);
+      renderRank((rs[0] && rs[0].data) || [], (((rs[1] && rs[1].data) || [])[0]) || null);
     }).catch(function(e){ rankBusy=false; console.warn('ranking取得失敗', e); });
   }
 
-  // ---- 起動時：サーバー在庫を確率(CFG)へ同期（各端末で当選率が実在庫に追従）----
-  function syncStockToCfg(){
-    sb.from('prizes').select('*').then(function(res){
-      var rows = (res && res.data) || [];
-      if(!rows.length) return;
-      rows.sort(function(a,b){ return (a.sort-b.sort) || String(a.name).localeCompare(b.name); });
-      try{
-        CFG.prizes = rows.map(function(r){ var m=prizeMeta(r.name, r.rarity); return {kind:m.kind, name:r.name, em:m.em, r:r.rarity, count:(r.stock||0)}; });
-
-        /* == fq-lose-auto-v1 : ハズレの個数をサーバーの数字から計算する ==
-           ★もとは端末ごとの設定で、初期値は35個だった。
-           景品320個 ＋ ハズレ35個 ＝ 当たる確率 約90%。1人3回引けるので
-           355回（＝約118人）で在庫が空になり、あとから来た人は全部ハズレになる。
-           ⚙️主催者用の設定で直しても、その端末のブラウザにしか保存されないので
-           参加者のスマホには届かなかった（サーバーから同期していたのは在庫だけ）。
-           ここで initial_stock から計算すれば、全端末が同じ確率になる。
-           ★ハズレを変えたいときは、この下の想定来場者数か、
-             prizes テーブルの initial_stock を変えること。
-             ⚙️の画面で手で変えても、次に開いた時にここで計算し直される。 */
-        var FQ_EXPECTED_ATTENDEES = 1500;   /* ←想定来場者数。変えるならここ */
-        var initTotal = 0;
-        rows.forEach(function(r){ initTotal += Math.max(0, +r.initial_stock || 0); });
-        var perPerson = (typeof DRAWS_PER_PERSON === 'number' && DRAWS_PER_PERSON > 0)
-                          ? DRAWS_PER_PERSON : 3;
-        if(initTotal > 0){
-          CFG.lose = Math.max(0, FQ_EXPECTED_ATTENDEES * perPerson - initTotal);
-        }
-
-        if(typeof saveCfg==='function') saveCfg();
-      }catch(e){ console.warn(e); }
-    });
-  }
-
-  // ---- drawGacha を差し替え（演出は既存のrunFx/runLoseをそのまま使用。在庫はサーバー確定）----
-  var _pickLv = function(){ try{ return (pickDraw().lv)|0; }catch(e){ return 1; } };
-  window.drawGacha = function(){
-    if(busy) return;
-    var gs = gachaState(); if(!gs.can) return;
-    busy = true; var gb=document.getElementById('gachaBtn'); if(gb) gb.disabled=true;
-    // ステージ消費（既存ロジックと同一）
-    if(S.gacha===0){ S.gacha=1; S.snapTalk[1]=talkCount(); S.snapEvent[1]=eventCount(); }
-    else if(S.gacha===1){ S.gacha=2; S.snapTalk[2]=talkCount(); S.snapEvent[2]=eventCount(); }
-    else if(S.gacha===2){ S.gacha=3; }
-    var lv = _pickLv();
-    if(lv===0){ save(); render(); runLose(function(){ busy=false; render(); }); return; }
-    var revive=false;
-    if(lv===4){ var rr=Math.random(); revive = rr<0.4?false:(rr<0.7?1:2); }
-    save(); render();
-    // サーバーで在庫をアトミックに確定
-    sb.rpc('claim_prize', {p_recog: DID, p_rarity: lv}).then(function(res){
-      if(res && res.error){ throw res.error; }
-      var won = rowFrom(res);
-      if(!won || !won.id){
-        // 品切れ → ハズレ演出
-        toast('この景品は品切れでした…（ハズレ）');
-        runLose(function(){ busy=false; render(); refreshStock(); });
-        return;
-      }
-      var m = prizeMeta(won.name, won.rarity);
-      var p = { em:m.em, name:won.name, kind:m.kind, r:won.rarity };
-      S.prizes.push(p); save(); render();
-      runFx(lv, function(){ busy=false; showPrize(p, lv); confetti(lv); render(); refreshStock(); }, revive);
-    }).catch(function(e){
-      // 通信失敗：演出を止めないようローカル付与にフォールバック
-      console.warn('claim_prize失敗→ローカル付与', e);
-      var lp = (typeof pickPrizeOfLevel==='function') ? pickPrizeOfLevel(lv) : {em:emojiByRarity(lv),name:'景品',kind:kindByRarity(lv),r:lv};
-      S.prizes.push(lp); save(); render();
-      runFx(lv, function(){ busy=false; showPrize(lp, lv); confetti(lv); render(); }, revive);
-    });
+  // ---- 画面：ポイント・ガチャのボタン・引換券の一覧 ----
+  function statusLabel(v){ return v.status==='used' ? '使用済み' : (v.status==='expired' ? '期限切れ' : '使えます'); }
+  function fmtDate(s){ if(!s) return ''; var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (m[1]+'年'+(+m[2])+'月'+(+m[3])+'日') : String(s); }
+  var _render = window.render;
+  window.render = function(){
+    _render();
+    var bal = V.balance, cost = V.cost||1;
+    var pt=document.getElementById('pt'); if(pt) pt.textContent = (bal==null ? '…' : bal);
+    var st=document.getElementById('steps'); if(st) st.style.display='none';
+    var btn=document.getElementById('gachaBtn'), hint=document.getElementById('gachaHint');
+    if(btn){
+      var can = !!SECRET && bal!=null && bal>=cost && !busy;
+      btn.disabled = !can;
+      btn.textContent = 'ガチャをまわす（1回 '+cost+'pt）';
+    }
+    if(hint){
+      if(!SECRET || bal==null) hint.innerHTML='ポイントを確かめています…<br>電波の良い場所で開いてね';
+      else if(bal>=cost) hint.innerHTML='のこり <b>'+bal+'pt</b>：あと <b>'+Math.floor(bal/cost)+'回</b> まわせます';
+      else hint.innerHTML='あと <b>'+(cost-bal)+'ポイント</b> でまわせます。会場のQRを読み取ろう';
+    }
+    var box=document.getElementById('prizes');
+    if(box){
+      if(!V.vouchers.length){ box.innerHTML='<span class="empty">まだ景品はありません。ガチャをまわそう！</span>'; }
+      else box.innerHTML = '<div class="fqv-list">' + V.vouchers.map(function(v,i){
+        return '<button type="button" class="fqv-card'+(v.status!=='ok'?' off':'')+'" data-fqv="'+i+'">'
+          + '<span class="fqv-em">'+emojiByRarity(v.rarity)+'</span>'
+          + '<span class="fqv-body"><b>'+esc(v.prize)+'</b><small>'+esc(v.shop||'')+(v.expires_on?'　'+esc(fmtDate(v.expires_on))+'まで':'')+'</small></span>'
+          + '<span class="fqv-st">'+statusLabel(v)+'</span></button>';
+      }).join('') + '</div><p class="fqv-tip">タップすると引換券（QR）が出ます</p>';
+    }
   };
 
-  function refreshStock(){ syncStockToCfg(); }
-
-  // ---- scan / testAddPoint / resetAll をラップしてポイント同期 ----
-  if(typeof scan==='function'){ var _scan=scan; window.scan=function(c){ _scan(c); syncPoints(); }; }
-  if(typeof testAddPoint==='function'){ var _tap=testAddPoint; window.testAddPoint=function(){ _tap(); syncPoints(); }; }
-  if(typeof resetAll==='function'){ var _reset=resetAll; window.resetAll=function(){ var before=points(); _reset(); if(points()!==before) syncPoints(); }; }
-
-  // ---- fq-recog-serial-v1: 認識番号をサーバーから受け取る ----
-  /* これまで：端末が 1000〜9999 の乱数を自分で決めていた（9000通り）。
-     1500人だと、ほぼ確実に何組もかぶる＝2人が同じデータを共有してしまう。
-     （大抽選会はこの番号で当選を発表するので、かぶりは直接トラブルになる）
-     これから：Supabase の連番（0001, 0002 …）を1端末に1つ配る。かぶりゼロ。
-     発行できなかった端末は乱数のまま「仮」として動かす（演出は止めない）。
-     次に開いた時、まだ何も送っていなければ発行し直す。 */
-  var SRVKEY='fukushi_quest_326_did_srv';
-  function isServerIssued(){ try{ return localStorage.getItem(SRVKEY)==='1'; }catch(e){ return false; } }
-  function showDevId(tmp){
-    var d=document.getElementById('devId'); if(!d) return;
-    d.textContent = tmp ? ('仮'+DID) : DID;
-    d.title = tmp ? 'まだ番号が確定していません。電波の良い場所で開き直してください。' : '';
+  // ---- 引換券の画面 ----
+  var modal=document.createElement('div');
+  modal.className='modal'; modal.id='fqvModal';
+  modal.innerHTML='<div class="modal-card fqv-modal"><div class="fqv-h" id="fqvH">引換券</div>'
+    + '<div class="prize-name" id="fqvPrize">-</div><div class="kind" id="fqvShop">-</div>'
+    + '<div class="fqv-desc" id="fqvDesc"></div>'
+    + '<div class="fqv-qr" id="fqvQr"></div>'
+    + '<div class="fqv-code">券番号 <b id="fqvCode">-</b></div>'
+    + '<div class="fqv-state" id="fqvState"></div>'
+    + '<div class="fqv-note"><b>お店でこの画面のQRを見せてください。</b>お店の人が読み取って「使用済み」にします。<br>'
+    + '⚠️ この券は<b>1回だけ</b>使えます。家族や友だちに譲ることもできますが、<b>スクショを何人に配っても、使えるのは最初にお店で使った1人だけ</b>です。2人目からは「使用済み」と出て使えません。<br>'
+    + '📷 スクショを撮っておくと、電波が無いときも見せられます。</div>'
+    + '<button class="btn" data-act="close" data-mod="fqvModal">とじる</button></div>';
+  document.body.appendChild(modal);
+  function shopUrl(token){ return location.origin + location.pathname.replace(/[^\/]*$/, '') + 'shop.html?t=' + encodeURIComponent(token); }
+  function openVoucher(v){
+    document.getElementById('fqvH').textContent = (v.rarity>=4?'特賞 ':'') + '引換券';
+    document.getElementById('fqvPrize').textContent = v.prize || '';
+    document.getElementById('fqvShop').textContent = v.shop ? ('使えるお店：'+v.shop) : '';
+    document.getElementById('fqvDesc').textContent = [v.description||'', v.expires_on ? ('有効期限：'+fmtDate(v.expires_on)+'まで') : ''].filter(Boolean).join('　');
+    document.getElementById('fqvCode').textContent = v.code || '';
+    var stEl=document.getElementById('fqvState');
+    stEl.textContent = v.status==='ok' ? '' : ('この券は'+statusLabel(v)+'です');
+    stEl.style.display = v.status==='ok' ? 'none' : 'block';
+    var qr=document.getElementById('fqvQr');
+    try{ var q=qrcode(0,'M'); q.addData(shopUrl(v.token)); q.make(); qr.innerHTML=q.createSvgTag({cellSize:5, margin:2, scalable:true}); }
+    catch(e){ qr.innerHTML='<span class="empty">QRを出せませんでした。券番号をお店に伝えてください。</span>'; }
+    qr.style.opacity = v.status==='ok' ? '1' : '.25';
+    modal.classList.add('show');
   }
-  function ensureRecog(){
-    if(isServerIssued()){ showDevId(false); return Promise.resolve(); }
-    // すでにこの番号でポイントを送っていたら、番号を変えると二重登録になるので変えない
-    if(getLast()>0){ showDevId(false); return Promise.resolve(); }
-    return sb.rpc('issue_recog').then(function(res){
-      if(res && res.error){ throw res.error; }
-      var v = res && res.data;
-      if(typeof v==='string' && v.length){
-        DID = v; window.DID = v;
-        try{ localStorage.setItem(DIDKEY, v); localStorage.setItem(SRVKEY,'1'); }catch(e){}
-        setLast(0);           // 新しい番号なので、ポイントは最初から送り直す
-        showDevId(false);
-      } else { showDevId(true); }
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest && ev.target.closest('[data-fqv]'); if(!b) return;
+    var v = V.vouchers[parseInt(b.getAttribute('data-fqv'),10)]; if(v) openVoucher(v);
+    refreshState();
+  });
+
+  // ---- ガチャ：サーバーが当たり外れを決め、その結果に合わせて演出を流す ----
+  window.drawGacha = function(){
+    if(busy) return;
+    if(!SECRET){ toast('電波の良い場所で開き直してね'); ensureDevice(); return; }
+    var cost=V.cost||1;
+    if(V.balance==null || V.balance<cost){ toast('ポイントが足りません'); return; }
+    busy = true; var gb=document.getElementById('gachaBtn'); if(gb) gb.disabled=true;
+    sb.rpc('fq_draw', {p_recog:String(DID), p_secret:SECRET}).then(function(res){
+      var d = res && res.data;
+      if(!d){ throw (res && res.error) || new Error('no data'); }
+      if(!d.ok){
+        busy=false;
+        if(d.reason==='points'){ V.balance=d.balance|0; V.cost=d.cost|0||cost; saveV(); toast('ポイントが足りません'); }
+        else if(d.reason==='auth'){ forgetDevice(); ensureDevice(); toast('もう一度まわしてね'); }
+        render(); return;
+      }
+      V.balance = d.balance|0; V.cost = d.cost|0 || cost; saveV();
+      if(!d.win){ render(); runLose(function(){ busy=false; render(); }); return; }
+      var v = d.voucher, lv = Math.max(1, Math.min(4, v.rarity|0));
+      V.vouchers.unshift(v); saveV();
+      var revive=false;
+      if(lv===4){ var rr=Math.random(); revive = rr<0.4?false:(rr<0.7?1:2); }
+      var p = { em:emojiByRarity(lv), name:v.prize, kind:(v.shop ? v.shop : kindByRarity(lv)), r:lv };
+      runFx(lv, function(){ busy=false; showPrize(p, lv); confetti(lv); render(); }, revive);
     }).catch(function(e){
-      console.warn('issue_recog失敗（仮番号のまま進みます）', e);
-      showDevId(true);
+      // ★通信に失敗したら、何も起きていない（ポイントも減っていない）。端末の中で景品は出さない
+      console.warn('fq_draw失敗', e);
+      busy=false; render();
+      toast('つながりませんでした。電波の良い場所でもう一度まわしてね（ポイントは減っていません）');
     });
-  }
+  };
+  // 当たりの画面のボタンで、そのまま引換券を開けるように
+  (function(){
+    var pm=document.querySelector('#prizeModal p');
+    if(pm) pm.textContent='「獲得した景品」の引換券を、お店で見せて使ってね。';
+  })();
+
+  // ---- テスト用のQRボタン（本物のQRではない）は参加者に見せない ----
+  (function(){ var b=document.querySelector('[data-act="scan"]'); var s=b && b.closest('section'); if(s) s.style.display='none'; })();
 
   // ---- 起動 ----
   var rs=document.getElementById('rankSec'); if(rs) rs.style.display='block';
-  ensureRecog().then(function(){
-    syncStockToCfg();
-    syncPoints();   // URLのQR(?q=)で先に加算された分もここで反映
+  render();
+  ensureDevice().then(function(){
+    flushCodes();
+    refreshState();
     syncName();
     refreshRanking();
   });
+  window.addEventListener('online', function(){ ensureDevice().then(function(){ flushCodes(); refreshState(); }); });
 
-  /* fq-rank-lite-v1: realtime購読は本部モニター(honbu.html)だけにする。
-     参加者端末が購読すると、誰か1人がQRを読むたびに全端末がランキングを
-     取り直し、掛け算で無料枠（realtime同時200接続・転送月5GB）を大きく超える。
-     参加者側は「自分が動いた時」＋「60秒ごと・画面を見ている間だけ」で十分。 */
+  /* fq-rank-lite-v1: realtime購読は本部モニター(honbu.html)だけにする。参加者端末は購読しない */
   setInterval(function(){
-    if(document.visibilityState!=='visible') return;   // 裏に回っている間は通信しない
-    if(window.busy) return;                            // ガチャ演出中は邪魔しない
+    if(document.visibilityState!=='visible') return;
+    if(window.busy) return;
     refreshRanking();
+    flushCodes();
   }, 60000);
   document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState==='visible') refreshRanking();
+    if(document.visibilityState==='visible'){ refreshRanking(); flushCodes(); refreshState(); }
   });
 })();
 </script>

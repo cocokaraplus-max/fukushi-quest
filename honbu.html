@@ -506,5 +506,169 @@ boot();
   });
 })();
 </script>
+<!-- fq-voucher-v1: 景品・協力店・引換券（?admin=1 のときだけ出る） -->
+<style>
+  .vcard{ border-color:#6a5a3a; }
+  .vcard h3{ margin:18px 0 8px; font-size:16px; color:var(--gold); border-top:1px solid var(--line); padding-top:14px; }
+  .vtbl{ width:100%; border-collapse:collapse; font-size:14px; }
+  .vtbl th{ text-align:left; color:var(--sub); font-weight:700; font-size:12px; padding:6px 6px; border-bottom:1px solid var(--line); }
+  .vtbl td{ padding:6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .vtbl input, .vtbl select{ padding:7px 8px; border-radius:7px; border:1px solid var(--line); background:#1c180f; color:var(--cream); font-size:14px; width:100%; box-sizing:border-box; }
+  .vtbl .n{ width:70px; } .vtbl .d{ width:150px; }
+  .vmono{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--gold); font-weight:800; word-break:break-all; }
+  .vsmall{ font-size:12px; color:var(--sub); line-height:1.7; word-break:break-all; }
+  .vscroll{ overflow-x:auto; }
+</style>
+<div class="wrap" id="vWrap" style="display:none;">
+  <div class="card lpcard vcard" style="grid-column:1 / -1;">
+    <h2>🎟 景品・協力店・引換券</h2>
+    <div class="lprow">
+      <label for="vPass">合言葉</label>
+      <input type="password" id="vPass" class="lpin" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:180px;">
+      <button class="lpbtn" id="vLoad">読み込む</button>
+    </div>
+    <div class="lpmsg" id="vMsg"></div>
+    <div id="vBody" style="display:none;">
+      <h3>ガチャの設定</h3>
+      <div class="lprow">
+        <label>1回に使うポイント</label><input type="number" id="vCost" class="lpin" min="1" style="width:80px;">
+        <label>ハズレ玉の数</label><input type="number" id="vLose" class="lpin" min="0" style="width:110px;">
+        <button class="lpbtn sm" id="vSetSave">保存</button>
+        <span class="vsmall" id="vRate"></span>
+      </div>
+      <p class="lpnote">当たる確率 ＝ 景品の残りの数 ÷（景品の残りの数 ＋ ハズレ玉の数）。ハズレ玉を増やすほど当たりにくくなります。</p>
+
+      <h3>協力店</h3>
+      <div class="vscroll"><table class="vtbl"><thead><tr><th>お店の名前</th><th>メモ</th><th>はじめのコード</th><th>暗証番号</th><th>発行／使用</th><th></th></tr></thead><tbody id="vShops"></tbody></table></div>
+      <div class="lprow" style="margin-top:10px;">
+        <input type="text" id="vNewShop" class="lpin" placeholder="新しいお店の名前" style="width:220px;">
+        <button class="lpbtn sm" id="vAddShop">お店を足す</button>
+      </div>
+      <p class="lpnote">お店には「はじめのコード」と、次のページのURLを渡してください。お店がそこで暗証番号を決めます：<br><span class="vmono" id="vSetupUrl"></span><br>
+        お店が暗証番号を忘れたら「コードを作り直す」を押して、新しいコードを渡してください（前の暗証番号は使えなくなります）。</p>
+
+      <h3>景品</h3>
+      <div class="vscroll"><table class="vtbl"><thead><tr><th>景品の名前</th><th>演出</th><th>用意する数</th><th>残り</th><th>使えるお店</th><th>内容（券に出る）</th><th>有効期限</th><th>並び</th><th></th></tr></thead><tbody id="vPrizes"></tbody></table></div>
+      <div class="lprow" style="margin-top:10px;"><button class="lpbtn sm" id="vAddPrize">景品を足す</button></div>
+      <p class="lpnote">演出は当たったときの色（青1・緑2・赤3・虹4）。「用意する数」を変えると、残りも同じだけ増減します。会場で渡す景品は、お店を「本部」にしておくと、本部の受付で同じように使用済みにできます。</p>
+
+      <h3>会場のQRに入れるURL（印刷用）</h3>
+      <div id="vCodes" class="vsmall"></div>
+      <p class="lpnote">★このURLをQRにして会場に置いてください。<code>?q=talk_A</code> のような古い形は、もう使えません（手で打てば取れてしまうため）。</p>
+
+      <h3>引換券（新しい順・300件まで）</h3>
+      <div class="vscroll"><table class="vtbl"><thead><tr><th>券番号</th><th>景品</th><th>お店</th><th>認識番号</th><th>発行</th><th>使用</th></tr></thead><tbody id="vVouchers"></tbody></table></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  'use strict';
+  var p = new URLSearchParams(location.search);
+  if (p.get('admin') !== '1') return;
+  var cfg = window.FQ_CONFIG || {};
+  var real = cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0 && window.supabase;
+  var wrap = document.getElementById('vWrap'); if (!wrap) return;
+  wrap.style.display = '';
+  function $(id){ return document.getElementById(id); }
+  function say(t, cls){ var m=$('vMsg'); m.className='lpmsg'+(cls?' '+cls:''); m.textContent=t; }
+  if (!real) { say('config.js が未設定なので使えません。', 'ng'); $('vLoad').disabled = true; return; }
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  var pass = $('vPass');
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  var BASE = location.origin + location.pathname.replace(/[^\/]*$/, '');
+  $('vSetupUrl').textContent = BASE + 'shop.html?setup=1';
+  function t(s){ if(!s) return ''; var d=new Date(s); return isNaN(d)?String(s):d.toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  function rpc(name, args){ return sb.rpc(name, args).then(function(r){ if (r.error) throw r.error; return r.data || {}; }); }
+  var DATA = null;
+
+  function shopOptions(sel){
+    return '<option value="">（お店なし）</option>' + (DATA.shops||[]).map(function(s){
+      return '<option value="'+esc(s.id)+'"'+(s.id===sel?' selected':'')+'>'+esc(s.name)+'</option>'; }).join('');
+  }
+  function draw(){
+    var st = DATA.settings || {};
+    $('vCost').value = st.draw_cost; $('vLose').value = st.lose_weight;
+    var stock = 0; (DATA.prizes||[]).forEach(function(x){ stock += Math.max(0, x.stock|0); });
+    var tot = stock + (st.lose_weight|0);
+    $('vRate').textContent = tot ? ('いまの当たる確率：約 ' + (Math.round(stock / tot * 1000) / 10) + '%（景品の残り ' + stock + '）') : '';
+    $('vShops').innerHTML = (DATA.shops||[]).map(function(s){
+      return '<tr data-shop="'+esc(s.id)+'"><td><input class="nm" value="'+esc(s.name)+'"></td><td><input class="nt" value="'+esc(s.note)+'"></td>'
+        + '<td class="vmono">'+esc(s.setup_code)+'</td><td>'+(s.has_pin?'決めてある':'<span style="color:#e08a8a">まだ</span>')+'</td>'
+        + '<td>'+(s.issued|0)+'／'+(s.used|0)+'</td>'
+        + '<td><button class="lpbtn sm sv">保存</button> <button class="lpbtn sm del nc">コードを作り直す</button></td></tr>';
+    }).join('') || '<tr><td colspan="6" class="vsmall">まだお店がありません</td></tr>';
+    $('vPrizes').innerHTML = (DATA.prizes||[]).map(function(x){ return prizeRow(x); }).join('') || '<tr><td colspan="9" class="vsmall">まだ景品がありません</td></tr>';
+    $('vCodes').innerHTML = (DATA.codes||[]).map(function(c){
+      return '<div style="margin-bottom:6px;"><b>'+esc(c.label)+'</b>（'+esc(c.points)+'pt）<br><span class="vmono">'+esc(BASE+'quest.html?q='+c.code)+'</span></div>'; }).join('');
+    $('vVouchers').innerHTML = (DATA.vouchers||[]).map(function(v){
+      return '<tr><td class="vmono">'+esc(v.code)+'</td><td>'+esc(v.prize)+'</td><td>'+esc(v.shop)+'</td><td>'+esc(v.recog_no)+'</td><td>'+esc(t(v.issued_at))+'</td><td>'+(v.used_at?esc(t(v.used_at)):'—')+'</td></tr>';
+    }).join('') || '<tr><td colspan="6" class="vsmall">まだ引換券はありません</td></tr>';
+  }
+  function prizeRow(x){
+    x = x || {id:'', name:'', rarity:1, initial_stock:0, stock:0, shop_id:'', description:'', expires_on:'', sort:(DATA.prizes||[]).length+1};
+    var rs = [1,2,3,4].map(function(r){ return '<option value="'+r+'"'+((x.rarity|0)===r?' selected':'')+'>'+['','青','緑','赤','虹'][r]+'</option>'; }).join('');
+    return '<tr data-prize="'+esc(x.id)+'"><td><input class="nm" value="'+esc(x.name)+'"></td><td><select class="rr">'+rs+'</select></td>'
+      + '<td><input class="n ini" type="number" min="0" value="'+esc(x.initial_stock)+'"></td><td>'+esc(x.stock)+'</td>'
+      + '<td><select class="sh">'+shopOptions(x.shop_id)+'</select></td><td><input class="ds" value="'+esc(x.description)+'"></td>'
+      + '<td><input class="d ex" type="date" value="'+esc(x.expires_on||'')+'"></td><td><input class="n so" type="number" value="'+esc(x.sort)+'"></td>'
+      + '<td><button class="lpbtn sm sv">保存</button> <button class="lpbtn sm del rm">削除</button></td></tr>';
+  }
+  function load(){
+    if (!pass.value.trim()) { say('合言葉を入れてください。', 'ng'); return; }
+    say('読み込み中…');
+    rpc('fq_admin_voucher_data', {p_pass: pass.value}).then(function(d){
+      if (!d.ok) { say(d.message || '読み込めませんでした。', 'ng'); return; }
+      DATA = d; draw(); $('vBody').style.display = ''; say('読み込みました。', 'ok');
+    }).catch(function(e){ say('読み込めませんでした（' + (e.message || e) + '）。fq_voucher.sql は流しましたか？', 'ng'); });
+  }
+  $('vLoad').addEventListener('click', load);
+  pass.addEventListener('keydown', function(e){ if (e.key === 'Enter') load(); });
+  $('vSetSave').addEventListener('click', function(){
+    rpc('fq_admin_settings_save', {p_pass: pass.value, p_draw_cost: parseInt($('vCost').value,10)||1, p_lose_weight: parseInt($('vLose').value,10)||0})
+      .then(function(d){ if (!d.ok) return say(d.message||'保存できませんでした。','ng'); load(); })
+      .catch(function(e){ say('保存できませんでした（'+(e.message||e)+'）。','ng'); });
+  });
+  $('vAddShop').addEventListener('click', function(){
+    var nm = $('vNewShop').value.trim(); if (!nm) { say('お店の名前を入れてください。','ng'); return; }
+    rpc('fq_admin_shop_save', {p_pass: pass.value, p_id: '', p_name: nm, p_note: ''})
+      .then(function(d){ if (!d.ok) return say(d.message||'足せませんでした。','ng'); $('vNewShop').value=''; load(); })
+      .catch(function(e){ say('足せませんでした（'+(e.message||e)+'）。','ng'); });
+  });
+  $('vAddPrize').addEventListener('click', function(){
+    if (!DATA) return;
+    var tb = $('vPrizes'); if (tb.querySelector('td[colspan]')) tb.innerHTML = '';
+    tb.insertAdjacentHTML('beforeend', prizeRow(null));
+  });
+  wrap.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    var tr = b.closest('tr'); if (!tr) return;
+    if (tr.hasAttribute('data-shop')) {
+      var id = tr.getAttribute('data-shop');
+      if (b.classList.contains('sv')) {
+        rpc('fq_admin_shop_save', {p_pass: pass.value, p_id: id, p_name: tr.querySelector('.nm').value, p_note: tr.querySelector('.nt').value})
+          .then(function(d){ if (!d.ok) return say(d.message||'保存できませんでした。','ng'); load(); });
+      } else if (b.classList.contains('nc')) {
+        if (!confirm('はじめのコードを作り直しますか？このお店の今の暗証番号は使えなくなります。')) return;
+        rpc('fq_admin_shop_newcode', {p_pass: pass.value, p_id: id}).then(function(){ load(); });
+      }
+    } else if (tr.hasAttribute('data-prize')) {
+      var pid = tr.getAttribute('data-prize');
+      if (b.classList.contains('sv')) {
+        rpc('fq_admin_prize_save', {p_pass: pass.value, p_id: pid, p_name: tr.querySelector('.nm').value,
+          p_rarity: parseInt(tr.querySelector('.rr').value,10)||1, p_initial: parseInt(tr.querySelector('.ini').value,10)||0,
+          p_shop_id: tr.querySelector('.sh').value, p_description: tr.querySelector('.ds').value,
+          p_expires_on: tr.querySelector('.ex').value, p_sort: parseInt(tr.querySelector('.so').value,10)||0})
+          .then(function(d){ if (!d.ok) return say(d.message||'保存できませんでした。','ng'); load(); })
+          .catch(function(e){ say('保存できませんでした（'+(e.message||e)+'）。','ng'); });
+      } else if (b.classList.contains('rm')) {
+        if (!pid) { tr.remove(); return; }
+        if (!confirm('この景品を消しますか？（発行済みの引換券は残ります）')) return;
+        rpc('fq_admin_prize_delete', {p_pass: pass.value, p_id: pid}).then(function(){ load(); });
+      }
+    }
+  });
+})();
+</script>
 </body>
 </html>

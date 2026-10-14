@@ -13,7 +13,8 @@
        つながらない時だけキャッシュを出す（＝オフラインでも開ける）。
      - アイコン・manifest だけ「キャッシュ優先」（変わらないので速さ優先）。
    ------------------------------------------------------------------ */
-const CACHE = 'fq326-v20';  // fq-mon7-v1: mon_1〜mon_7 を切り抜き直したので版を上げる
+const CACHE = 'fq326-v21';  // fq-voucher-v1: lib/qrcode.min.js を足した
+// (旧) const CACHE = 'fq326-v20';  // fq-mon7-v1: mon_1〜mon_7 を切り抜き直したので版を上げる
 // ★名前を変えずに絵の中身だけ差し替えたときは、必ずここを上げること。
 //   上げないと、端末に残った古い絵（白い丸の「日」）が出続ける。
 //   ★名前が新しい絵（time.png / time_note.png）は、上げなくても出る。
@@ -33,7 +34,8 @@ const ASSETS = ['./', './index.html', './quest.html', './config.js', './manifest
   './img/app/m_jigyosho.png', './img/app/m_talk.png',
   './img/app/m_check.png', './img/app/m_event.png',
   './img/app/sw1.png', './img/app/sw2.png', './img/app/sw3.png',
-  './img/app/sw4.png', './img/app/sw5.png', './img/app/sw6.png'];
+  './img/app/sw4.png', './img/app/sw5.png', './img/app/sw6.png',
+  './lib/qrcode.min.js', './shop.html'];  // fq-voucher-v1
 
 self.addEventListener('install', e => {
   // 1つでも落ちると全部入らないので、個別に入れて失敗は無視する
