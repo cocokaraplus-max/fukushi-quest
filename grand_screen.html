@@ -23,13 +23,14 @@
   .nm.show{ opacity:1; }
   .stage.flash{ animation:fl 1.4s ease-out; }
   @keyframes fl{ 0%{ background:#f7e3a0; } 100%{ background:radial-gradient(ellipse at center,#2c2416 0%,#0d0a05 70%); } }
-  .idle .no{ opacity:.18; }
+  /* fq-grand-v4: 待っている間は「大抽選会」 */
+  .idle .no{ font-size:min(17vw,26vh); letter-spacing:.12em; color:#f0c95a; text-shadow:0 0 .1em rgba(240,201,90,.55); }
   .hint{ position:fixed; left:0; right:0; bottom:2vh; text-align:center; font-size:14px; color:#8a7a5a; }
   .hint.off{ display:none; }
 </style>
 </head>
 <body>
-<div class="stage idle" id="stage"><div class="no" id="no">????</div><div class="nm" id="nm"></div></div>
+<div class="stage idle" id="stage"><div class="no" id="no">大抽選会</div><div class="nm" id="nm"></div></div>
 <div class="hint" id="hint">画面を1回クリックすると音が出せるようになります（F11 などで全画面に）。この文字はクリックで消えます。</div>
 <script>
 (function(){
@@ -88,7 +89,7 @@
     $('no').innerHTML = digits.map(function(c, i){ return '<span' + (locked[i] ? ' class="lock"' : '') + '>' + esc(c) + '</span>'; }).join('');
   }
   function idle(){
-    run = null; $('stage').classList.add('idle'); $('no').textContent = '????';
+    run = null; $('stage').classList.add('idle'); $('no').textContent = '大抽選会';
     $('nm').textContent = ''; $('nm').classList.remove('show');
   }
   function start(n){
