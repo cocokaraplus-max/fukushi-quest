@@ -670,5 +670,97 @@ boot();
   });
 })();
 </script>
+<!-- fq-grand-v1: 大抽選会（?admin=1 のときだけ出る）。対象はガチャを1回でもまわした人 -->
+<style>
+  .gcard{ border-color:#7a5a2a; }
+  .gbig{ text-align:center; padding:26px 10px; margin:12px 0; border-radius:16px; background:#1c180f; border:2px solid var(--gold); }
+  .gbig .lab{ font-size:22px; color:var(--gold); font-weight:800; min-height:30px; }
+  .gbig .no{ font-size:110px; font-weight:900; letter-spacing:.08em; line-height:1.1; font-variant-numeric:tabular-nums; }
+  .gbig .nm{ font-size:34px; font-weight:800; min-height:44px; }
+  .gbtn{ background:linear-gradient(135deg,#f0d98a,#e0b64a); color:#211c14; border:none; border-radius:14px; padding:16px 34px; font-size:22px; font-weight:900; cursor:pointer; }
+  .gbtn:disabled{ opacity:.5; cursor:not-allowed; }
+  .gwin{ display:flex; gap:12px; align-items:center; padding:8px 4px; border-bottom:1px solid var(--line); font-size:16px; }
+  .gwin.absent{ opacity:.45; text-decoration:line-through; }
+  .gwin .n{ font-weight:900; font-size:20px; min-width:72px; color:var(--gold); }
+  .gwin .l{ min-width:90px; color:var(--sub); }
+  .gwin .nm{ flex:1; }
+</style>
+<div class="wrap" id="gWrap" style="display:none;">
+  <div class="card lpcard gcard" style="grid-column:1 / -1;">
+    <h2>🎉 大抽選会</h2>
+    <div class="lprow">
+      <label for="gPass">合言葉</label>
+      <input type="password" id="gPass" class="lpin" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:180px;">
+      <button class="lpbtn" id="gLoad">読み込む</button>
+      <span class="vsmall" id="gCount"></span>
+    </div>
+    <div class="lpmsg" id="gMsg"></div>
+    <div id="gBody" style="display:none;">
+      <div class="lprow">
+        <label for="gLabel">何の賞？</label>
+        <input type="text" id="gLabel" class="lpin" placeholder="例 特賞・1等" style="width:200px;">
+        <button class="gbtn" id="gDraw">抽選する</button>
+      </div>
+      <div class="gbig"><div class="lab" id="gShowLab"></div><div class="no" id="gShowNo">----</div><div class="nm" id="gShowNm"></div></div>
+      <p class="lpnote">対象は<b>ガチャを1回でもまわした人</b>です。同じ人は2回当たりません。当たった人がその場にいなければ「いなかった」を押して、もう一度「抽選する」を押してください（いなかった人は、もう選ばれません）。</p>
+      <div id="gList"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  'use strict';
+  var p = new URLSearchParams(location.search);
+  if (p.get('admin') !== '1') return;
+  var cfg = window.FQ_CONFIG || {};
+  var real = cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0 && window.supabase;
+  var wrap = document.getElementById('gWrap'); if (!wrap) return;
+  wrap.style.display = '';
+  function $(id){ return document.getElementById(id); }
+  function say(t, cls){ var m=$('gMsg'); m.className='lpmsg'+(cls?' '+cls:''); m.textContent=t; }
+  if (!real) { say('config.js が未設定なので使えません。', 'ng'); $('gLoad').disabled = true; return; }
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  var pass = $('gPass');
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function rpc(name, args){ return sb.rpc(name, args).then(function(r){ if (r.error) throw r.error; return r.data || {}; }); }
+
+  function load(){
+    if (!pass.value.trim()) { say('合言葉を入れてください。', 'ng'); return Promise.resolve(); }
+    return rpc('fq_admin_grand_list', {p_pass: pass.value}).then(function(d){
+      if (!d.ok) { say(d.message || '読み込めませんでした。', 'ng'); return; }
+      $('gBody').style.display = ''; say('');
+      $('gCount').textContent = '対象 ' + (d.eligible|0) + '人（まだ選ばれていない人 ' + (d.remaining|0) + '人）';
+      $('gList').innerHTML = (d.winners||[]).map(function(w){
+        return '<div class="gwin' + (w.status==='absent'?' absent':'') + '"><span class="n">' + esc(w.recog_no) + '</span>'
+          + '<span class="l">' + esc(w.label||'') + '</span><span class="nm">' + esc(w.nickname||'（なまえなし）') + '</span>'
+          + '<button class="lpbtn sm' + (w.status==='absent'?'':' del') + '" data-gid="' + esc(w.id) + '" data-to="' + (w.status==='absent'?'won':'absent') + '">'
+          + (w.status==='absent'?'やっぱりいた':'いなかった') + '</button></div>';
+      }).join('');
+    }).catch(function(e){ say('読み込めませんでした（' + (e.message || e) + '）。fq_grand.sql は流しましたか？', 'ng'); });
+  }
+  $('gLoad').addEventListener('click', load);
+  pass.addEventListener('keydown', function(e){ if (e.key === 'Enter') load(); });
+
+  $('gDraw').addEventListener('click', function(){
+    var b = this; b.disabled = true; say('');
+    var lab = $('gLabel').value.trim();
+    $('gShowLab').textContent = lab; $('gShowNm').textContent = '';
+    var t0 = Date.now(), spin = setInterval(function(){ $('gShowNo').textContent = String(Math.floor(Math.random()*9000)+1000); }, 60);
+    rpc('fq_admin_grand_draw', {p_pass: pass.value, p_label: lab}).then(function(d){
+      setTimeout(function(){
+        clearInterval(spin); b.disabled = false;
+        if (!d.ok) { $('gShowNo').textContent = '----'; say(d.message || '選べませんでした。', 'ng'); return; }
+        $('gShowNo').textContent = d.recog_no; $('gShowNm').textContent = d.nickname || '';
+        load();
+      }, Math.max(0, 2500 - (Date.now() - t0)));   // 2.5秒ほど数字をまわしてから発表
+    }).catch(function(e){ clearInterval(spin); b.disabled = false; $('gShowNo').textContent = '----'; say('選べませんでした（' + (e.message || e) + '）。', 'ng'); });
+  });
+
+  $('gList').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-gid]'); if (!b) return;
+    rpc('fq_admin_grand_mark', {p_pass: pass.value, p_id: parseInt(b.getAttribute('data-gid'),10), p_status: b.getAttribute('data-to')}).then(load);
+  });
+})();
+</script>
 </body>
 </html>

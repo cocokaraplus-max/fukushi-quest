@@ -549,6 +549,7 @@ window.__FQ_Q0 = location.search;</script>
       <div class="pinfo-id">認識番号<b id="devId">—</b></div>
     </div>
     <p class="pinfo-note">大抽選会は、この「なまえ」と「認識番号」で当選が発表されます。会場受付で番号を伝えてください。</p>
+    <p class="pinfo-note" id="fqGrand" style="display:none;font-weight:800;font-size:12px;"></p><!-- fq-grand-v1 -->
   </section>
 
   <!-- == fq-menu-v1 ==
@@ -1744,7 +1745,7 @@ if ('serviceWorker' in navigator) {
       var d = res && res.data; if(!d) return;
       if(!d.ok && d.reason==='auth'){ forgetDevice(); return ensureDevice().then(function(ok){ if(ok) return refreshState(); }); }
       if(!d.ok) return;
-      V.balance = d.balance|0; V.cost = Math.max(1, d.cost|0); V.vouchers = d.vouchers || []; V.bases = d.bases || [];
+      V.balance = d.balance|0; V.cost = Math.max(1, d.cost|0); V.vouchers = d.vouchers || []; V.bases = d.bases || []; V.grand = !!d.grand; /* fq-grand-v1 */
       // クエストの「達成」表示は、サーバーに届いたQRで合わせる（端末を変えても戻る）
       (d.bases||[]).forEach(function(b){ if(S.scanned.indexOf(b)===-1) S.scanned.push(b); });
       save(); saveV(); render();
@@ -1831,6 +1832,12 @@ if ('serviceWorker' in navigator) {
       else if(bal>=cost) hint.innerHTML='のこり <b>'+bal+'pt</b>：あと <b>'+Math.floor(bal/cost)+'回</b> まわせます';
       else hint.innerHTML='あと <b>'+(cost-bal)+'ポイント</b> でまわせます。会場のQRを読み取ろう';
     }
+    var gEl=document.getElementById('fqGrand');   /* fq-grand-v1 */
+    if(gEl){
+      gEl.style.display = SECRET ? 'block' : 'none';
+      gEl.style.color = V.grand ? 'var(--red)' : '';
+      gEl.textContent = V.grand ? '🎉 大抽選会の対象です（認識番号 '+DID+'）' : 'ガチャを1回まわすと、大抽選会の対象になります';
+    }
     var box=document.getElementById('prizes');
     if(box){
       if(!V.vouchers.length){ box.innerHTML='<span class="empty">まだ景品はありません。ガチャをまわそう！</span>'; }
@@ -1895,7 +1902,7 @@ if ('serviceWorker' in navigator) {
         else if(d.reason==='auth'){ forgetDevice(); ensureDevice(); toast('もう一度まわしてね'); }
         render(); return;
       }
-      V.balance = d.balance|0; V.cost = d.cost|0 || cost; saveV();
+      V.balance = d.balance|0; V.cost = d.cost|0 || cost; V.grand = true; saveV(); /* fq-grand-v1: 1回まわせば大抽選会の対象 */
       if(!d.win){ render(); runLose(function(){ busy=false; render(); }); return; }
       var v = d.voucher, lv = Math.max(1, Math.min(4, v.rarity|0));
       V.vouchers.unshift(v); saveV();
