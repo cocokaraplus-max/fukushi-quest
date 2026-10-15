@@ -830,7 +830,7 @@ boot();
     var n = 4, answer = null, failed = null, locked = [], t0 = Date.now(), lastFrame = 0;
     var total = SPIN_MS + STEP_MS * (n - 1) + LAST_EXTRA_MS;
     drumroll(total / 1000);
-    gsend({ type: 'start', n: n });   // fq-grand-v3
+    gsend({ type: 'start', n: n, label: lab });   // fq-grand-v3 / fq-grand-v6: 賞の名前（特賞・副賞なら花火）
     (PRACTICE ? Promise.resolve({ ok: true, recog_no: String(1000 + Math.floor(Math.random() * 9000)), nickname: 'れんしゅう' })   // fq-grand-v5
               : rpc('fq_admin_grand_draw', {p_pass: pass.value, p_label: lab})).then(function(d){
       if (!d.ok) { failed = d.message || '選べませんでした。'; gsend({ type: 'abort' }); return; }

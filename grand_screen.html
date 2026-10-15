@@ -13,16 +13,18 @@
      ★ブラウザは、画面を1回押すまで音を出させてくれない。開いたら1回クリックしておく -->
 <style>
   html,body{ margin:0; height:100%; background:#0d0a05; color:#f7efd9; overflow:hidden;
+    /* fq-grand-v6: 夜空は body に。花火の絵（canvas）を夜空と文字のあいだに置く */
     font-family:'Hiragino Kaku Gothic ProN','Yu Gothic','Noto Sans JP',sans-serif; cursor:default; }
   .stage{ position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background:radial-gradient(ellipse at center,#2c2416 0%,#0d0a05 70%); }
+    background:transparent; z-index:1; }
+  body{ background:radial-gradient(ellipse at center,#2c2416 0%,#0d0a05 70%) fixed; }
   .no{ font-size:min(32vw,48vh); font-weight:900; letter-spacing:.06em; line-height:1; font-variant-numeric:tabular-nums; }
   .no span{ display:inline-block; min-width:.62em; text-align:center; }
   .no span.lock{ color:#f0c95a; text-shadow:0 0 .12em rgba(240,201,90,.75); }
   .nm{ margin-top:4vh; font-size:min(9vw,11vh); font-weight:800; min-height:1.3em; letter-spacing:.06em; opacity:0; transition:opacity .6s; }
   .nm.show{ opacity:1; }
   .stage.flash{ animation:fl 1.4s ease-out; }
-  @keyframes fl{ 0%{ background:#f7e3a0; } 100%{ background:radial-gradient(ellipse at center,#2c2416 0%,#0d0a05 70%); } }
+  @keyframes fl{ 0%{ background:#f7e3a0; } 100%{ background:transparent; } }
   /* fq-grand-v4: 待っている間は「大抽選会」 */
   .idle .no{ font-size:min(17vw,26vh); letter-spacing:.12em; color:#f0c95a; text-shadow:0 0 .1em rgba(240,201,90,.55); }
   .hint{ position:fixed; left:0; right:0; bottom:2vh; text-align:center; font-size:14px; color:#8a7a5a; }
@@ -82,6 +84,111 @@
     for (var k = 0; k < 6; k++) hit(a, t + 0.58 + k * 0.32, 0.25, 0.08, 1800);
   }
 
+  /* ---- fq-grand-v6: 花火（特賞・副賞のとき）。絵も音も、その場で作る ---- */
+  var FW = { cv: null, ctx: null, shells: [], parts: [], glows: [], on: false, until: 0 };
+  function fwCanvas(){
+    if (FW.cv) return;
+    var cv = document.createElement('canvas'); cv.id = 'fw';
+    cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+    document.body.insertBefore(cv, document.body.firstChild);
+    FW.cv = cv; FW.ctx = cv.getContext('2d');
+    function fit(){ var r = window.devicePixelRatio || 1; cv.width = innerWidth * r; cv.height = innerHeight * r; FW.ctx.setTransform(r, 0, 0, r, 0, 0); }
+    fit(); window.addEventListener('resize', fit);
+  }
+  var FW_COLORS = [['#ffd36b', '#fff2c4'], ['#ff5a4f', '#ffc2a8'], ['#5fe08f', '#d6ffe2'], ['#5fb8ff', '#d9f0ff'],
+                   ['#c98bff', '#f0dcff'], ['#ffffff', '#fff6d8'], ['#ff8ad0', '#ffe0f2']];
+  function fwSound(kind, when){
+    var a = ac(); if (!a) return; var t = a.currentTime + (when || 0);
+    if (kind === 'launch') {                         // ひゅるる…
+      var o = a.createOscillator(), g = a.createGain(); o.type = 'sine';
+      o.frequency.setValueAtTime(600, t); o.frequency.exponentialRampToValueAtTime(1800, t + 1.0);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.04, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.05);
+      o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + 1.1);
+    } else if (kind === 'boom') {                    // ドーン
+      hit(a, t, 0.95, 1.6, 110, 'lowpass'); hit(a, t, 0.5, 0.5, 400, 'lowpass');
+    } else if (kind === 'crackle') {                 // パチパチ
+      for (var i = 0; i < 26; i++) hit(a, t + 0.35 + Math.random() * 1.2, 0.05 + Math.random() * 0.08, 0.03, 3000 + Math.random() * 3000);
+    }
+  }
+  function fwLaunch(delay){
+    setTimeout(function(){
+      if (!FW.on) return;
+      var W = innerWidth, H = innerHeight;
+      var x = W * (0.1 + Math.random() * 0.8), ty = H * (0.1 + Math.random() * 0.38);
+      var vy = -Math.sqrt(2 * 0.13 * (H - ty));      // その高さで止まる速さ
+      FW.shells.push({ x: x, y: H + 10, vx: (Math.random() - 0.5) * 1.2, vy: vy, trail: [], col: FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)],
+                       type: ['peony', 'peony', 'willow', 'ring', 'double'][Math.floor(Math.random() * 5)] });
+      fwSound('launch');
+    }, delay);
+  }
+  function fwBurst(s){
+    var n = s.type === 'ring' ? 120 : 210, base = Math.min(innerWidth, innerHeight) / 68;
+    var tilt = Math.random() * Math.PI;
+    for (var i = 0; i < n; i++) {
+      var ang = Math.random() * Math.PI * 2, sp = base * (0.55 + Math.random() * 0.55);
+      if (s.type === 'ring') { ang = (i / n) * Math.PI * 2; sp = base; }
+      var vx = Math.cos(ang) * sp, vy = Math.sin(ang) * sp;
+      if (s.type === 'ring') { vy *= Math.cos(tilt); }
+      var willow = s.type === 'willow';
+      FW.parts.push({ x: s.x, y: s.y, vx: vx, vy: vy, life: 1, decay: willow ? 0.0055 : 0.010 + Math.random() * 0.007,
+                      col: willow ? '#ffcf6b' : (i % 3 === 0 ? s.col[1] : s.col[0]), trail: [], tl: willow ? 14 : 6,
+                      drag: willow ? 0.965 : 0.955, g: willow ? 0.045 : 0.06, glitter: Math.random() < 0.3 });
+    }
+    if (s.type === 'double') {                       // 内側にもう1つの色
+      var c2 = FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)][0];
+      for (var j = 0; j < 70; j++) {
+        var a2 = Math.random() * Math.PI * 2, sp2 = base * 0.45 * (0.6 + Math.random() * 0.4);
+        FW.parts.push({ x: s.x, y: s.y, vx: Math.cos(a2) * sp2, vy: Math.sin(a2) * sp2, life: 1, decay: 0.014, col: c2, trail: [], tl: 5, drag: 0.95, g: 0.06, glitter: false });
+      }
+    }
+    FW.glows.push({ x: s.x, y: s.y, r: base * 9, life: 1, col: s.col[0] });   // 開いた瞬間の光
+    fwSound('boom'); fwSound('crackle');
+    var st = document.getElementById('stage');            // 夜空がぱっと明るくなる
+    if (st) { st.style.transition = 'none'; st.style.filter = 'brightness(1.5)'; setTimeout(function(){ st.style.transition = 'filter .6s'; st.style.filter = ''; }, 60); }
+  }
+  function fwFrame(){
+    var c = FW.ctx, W = innerWidth, H = innerHeight;
+    c.globalCompositeOperation = 'source-over'; c.clearRect(0, 0, W, H);
+    c.globalCompositeOperation = 'lighter'; c.lineCap = 'round';
+    for (var i = FW.shells.length - 1; i >= 0; i--) {
+      var s = FW.shells[i];
+      s.trail.push([s.x, s.y]); if (s.trail.length > 10) s.trail.shift();
+      s.x += s.vx; s.y += s.vy; s.vy += 0.13;
+      c.strokeStyle = 'rgba(255,220,160,.8)'; c.lineWidth = 2.2; c.beginPath();
+      c.moveTo(s.trail[0][0], s.trail[0][1]); for (var k = 1; k < s.trail.length; k++) c.lineTo(s.trail[k][0], s.trail[k][1]); c.lineTo(s.x, s.y); c.stroke();
+      if (s.vy >= -0.5) { fwBurst(s); FW.shells.splice(i, 1); }
+    }
+    for (var p = FW.parts.length - 1; p >= 0; p--) {
+      var q = FW.parts[p];
+      q.trail.push([q.x, q.y]); if (q.trail.length > q.tl) q.trail.shift();
+      q.vx *= q.drag; q.vy = q.vy * q.drag + q.g; q.x += q.vx; q.y += q.vy; q.life -= q.decay;
+      if (q.life <= 0) { FW.parts.splice(p, 1); continue; }
+      var al = Math.max(0, q.life) * (q.glitter && Math.random() < 0.35 ? 0.25 : 1);
+      c.globalAlpha = al; c.strokeStyle = q.col; c.lineWidth = 3.2 * Math.max(0.45, q.life);
+      c.beginPath(); c.moveTo(q.trail[0][0], q.trail[0][1]); for (var m = 1; m < q.trail.length; m++) c.lineTo(q.trail[m][0], q.trail[m][1]); c.lineTo(q.x, q.y); c.stroke();
+    }
+    for (var gI = FW.glows.length - 1; gI >= 0; gI--) {
+      var gw = FW.glows[gI]; gw.life -= 0.06; if (gw.life <= 0) { FW.glows.splice(gI, 1); continue; }
+      var grd = c.createRadialGradient(gw.x, gw.y, 0, gw.x, gw.y, gw.r);
+      grd.addColorStop(0, gw.col); grd.addColorStop(1, 'rgba(0,0,0,0)');
+      c.globalAlpha = gw.life * 0.45; c.fillStyle = grd; c.beginPath(); c.arc(gw.x, gw.y, gw.r, 0, Math.PI * 2); c.fill();
+    }
+    c.globalAlpha = 1;
+    if (FW.on || FW.shells.length || FW.parts.length || FW.glows.length) requestAnimationFrame(fwFrame);
+    else c.clearRect(0, 0, W, H);
+  }
+  function fireworks(sec){
+    fwCanvas();
+    var wasOn = FW.on; FW.on = true; FW.until = Date.now() + sec * 1000;
+    var t = 0;
+    while (t < sec * 1000 - 1500) { fwLaunch(t); if (Math.random() < 0.45) fwLaunch(t + 120); t += 450 + Math.random() * 450; }
+    for (var f = 0; f < 5; f++) fwLaunch(sec * 1000 - 1400 + f * 90);      // 最後にまとめて
+    setTimeout(function(){ if (Date.now() >= FW.until) FW.on = false; }, sec * 1000);
+    if (!wasOn) requestAnimationFrame(fwFrame);
+  }
+  function fireworksStop(){ FW.on = false; FW.shells = []; FW.parts = []; FW.glows = []; }
+  window.fqFireworks = fireworks;   // 試すとき用
+
   /* ---- 発表の流れ（本部モニターと同じ時間割） ---- */
   var SPIN_MS = 6500, STEP_MS = 1000, LAST_EXTRA_MS = 1800;
   var run = null;   // いまの発表
@@ -92,10 +199,10 @@
     run = null; $('stage').classList.add('idle'); $('no').textContent = '大抽選会';
     $('nm').textContent = ''; $('nm').classList.remove('show');
   }
-  function start(n){
-    stopSound();
+  function start(n, label){
+    stopSound(); fireworksStop();   // fq-grand-v6
     $('stage').classList.remove('idle'); $('nm').textContent = ''; $('nm').classList.remove('show');
-    run = { n: n || 4, answer: null, locked: [], t0: Date.now(), last: 0 };
+    run = { n: n || 4, answer: null, locked: [], t0: Date.now(), last: 0, label: String(label || '') };
     drumroll((SPIN_MS + STEP_MS * (run.n - 1) + LAST_EXTRA_MS) / 1000);
     var me = run;
     (function frame(){
@@ -116,6 +223,7 @@
       if (me.answer && el >= lockAt[n - 1]) {
         var fin = ans.split(''); showDigits(fin, fin.map(function(){ return true; }));
         fanfare();
+        if (/特賞|副賞/.test(me.label)) fireworks(9);   // fq-grand-v6: 特賞・副賞は花火
         var st = $('stage'); st.classList.remove('flash'); void st.offsetWidth; st.classList.add('flash');
         $('nm').textContent = me.answer.nickname || ''; $('nm').classList.add('show');
         return;
@@ -128,9 +236,9 @@
   function onMsg(m){
     if (!m || typeof m !== 'object') return;
     if (m.type === 'ping') { send({ type: 'hello' }); return; }
-    if (m.type === 'start') start(m.n);
+    if (m.type === 'start') start(m.n, m.label);
     else if (m.type === 'result' && run) { run.answer = { recog_no: String(m.recog_no || ''), nickname: String(m.nickname || '') }; run.n = run.answer.recog_no.length || run.n; }
-    else if (m.type === 'abort' || m.type === 'clear') { stopSound(); idle(); }
+    else if (m.type === 'abort' || m.type === 'clear') { stopSound(); fireworksStop(); idle(); }
   }
   var bc = null;
   try { bc = new BroadcastChannel('fq-grand'); bc.onmessage = function(e){ onMsg(e.data); }; } catch(e) { bc = null; }
