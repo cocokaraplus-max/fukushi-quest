@@ -697,6 +697,7 @@ boot();
       <label for="gPass">合言葉</label>
       <input type="password" id="gPass" class="lpin" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:180px;">
       <button class="lpbtn" id="gLoad">読み込む</button>
+      <button class="lpbtn sm" id="gPractice" title="サーバーには何も書きません">練習で抽選する（記録しない）</button><!-- fq-grand-v5 -->
       <span class="vsmall" id="gCount"></span>
     </div>
     <div class="lpmsg" id="gMsg"></div>
@@ -813,15 +814,25 @@ boot();
   function showDigits(digits, locked){
     $('gShowNo').innerHTML = digits.map(function(c, i){ return '<span' + (locked[i] ? ' class="lock"' : '') + '>' + esc(c) + '</span>'; }).join('');
   }
+  /* fq-grand-v5: 練習。架空の番号で同じ演出を流す（サーバーには何も書かない） */
+  var gPracticeNext = false;
+  $('gPractice').addEventListener('click', function(){
+    if ($('gDraw').disabled) return;              // 抽選の途中は押せない
+    $('gBody').style.display = '';
+    gPracticeNext = true; $('gDraw').click();
+  });
   $('gDraw').addEventListener('click', function(){
     var b = this; b.disabled = true; say('');
+    var PRACTICE = gPracticeNext; gPracticeNext = false;   // fq-grand-v5
+    if (PRACTICE) { $('gPractice').disabled = true; say('練習です（記録していません）', 'ok'); }
     var lab = $('gLabel').value.trim();
     $('gShowLab').textContent = lab; $('gShowNm').textContent = ''; $('gShowNo').textContent = '';
     var n = 4, answer = null, failed = null, locked = [], t0 = Date.now(), lastFrame = 0;
     var total = SPIN_MS + STEP_MS * (n - 1) + LAST_EXTRA_MS;
     drumroll(total / 1000);
     gsend({ type: 'start', n: n });   // fq-grand-v3
-    rpc('fq_admin_grand_draw', {p_pass: pass.value, p_label: lab}).then(function(d){
+    (PRACTICE ? Promise.resolve({ ok: true, recog_no: String(1000 + Math.floor(Math.random() * 9000)), nickname: 'れんしゅう' })   // fq-grand-v5
+              : rpc('fq_admin_grand_draw', {p_pass: pass.value, p_label: lab})).then(function(d){
       if (!d.ok) { failed = d.message || '選べませんでした。'; gsend({ type: 'abort' }); return; }
       answer = d; n = String(d.recog_no).length;
       gsend({ type: 'result', recog_no: d.recog_no, nickname: d.nickname || '' });   // fq-grand-v3
@@ -847,7 +858,7 @@ boot();
         crash();
         var box = $('gShowNo').parentNode; box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash');
         $('gShowNm').textContent = answer.nickname || '（なまえ未登録）';   // 数字の下に、登録したなまえ
-        b.disabled = false; load(); return;
+        b.disabled = false; $('gPractice').disabled = false; if (!PRACTICE) load(); return;   // fq-grand-v5
       }
       requestAnimationFrame(frame);
     }
