@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>大抽選会</title>
+<!-- fq-grand-v3: 会場のスクリーンに出す画面。出すのは「番号」と「なまえ」だけ。
+     ・操作は本部モニター（honbu.html?admin=1 の「大抽選会」）でする。合言葉・賞の名前・抽選のボタンは向こうにある
+     ・同じパソコンの別のウィンドウとして開き、プロジェクターの画面に全画面で出す（本部モニターの「会場の画面を開く」）
+     ・本部モニターから合図（BroadcastChannel）が来ると、ドラムロール → 桁が1つずつ止まる → ファンファーレ
+     ★サーバーには何も聞かない。当たりを決めるのは本部モニター側（サーバー）。この画面は見せるだけ
+     ★ブラウザは、画面を1回押すまで音を出させてくれない。開いたら1回クリックしておく -->
+<style>
+  html,body{ margin:0; height:100%; background:#0d0a05; color:#f7efd9; overflow:hidden;
+    font-family:'Hiragino Kaku Gothic ProN','Yu Gothic','Noto Sans JP',sans-serif; cursor:default; }
+  .stage{ position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at center,#2c2416 0%,#0d0a05 70%); }
+  .no{ font-size:min(32vw,48vh); font-weight:900; letter-spacing:.06em; line-height:1; font-variant-numeric:tabular-nums; }
+  .no span{ display:inline-block; min-width:.62em; text-align:center; }
+  .no span.lock{ color:#f0c95a; text-shadow:0 0 .12em rgba(240,201,90,.75); }
+  .nm{ margin-top:4vh; font-size:min(9vw,11vh); font-weight:800; min-height:1.3em; letter-spacing:.06em; opacity:0; transition:opacity .6s; }
+  .nm.show{ opacity:1; }
+  .stage.flash{ animation:fl 1.4s ease-out; }
+  @keyframes fl{ 0%{ background:#f7e3a0; } 100%{ background:radial-gradient(ellipse at center,#2c2416 0%,#0d0a05 70%); } }
+  .idle .no{ opacity:.18; }
+  .hint{ position:fixed; left:0; right:0; bottom:2vh; text-align:center; font-size:14px; color:#8a7a5a; }
+  .hint.off{ display:none; }
+</style>
+</head>
+<body>
+<div class="stage idle" id="stage"><div class="no" id="no">????</div><div class="nm" id="nm"></div></div>
+<div class="hint" id="hint">画面を1回クリックすると音が出せるようになります（F11 などで全画面に）。この文字はクリックで消えます。</div>
+<script>
+(function(){
+  'use strict';
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ---- 音（素材は使わず、その場で作る） ---- */
+  var AC = null, NB = null;
+  function ac(){
+    try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch(e) { AC = null; }
+    if (AC && !NB) { NB = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); var d = NB.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    return AC;
+  }
+  document.addEventListener('click', function(){ ac(); $('hint').classList.add('off'); });
+  function hit(a, t, vol, len, freq, type){
+    var s = a.createBufferSource(); s.buffer = NB;
+    var f = a.createBiquadFilter(); f.type = type || 'bandpass'; f.frequency.value = freq; f.Q.value = 0.7;
+    var g = a.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + len);
+    s.connect(f); f.connect(g); g.connect(a.destination); s.start(t, Math.random() * 0.5); s.stop(t + len + 0.05);
+  }
+  var rollNodesEnd = 0;
+  function drumroll(sec){
+    var a = ac(); if (!a) return;
+    var t0 = a.currentTime + 0.05, t = t0, end = t0 + sec; rollNodesEnd = end;
+    while (t < end) { var p = (t - t0) / sec; hit(a, t, 0.06 + 0.42 * p * p, 0.07, 1300 + 900 * p); t += 0.042; }
+    for (var k = t0; k < end; k += 0.5) hit(a, k, 0.18 + 0.3 * (k - t0) / sec, 0.18, 140, 'lowpass');
+  }
+  function stopSound(){ if (AC) { try { AC.close(); } catch(e) {} } AC = null; NB = null; }
+  function tick(){ var a = ac(); if (a) hit(a, a.currentTime, 0.5, 0.12, 2600); }
+  function brass(a, t, fq, len, vol){
+    [1, 1.004].forEach(function(det){
+      var o = a.createOscillator(), f = a.createBiquadFilter(), g = a.createGain();
+      o.type = 'sawtooth'; o.frequency.value = fq * det;
+      f.type = 'lowpass'; f.frequency.setValueAtTime(900, t); f.frequency.linearRampToValueAtTime(3200, t + 0.06); f.Q.value = 1.2;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.03);
+      g.gain.setValueAtTime(vol, t + Math.max(0.04, len - 0.08)); g.gain.exponentialRampToValueAtTime(0.0008, t + len);
+      o.connect(f); f.connect(g); g.connect(a.destination); o.start(t); o.stop(t + len + 0.05);
+    });
+  }
+  function fanfare(){
+    var a = ac(); if (!a) return; var t = a.currentTime + 0.02;
+    hit(a, t, 0.9, 2.6, 6000, 'highpass'); hit(a, t, 0.7, 0.4, 180, 'lowpass');
+    var C5 = 523.25, E5 = 659.25, G5 = 783.99, C6 = 1046.5, G4 = 392.0, D5 = 587.33, F5 = 698.46;
+    [[G4,.10,.13],[G4,.26,.13],[G4,.42,.13],[C5,.58,.45],[E5,1.08,.13],[D5,1.24,.13],[E5,1.40,.13],[G5,1.56,.40],
+     [F5,2.00,.13],[E5,2.16,.13],[D5,2.32,.13],[C6,2.48,1.60]].forEach(function(n){ brass(a, t + n[1], n[0], n[2], 0.11); });
+    [C5, E5, G5].forEach(function(fq){ brass(a, t + 2.48, fq, 1.60, 0.06); });
+    hit(a, t + 2.48, 0.8, 2.8, 6000, 'highpass'); hit(a, t + 2.48, 0.6, 0.5, 160, 'lowpass');
+    for (var k = 0; k < 6; k++) hit(a, t + 0.58 + k * 0.32, 0.25, 0.08, 1800);
+  }
+
+  /* ---- 発表の流れ（本部モニターと同じ時間割） ---- */
+  var SPIN_MS = 6500, STEP_MS = 1000, LAST_EXTRA_MS = 1800;
+  var run = null;   // いまの発表
+  function showDigits(digits, locked){
+    $('no').innerHTML = digits.map(function(c, i){ return '<span' + (locked[i] ? ' class="lock"' : '') + '>' + esc(c) + '</span>'; }).join('');
+  }
+  function idle(){
+    run = null; $('stage').classList.add('idle'); $('no').textContent = '????';
+    $('nm').textContent = ''; $('nm').classList.remove('show');
+  }
+  function start(n){
+    stopSound();
+    $('stage').classList.remove('idle'); $('nm').textContent = ''; $('nm').classList.remove('show');
+    run = { n: n || 4, answer: null, locked: [], t0: Date.now(), last: 0 };
+    drumroll((SPIN_MS + STEP_MS * (run.n - 1) + LAST_EXTRA_MS) / 1000);
+    var me = run;
+    (function frame(){
+      if (run !== me) return;
+      var el = Date.now() - me.t0, n = me.n, ans = me.answer ? String(me.answer.recog_no) : '';
+      var lockAt = []; for (var i = 0; i < n; i++) lockAt.push(SPIN_MS + STEP_MS * i + (i === n - 1 ? LAST_EXTRA_MS : 0));
+      var gap = el < SPIN_MS - 1500 ? 45 : 45 + (el - (SPIN_MS - 1500)) / 20;
+      if (el - me.last >= Math.min(gap, 220)) {
+        me.last = el;
+        var digits = [];
+        for (var j = 0; j < n; j++) {
+          var lk = !!me.answer && el >= lockAt[j];
+          if (lk && !me.locked[j]) { me.locked[j] = true; if (j < n - 1) tick(); }
+          digits.push(lk ? ans.charAt(j) : String(Math.floor(Math.random() * 10)));
+        }
+        showDigits(digits, me.locked);
+      }
+      if (me.answer && el >= lockAt[n - 1]) {
+        var fin = ans.split(''); showDigits(fin, fin.map(function(){ return true; }));
+        fanfare();
+        var st = $('stage'); st.classList.remove('flash'); void st.offsetWidth; st.classList.add('flash');
+        $('nm').textContent = me.answer.nickname || ''; $('nm').classList.add('show');
+        return;
+      }
+      requestAnimationFrame(frame);
+    })();
+  }
+
+  /* ---- 本部モニターからの合図 ---- */
+  function onMsg(m){
+    if (!m || typeof m !== 'object') return;
+    if (m.type === 'ping') { send({ type: 'hello' }); return; }
+    if (m.type === 'start') start(m.n);
+    else if (m.type === 'result' && run) { run.answer = { recog_no: String(m.recog_no || ''), nickname: String(m.nickname || '') }; run.n = run.answer.recog_no.length || run.n; }
+    else if (m.type === 'abort' || m.type === 'clear') { stopSound(); idle(); }
+  }
+  var bc = null;
+  try { bc = new BroadcastChannel('fq-grand'); bc.onmessage = function(e){ onMsg(e.data); }; } catch(e) { bc = null; }
+  function send(m){ if (bc) try { bc.postMessage(m); } catch(e) {} }
+  send({ type: 'hello' });
+})();
+</script>
+</body>
+</html>

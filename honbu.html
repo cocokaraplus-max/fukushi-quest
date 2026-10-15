@@ -706,6 +706,11 @@ boot();
         <input type="text" id="gLabel" class="lpin" placeholder="例 特賞・1等" style="width:200px;">
         <button class="gbtn" id="gDraw">抽選する</button>
       </div>
+      <div class="lprow"><!-- fq-grand-v3: 会場のスクリーン -->
+        <button class="lpbtn" id="gScreenOpen">会場の画面を開く</button>
+        <button class="lpbtn sm del" id="gScreenClear">会場の画面を消す</button>
+        <span class="vsmall" id="gScreenSt">会場の画面：まだ開いていません（このパソコンだけで鳴らします）</span>
+      </div>
       <div class="gbig"><div class="lab" id="gShowLab"></div><div class="no" id="gShowNo">----</div><div class="nm" id="gShowNm"></div></div>
       <p class="lpnote">対象は<b>ガチャを1回でもまわした人</b>です。押すとドラムロールが鳴り、約11秒じらしてから、ファンファーレで番号となまえを発表します（音はこのパソコンから出ます）。同じ人は2回当たりません。当たった人がその場にいなければ「いなかった」を押して、もう一度「抽選する」を押してください（いなかった人は、もう選ばれません）。</p>
       <div id="gList"></div>
@@ -760,13 +765,23 @@ boot();
     var g = a.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + len);
     s.connect(f); f.connect(g); g.connect(a.destination); s.start(t, Math.random() * 0.5); s.stop(t + len + 0.05);
   }
+  /* fq-grand-v3: 会場の画面（grand_screen.html）への合図。つながっている間は音を向こうに任せる */
+  var SCREEN = false, gbc = null;
+  try { gbc = new BroadcastChannel('fq-grand'); gbc.onmessage = function(e){ if (e.data && e.data.type === 'hello') { SCREEN = true; screenSt(); } }; } catch(e) { gbc = null; }
+  function gsend(m){ if (gbc) try { gbc.postMessage(m); } catch(e) {} }
+  function screenSt(){ var el = $('gScreenSt'); if (el) el.textContent = SCREEN ? '会場の画面：つながっています（音は会場の画面から出ます）' : '会場の画面：まだ開いていません（このパソコンだけで鳴らします）'; }
+  function pingScreen(){ SCREEN = false; gsend({ type: 'ping' }); setTimeout(screenSt, 400); }
+  $('gScreenOpen').addEventListener('click', function(){ window.open('grand_screen.html', 'fqGrandScreen', 'width=1280,height=720'); setTimeout(pingScreen, 1200); });
+  $('gScreenClear').addEventListener('click', function(){ gsend({ type: 'clear' }); });
+  pingScreen(); setInterval(pingScreen, 15000);
   function drumroll(sec){
+    if (SCREEN) return;   // fq-grand-v3: 会場の画面が鳴らす
     var a = ac(); if (!a) return;
     var t0 = a.currentTime + 0.05, t = t0, end = t0 + sec;
     while (t < end) { var p = (t - t0) / sec; hit(a, t, 0.06 + 0.42 * p * p, 0.07, 1300 + 900 * p); t += 0.042; }
     for (var k = t0; k < end; k += 0.5) hit(a, k, 0.18 + 0.3 * (k - t0) / sec, 0.18, 140, 'lowpass');   // 低い太鼓で、だんだん大きく
   }
-  function tick(){ var a = ac(); if (a) hit(a, a.currentTime, 0.5, 0.12, 2600); }
+  function tick(){ if (SCREEN) return; var a = ac(); if (a) hit(a, a.currentTime, 0.5, 0.12, 2600); }
   /* 当たりのファンファーレ（金管っぽい音をその場で作る。既存の曲は使わないオリジナルの節） */
   function brass(a, t, fq, len, vol){
     [1, 1.004].forEach(function(det){
@@ -779,6 +794,7 @@ boot();
     });
   }
   function crash(){
+    if (SCREEN) return;   // fq-grand-v3
     var a = ac(); if (!a) return; var t = a.currentTime + 0.02;
     hit(a, t, 0.9, 2.6, 6000, 'highpass'); hit(a, t, 0.7, 0.4, 180, 'lowpass');   // シンバルと大太鼓
     var C5 = 523.25, E5 = 659.25, G5 = 783.99, C6 = 1046.5, G4 = 392.0, D5 = 587.33, F5 = 698.46;
@@ -804,10 +820,12 @@ boot();
     var n = 4, answer = null, failed = null, locked = [], t0 = Date.now(), lastFrame = 0;
     var total = SPIN_MS + STEP_MS * (n - 1) + LAST_EXTRA_MS;
     drumroll(total / 1000);
+    gsend({ type: 'start', n: n });   // fq-grand-v3
     rpc('fq_admin_grand_draw', {p_pass: pass.value, p_label: lab}).then(function(d){
-      if (!d.ok) { failed = d.message || '選べませんでした。'; return; }
+      if (!d.ok) { failed = d.message || '選べませんでした。'; gsend({ type: 'abort' }); return; }
       answer = d; n = String(d.recog_no).length;
-    }).catch(function(e){ failed = '選べませんでした（' + (e.message || e) + '）。'; });
+      gsend({ type: 'result', recog_no: d.recog_no, nickname: d.nickname || '' });   // fq-grand-v3
+    }).catch(function(e){ failed = '選べませんでした（' + (e.message || e) + '）。'; gsend({ type: 'abort' }); });
     function frame(){
       var el = Date.now() - t0;
       if (failed) { if (AC) try { AC.close(); } catch(e) {} AC = null; NB = null; b.disabled = false; $('gShowNo').textContent = '----'; say(failed, 'ng'); return; }
