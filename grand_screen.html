@@ -122,7 +122,7 @@
     }, delay);
   }
   function fwBurst(s){
-    var n = s.type === 'ring' ? 120 : 210, base = Math.min(innerWidth, innerHeight) / 68;
+    var n = s.type === 'ring' ? 120 : 210, base = Math.min(innerWidth, innerHeight) / 68 * (FW.big ? 1.35 : 1);   // fq-grand-v7: 特賞はひと回り大きく
     var tilt = Math.random() * Math.PI;
     for (var i = 0; i < n; i++) {
       var ang = Math.random() * Math.PI * 2, sp = base * (0.55 + Math.random() * 0.55);
@@ -177,17 +177,74 @@
     if (FW.on || FW.shells.length || FW.parts.length || FW.glows.length) requestAnimationFrame(fwFrame);
     else c.clearRect(0, 0, W, H);
   }
-  function fireworks(sec){
-    fwCanvas();
+  function fireworks(sec, big){
+    fwCanvas(); FW.big = !!big;   // fq-grand-v7
     var wasOn = FW.on; FW.on = true; FW.until = Date.now() + sec * 1000;
     var t = 0;
-    while (t < sec * 1000 - 1500) { fwLaunch(t); if (Math.random() < 0.45) fwLaunch(t + 120); t += 450 + Math.random() * 450; }
-    for (var f = 0; f < 5; f++) fwLaunch(sec * 1000 - 1400 + f * 90);      // 最後にまとめて
+    if (big) {                    // 特賞：2〜3発ずつ、間をあけずに
+      while (t < sec * 1000 - 2200) { fwLaunch(t); fwLaunch(t + 140); if (Math.random() < 0.6) fwLaunch(t + 300); t += 380 + Math.random() * 320; }
+      for (var f2 = 0; f2 < 12; f2++) fwLaunch(sec * 1000 - 2100 + f2 * 110);   // 最後に12発の連発
+    } else {
+      while (t < sec * 1000 - 1500) { fwLaunch(t); if (Math.random() < 0.45) fwLaunch(t + 120); t += 450 + Math.random() * 450; }
+      for (var f = 0; f < 5; f++) fwLaunch(sec * 1000 - 1400 + f * 90);      // 最後にまとめて
+    }
     setTimeout(function(){ if (Date.now() >= FW.until) FW.on = false; }, sec * 1000);
     if (!wasOn) requestAnimationFrame(fwFrame);
   }
-  function fireworksStop(){ FW.on = false; FW.shells = []; FW.parts = []; FW.glows = []; }
+  function fireworksStop(){ FW.on = false; FW.shells = []; FW.parts = []; FW.glows = []; if (typeof confettiStop === 'function') confettiStop(); }
   window.fqFireworks = fireworks;   // 試すとき用
+
+  /* ---- fq-grand-v7: 紙吹雪（特賞のとき）。文字の手前を舞い落ちる ---- */
+  var CF = { cv: null, ctx: null, ps: [], on: false };
+  var CF_COLORS = ['#ffd36b', '#ff5a4f', '#5fe08f', '#5fb8ff', '#c98bff', '#ff8ad0', '#ffffff', '#f0c95a'];
+  function cfCanvas(){
+    if (CF.cv) return;
+    var cv = document.createElement('canvas');
+    cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;';
+    document.body.appendChild(cv); CF.cv = cv; CF.ctx = cv.getContext('2d');
+    function fit(){ var r = window.devicePixelRatio || 1; cv.width = innerWidth * r; cv.height = innerHeight * r; CF.ctx.setTransform(r, 0, 0, r, 0, 0); }
+    fit(); window.addEventListener('resize', fit);
+  }
+  function cfAdd(n, burst){
+    var W = innerWidth, H = innerHeight, sz = Math.min(W, H) / 70;
+    for (var i = 0; i < n; i++) {
+      var p = { x: Math.random() * W, y: -20 - Math.random() * H * 0.4, vx: (Math.random() - 0.5) * 1.5, vy: 1.2 + Math.random() * 2.2,
+                w: sz * (0.7 + Math.random() * 0.7), h: sz * (0.35 + Math.random() * 0.4), rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.25,
+                flip: Math.random() * 6.28, vf: 0.08 + Math.random() * 0.12, sway: Math.random() * 6.28, col: CF_COLORS[Math.floor(Math.random() * CF_COLORS.length)],
+                shiny: Math.random() < 0.25 };
+      if (burst) {                                           // 左右の下からキャノンで打ち上げる
+        var left = i % 2 === 0; p.x = left ? W * 0.02 : W * 0.98; p.y = H * 0.98;
+        var ang = (left ? -1 : -1) * (Math.PI / 2) + (left ? 0.35 : -0.35) + (Math.random() - 0.5) * 0.5;
+        var sp = Math.min(W, H) / 38 * (0.7 + Math.random() * 0.6);
+        p.vx = Math.cos(ang) * sp; p.vy = Math.sin(ang) * sp;
+      }
+      CF.ps.push(p);
+    }
+  }
+  function cfFrame(){
+    var c = CF.ctx, W = innerWidth, H = innerHeight; c.clearRect(0, 0, W, H);
+    for (var i = CF.ps.length - 1; i >= 0; i--) {
+      var p = CF.ps[i];
+      if (p.vy > 3.4) p.vy = p.vy * 0.96 + 0.1; else p.vy += 0.09;   // 空気でふわっと落ちる
+      p.vx *= 0.985; p.sway += 0.05; p.x += p.vx + Math.sin(p.sway) * 0.9; p.y += p.vy; p.rot += p.vr; p.flip += p.vf;
+      if (p.y > H + 30) { CF.ps.splice(i, 1); continue; }
+      var fy = Math.cos(p.flip);                                    // くるくる裏返る
+      c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.scale(1, fy);
+      c.fillStyle = p.col; c.globalAlpha = 0.95; c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      if (p.shiny && fy > 0.6) { c.globalAlpha = 0.6; c.fillStyle = '#ffffff'; c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * 0.3); }
+      c.restore();
+    }
+    if (CF.on || CF.ps.length) requestAnimationFrame(cfFrame); else c.clearRect(0, 0, W, H);
+  }
+  function confetti(sec){
+    cfCanvas(); var was = CF.on || CF.ps.length; CF.on = true;
+    cfAdd(160, true); cfAdd(220, false);                          // はじめにどっと
+    var t = 0, iv = setInterval(function(){ t += 400; if (!CF.on || t > sec * 1000) { clearInterval(iv); CF.on = false; return; } cfAdd(28, false); }, 400);
+    setTimeout(function(){ if (CF.on) cfAdd(140, true); }, 2600);   // もう一度キャノン
+    if (!was) requestAnimationFrame(cfFrame);
+  }
+  function confettiStop(){ CF.on = false; CF.ps = []; }
+  window.fqConfetti = confetti;   // 試すとき用
 
   /* ---- 発表の流れ（本部モニターと同じ時間割） ---- */
   var SPIN_MS = 6500, STEP_MS = 1000, LAST_EXTRA_MS = 1800;
@@ -223,7 +280,8 @@
       if (me.answer && el >= lockAt[n - 1]) {
         var fin = ans.split(''); showDigits(fin, fin.map(function(){ return true; }));
         fanfare();
-        if (/特賞|副賞/.test(me.label)) fireworks(9);   // fq-grand-v6: 特賞・副賞は花火
+        if (/特賞/.test(me.label)) { fireworks(16, true); confetti(14); }   // fq-grand-v7: 特賞は盛大に＋紙吹雪
+        else if (/副賞/.test(me.label)) fireworks(9);                       // fq-grand-v6: 副賞は花火
         var st = $('stage'); st.classList.remove('flash'); void st.offsetWidth; st.classList.add('flash');
         $('nm').textContent = me.answer.nickname || ''; $('nm').classList.add('show');
         return;
