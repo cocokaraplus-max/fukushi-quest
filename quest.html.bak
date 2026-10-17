@@ -1,0 +1,2660 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#f2ecdd">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="FUKUSHI QUEST">
+<title>FUKUSHI QUEST</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f1ead8; --card:#fffdf6; --ink:#463a2c; --muted:#8f8069; --line:#e0d4b8;
+    --red:#df5b45; --mustard:#e7a43a; --teal:#4fa891; --pink:#ec9bb4; --green:#82b055; --blue:#6db7d6;
+    --shadow:0 6px 0 rgba(70,58,44,.10),0 12px 22px rgba(70,58,44,.10);
+    /* ★★fq-square2-v1: 角の丸みは **この2つ** で決める（index.html と同じ数）。
+       ★★2つのファイルで1組。片方だけ変えると、行き来したときに形が変わって見える。
+       ★丸いまま残すもの: カプセル、コイン、丸いボタンの帯(999px)、紙ふぶき。 */
+    --r:5px; --r2:3px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
+    color:var(--ink); min-height:100vh; padding:0 0 46px; overflow-x:hidden; font-weight:700;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(231,164,58,.10), transparent 26%),
+      radial-gradient(circle at 82% 30%, rgba(79,168,145,.10), transparent 24%),
+      radial-gradient(circle at 60% 82%, rgba(236,155,180,.10), transparent 26%),
+      var(--paper);
+  }
+  .hand{font-family:"Yomogi","Zen Maru Gothic",cursive;}
+  .wrap{max-width:460px;margin:0 auto;padding:0 15px;}
+
+  /* ══════════ fq-soon-v1 : 準備中（工事中）のお知らせ ══════════
+     html に soon-on が付いているときだけ、アプリの中身を全部隠して これを出す。
+     ★中身は **消していない**。隠しているだけ。
+       <head> の SOON を false にすると、その瞬間に元どおり動く。
+     ★.wrap の直下のセクションを、まとめて隠している。
+       あとからセクションを足すときも、.wrap の直下に置くかぎり自動で隠れる。 */
+  .soonbox{display:none;}
+  html.soon-on .soonbox{display:block;}
+  html.soon-on .ptbar{display:none;}
+  html.soon-on .wrap > section:not(.soonbox){display:none !important;}
+  /* ★下の「進捗はこの端末に保存されます。」だけ消す。
+       タグで囲まれていない ただの文字なので、.foot の字の大きさを 0 にして消す。
+       .credit は自分で大きさを持っているので残る。
+     ★326さんのクレジットは **消してはいけない**（許諾の表示）。 */
+  html.soon-on .foot{font-size:0;}
+  .soonbox{background:var(--card);border:2px dashed var(--line);border-radius:var(--r);
+           padding:26px 18px;text-align:center;margin:18px 0;box-shadow:var(--shadow);}
+  .soonbox .sn-em{font-size:40px;line-height:1;}
+  .soonbox h2{font-size:21px;font-weight:900;margin:10px 0 2px;}
+  .soonbox .sn-en{font-size:11px;font-weight:900;letter-spacing:.16em;
+                  color:var(--muted);margin-bottom:15px;}
+  .soonbox p{font-size:13.5px;line-height:1.85;margin:0 0 15px;}
+  .soonbox .sn-when{background:var(--paper);border:2px solid var(--line);border-radius:var(--r);
+           padding:12px;font-size:13.5px;line-height:1.85;margin-bottom:17px;}
+  .soonbox .sn-btn{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;
+           border-radius:999px;padding:13px 26px;font-size:15px;font-weight:900;
+           box-shadow:0 4px 0 rgba(0,0,0,.22);}
+  .soonbox .sn-btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.22);}
+  .soonbox .sn-note{margin-top:15px;font-size:11.5px;line-height:1.75;color:var(--muted);}
+  /* header */
+  header{position:sticky;top:0;z-index:20;padding:12px 0 10px;
+    background:linear-gradient(180deg,rgba(241,234,216,.97),rgba(241,234,216,.86));backdrop-filter:blur(5px);
+    border-bottom:2px dashed var(--line);}
+  .brand{display:flex;align-items:center;gap:10px;justify-content:center;}
+  .brand img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.12));}
+  .brand h1{margin:0;font-size:23px;letter-spacing:.02em;font-weight:900;color:var(--ink);}
+  .brand h1 b{color:var(--red);}
+  .ptbar{display:flex;justify-content:center;margin-top:8px;}
+  .ptchip{display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--line);
+    border-radius:999px;padding:6px 18px;font-weight:900;font-size:15px;box-shadow:var(--shadow);}
+  .ptchip .coin{width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe08a,var(--mustard));
+    color:#7a5300;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;border:2px solid #d68f22;}
+  .ptchip .val{color:var(--red);font-size:22px;min-width:22px;text-align:center;}
+  /* sections */
+  section{background:var(--card);border:2px solid var(--line);border-radius:var(--r);padding:16px;margin-top:16px;box-shadow:var(--shadow);position:relative;}
+  /* fq-flat-v1: 枠の傾き（1つおきに ±0.4度）をやめた。2026-08-24 ユーザー判断。
+     元は「手で貼った紙」の風合いを出すための演出だったが、
+     ・見ていて気持ち悪い（本人の言葉）
+     ・傾いた要素の中の文字は、端末によって輪郭がぼやける
+     1500人がそれぞれ違う端末で見るので、読みやすさを優先した。
+     ★戻したくなったら、下の2行のコメントを外すだけ。
+     section:nth-of-type(odd){transform:rotate(-.4deg);}
+     section:nth-of-type(even){transform:rotate(.4deg);} */
+  .sec-h{display:flex;align-items:center;gap:9px;margin:0 0 4px;font-size:19px;font-weight:900;}
+  .sec-h .em{font-size:20px;}
+  .sec-sub{color:var(--muted);font-size:12.5px;margin:0 0 12px;line-height:1.7;font-weight:500;}
+  /* quests */
+  .quest{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r);background:#fbf6ea;
+    border:2px solid var(--line);margin-bottom:10px;transition:.2s;}
+  .quest.done{background:linear-gradient(90deg,rgba(130,176,85,.18),#fbf6ea);border-color:var(--green);}
+  .qimg{width:52px;height:52px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 2px 1px rgba(0,0,0,.1));}
+  .qbody{flex:1;min-width:0;}
+  .qtitle{font-weight:900;font-size:15px;}
+  .qdesc{color:var(--muted);font-size:11.5px;margin-top:2px;line-height:1.5;font-weight:500;}
+  .qright{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:5px;}
+  .qcheck{width:28px;height:28px;border-radius:var(--r2);border:2.5px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;background:#fff;}
+  .quest.done .qcheck{background:var(--green);border-color:var(--green);}
+  .qpt{font-weight:900;font-size:11px;color:#7a5300;background:#ffe9bf;border:1.5px solid var(--mustard);border-radius:var(--r2);padding:2px 7px;}
+  .quest.done .qpt{color:#fff;background:var(--green);border-color:var(--green);}
+  /* gacha */
+  .gacha-box{text-align:center;}
+  .steps{display:flex;gap:7px;justify-content:center;margin:4px 0 14px;}
+  .step{flex:1;max-width:98px;background:#fbf6ea;border:2px solid var(--line);border-radius:var(--r);padding:7px 4px;font-size:10.5px;color:var(--muted);text-align:center;font-weight:700;}
+  .step .n{display:block;font-weight:900;font-size:14px;color:var(--ink);}
+  .step.on{border-color:var(--mustard);background:#fff2d8;color:#7a5300;}
+  .step.on .n{color:var(--red);}
+  .step.cleared{border-color:var(--green);background:rgba(130,176,85,.18);}
+  .step.cleared .n{color:var(--green);}
+  .gacha-stage{display:flex;align-items:flex-end;justify-content:center;gap:6px;margin:2px 0 6px;}
+  .gacha-keeper{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 2px rgba(0,0,0,.12));}
+  .capsule{width:104px;height:104px;border-radius:50% 50% 47% 47%;position:relative;
+    background:linear-gradient(160deg,#fff 0 50%,var(--pink) 50% 100%);border:3px solid #fff;
+    box-shadow:0 8px 18px rgba(70,58,44,.22),inset 0 -6px 12px rgba(0,0,0,.08);}
+  .capsule:after{content:"";position:absolute;left:16%;top:14%;width:32%;height:24%;border-radius:50%;background:rgba(255,255,255,.75);}
+  .capsule.shake{animation:shake .5s ease-in-out 3;}
+  @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg) translateY(-4px)}75%{transform:rotate(12deg) translateY(-4px)}}
+  .btn{display:block;width:100%;border:none;border-radius:var(--r);padding:15px;font-size:17px;font-weight:900;cursor:pointer;transition:.12s;font-family:inherit;}
+  .btn:active{transform:translateY(2px);}
+  .btn-gacha{background:linear-gradient(135deg,#f2b64e,var(--mustard));color:#6b4700;box-shadow:0 6px 0 #c07f16;border:2px solid #fff;}
+  .btn-gacha:active{box-shadow:0 2px 0 #c07f16;}
+  .btn-gacha:disabled{background:#e7ddc7;color:#a99a80;box-shadow:0 6px 0 #cbbd9f;border-color:#f3ecdb;cursor:not-allowed;}
+  .gacha-hint{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.7;background:#fbf6ea;border:2px dashed var(--line);border-radius:var(--r);padding:11px 13px;font-weight:700;}
+  .gacha-hint b{color:var(--red);}
+  /* prizes */
+  .prize-wrap{display:flex;gap:12px;align-items:flex-start;}
+  .prize-mascot{width:56px;height:56px;object-fit:contain;flex:0 0 auto;}
+  .prize-row{display:flex;flex-wrap:wrap;gap:8px;flex:1;}
+  .prize-tag{background:#fbf6ea;border:2px solid var(--line);border-radius:var(--r);padding:6px 11px;font-size:12.5px;font-weight:800;}
+  .prize-tag .em{margin-right:5px;}
+  .empty{color:var(--muted);font-size:12.5px;font-weight:600;}
+  /* test panel */
+  .warnband{background:#e9f4f1;border:2px solid #bfe0d8;color:#3a6b60;border-radius:var(--r);padding:10px 13px;font-size:11.5px;line-height:1.7;margin-bottom:12px;font-weight:600;}
+  .scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .testpanel{border:2px dashed #c9a13b;border-radius:var(--r);background:#fffdf5;padding:14px;margin-top:14px;}
+  .scan-btn{background:#fbf6ea;border:2px solid var(--line);color:var(--ink);border-radius:var(--r);padding:11px 8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1.4;transition:.12s;}
+  .scan-btn:active{transform:translateY(2px);background:#f3ead6;}
+  .scan-btn .em{display:block;font-size:22px;margin-bottom:3px;}
+  .scan-btn.wide{grid-column:1 / -1;}
+  .scan-btn small{display:block;color:var(--muted);font-weight:600;font-size:10px;margin-top:2px;}
+  /* howto */
+  details{background:#fbf6ea;border:2px solid var(--line);border-radius:var(--r);padding:0 14px;margin-top:8px;}
+  details summary{cursor:pointer;padding:13px 0;font-weight:900;font-size:14px;list-style:none;}
+  details summary::-webkit-details-marker{display:none;}
+  details summary:before{content:"✦ ";color:var(--mustard);}
+  .howto{font-size:12.5px;color:var(--muted);line-height:1.9;padding-bottom:14px;font-weight:600;}
+  .howto code{background:#efe6cf;color:#8a5a12;border-radius:var(--r2);padding:1px 6px;font-size:11px;word-break:break-all;}
+  .linkbtn{background:none;border:none;color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit;padding:0;font-weight:700;}
+  .foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:20px;line-height:1.8;font-weight:600;}
+  .credit{margin-top:8px;font-size:10.5px;color:#a89675;}
+  /* toast */
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
+    background:#fffdf6;border:2px solid var(--mustard);color:var(--ink);border-radius:var(--r);padding:11px 18px;font-weight:900;font-size:13.5px;z-index:60;transition:.25s;box-shadow:var(--shadow);max-width:90%;text-align:center;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* fq-shindan-all-v1: 7タイプをぜんぶ見る */
+  .sd-all{margin-top:16px;border-top:2px dashed var(--line);padding-top:12px;}
+  .sd-all h5{margin:0 0 8px;font-size:14px;text-align:center;}
+  .sd-all-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .sd-tile{position:relative;background:#fbf6ea;border:2px solid var(--line);border-radius:12px;padding:6px 4px 5px;text-align:center;cursor:pointer;font-family:inherit;}
+  .sd-tile img{width:100%;max-width:64px;aspect-ratio:1;object-fit:contain;display:block;margin:0 auto;}
+  .sd-tile b{display:block;font-size:10.5px;line-height:1.3;margin-top:2px;color:var(--ink);}
+  .sd-tile small{display:block;font-size:9.5px;color:var(--muted);font-weight:700;}
+  .sd-tile.me{border-color:var(--red);background:#fff1ea;}
+  .sd-tile .me-tag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:9.5px;font-weight:900;border-radius:999px;padding:1px 7px;white-space:nowrap;}
+  .sd-all-modal .modal-card{max-height:88vh;overflow-y:auto;text-align:left;padding:16px 14px;}
+  /* fq-voucher-v1: 引換券 */
+  .fqv-list{display:flex;flex-direction:column;gap:8px;width:100%;}
+  .fqv-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fffdf6;border:2px solid var(--mustard);border-radius:var(--r2);padding:10px 12px;font-family:inherit;cursor:pointer;}
+  .fqv-card.off{opacity:.55;border-color:#cfc6b6;}
+  .fqv-em{font-size:26px;}
+  .fqv-body{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .fqv-body b{font-size:15px;color:var(--ink);}
+  .fqv-body small{font-size:11.5px;color:var(--muted);font-weight:700;}
+  .fqv-st{font-size:11px;font-weight:900;color:#7a5300;background:#ffe9bf;border-radius:999px;padding:3px 9px;white-space:nowrap;}
+  .fqv-card.off .fqv-st{background:#eee;color:#777;}
+  .fqv-tip{font-size:11.5px;color:var(--muted);margin:6px 0 0;text-align:center;font-weight:700;}
+  .fqv-modal{max-height:92vh;overflow-y:auto;}
+  .fqv-h{font-weight:900;color:var(--red);font-size:15px;letter-spacing:.1em;}
+  .fqv-desc{font-size:12.5px;color:var(--ink);margin:6px 0;font-weight:700;}
+  .fqv-qr{width:220px;max-width:70vw;margin:8px auto 4px;background:#fff;padding:6px;border-radius:8px;}
+  .fqv-qr svg{width:100%;height:auto;display:block;}
+  .fqv-code{font-size:13px;color:var(--muted);font-weight:700;}
+  .fqv-code b{font-size:20px;color:var(--ink);letter-spacing:.08em;}
+  .fqv-state{display:none;margin:8px 0 0;font-weight:900;color:#fff;background:#8a8a8a;border-radius:8px;padding:6px;}
+  .fqv-note{text-align:left;font-size:12px;line-height:1.7;color:var(--ink);background:#fff6e2;border-radius:10px;padding:10px 12px;margin-top:10px;font-weight:600;}
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(70,58,44,.55);display:none;align-items:center;justify-content:center;z-index:80;padding:22px;}
+  .modal.show{display:flex;}
+  .modal-card{background:var(--card);border:3px solid var(--mustard);border-radius:var(--r);padding:24px 22px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(70,58,44,.4);animation:pop .3s ease;}
+  @keyframes pop{from{transform:scale(.82);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal .big{font-size:50px;margin-bottom:2px;}
+  .modal .mimg{width:96px;height:96px;object-fit:contain;margin:0 auto 4px;display:block;}
+  .modal h3{margin:4px 0;font-size:22px;color:var(--red);}
+  .modal .prize-name{font-size:23px;font-weight:900;margin:8px 0;}
+  .modal .kind{font-size:12.5px;color:var(--muted);font-weight:700;}
+  .modal p{color:var(--muted);font-size:13px;line-height:1.7;margin:10px 0 0;font-weight:600;}
+  .modal .btn{margin-top:18px;background:linear-gradient(135deg,#f2b64e,var(--mustard));color:#6b4700;box-shadow:0 5px 0 #c07f16;border:2px solid #fff;}
+  .confetti{position:fixed;top:-10px;width:9px;height:14px;z-index:70;pointer-events:none;border-radius:2px;}
+  /* sound toggle */
+  .snd{display:block;margin:0 auto 8px;background:#fbf6ea;border:2px solid var(--line);border-radius:999px;
+    padding:4px 14px;font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;font-family:inherit;}
+  /* ===== gacha 演出 (fullscreen) ===== */
+  .modal-fx{position:fixed;inset:0;z-index:90;display:none;overflow:hidden;}
+  .modal-fx.show{display:block;}
+  .modal-fx.shake{animation:scr .28s linear infinite;}
+  @keyframes scr{0%{transform:translate(0,0)}25%{transform:translate(-5px,4px)}50%{transform:translate(5px,-4px)}75%{transform:translate(-4px,-4px)}100%{transform:translate(0,0)}}
+  .fxbg{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#cfe6ff,#1a1330 78%);transition:background .35s;}
+  .fx-rainbow{position:absolute;left:50%;top:50%;width:230vmax;height:230vmax;margin:-115vmax;opacity:0;transition:opacity .3s;
+    background:conic-gradient(#ff5b5b,#ffb03a,#ffe83a,#5bd97f,#49c6ff,#7b7bff,#ec6fd0,#ff5b5b);}
+  .fx-rainbow.on{opacity:.92;animation:spin2 3s linear infinite;}
+  .fx-rays{position:absolute;left:50%;top:50%;width:230vmax;height:230vmax;margin:-115vmax;opacity:0;
+    background:repeating-conic-gradient(rgba(255,255,255,0) 0 7deg, rgba(255,255,255,.22) 7deg 14deg);}
+  .fx-rays.on{opacity:1;animation:spin2 1.1s linear infinite;}
+  .fx-rays.fast{animation-duration:.35s;}
+  @keyframes spin2{to{transform:rotate(360deg)}}
+  .fx-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:3;}
+  .fx-capwrap{filter:drop-shadow(0 10px 20px rgba(0,0,0,.4));}
+  .fx-capwrap.kyuin{animation:capzoom .5s ease-in-out infinite;}
+  @keyframes capzoom{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+  .fx-cap{width:130px;height:130px;border-radius:50% 50% 47% 47%;border:5px solid #fff;
+    background:linear-gradient(160deg,#fff 0 50%,var(--pink) 50% 100%);}
+  .fx-cap.roll{animation:roll .45s linear infinite;}
+  .fx-cap.fast{animation-duration:.16s;}
+  @keyframes roll{to{transform:rotate(360deg)}}
+  .fx-label{margin-top:24px;color:#fff;font-weight:900;font-size:27px;letter-spacing:.06em;text-shadow:0 2px 12px rgba(0,0,0,.7);min-height:36px;}
+  .fx-label.buru{animation:txtburu .07s linear infinite;color:#fff;text-shadow:0 0 14px #ffd54a,0 2px 12px rgba(0,0,0,.7);}
+  @keyframes txtburu{0%{transform:translate(0,0)}20%{transform:translate(-3px,2px)}40%{transform:translate(3px,-2px)}60%{transform:translate(-2px,-3px)}80%{transform:translate(2px,3px)}100%{transform:translate(-2px,1px)}}
+  .fx-gauge{margin-top:14px;width:210px;height:15px;border-radius:999px;background:rgba(255,255,255,.22);overflow:hidden;border:2px solid rgba(255,255,255,.65);}
+  .fx-gauge i{display:block;height:100%;width:0;background:#7bb6e6;transition:width .3s ease, background .3s;}
+  .fx-confirm{margin-top:26px;display:none;background:#ffd54a;color:#6a3d00;border:3px solid #fff;border-radius:999px;padding:14px 30px;font-size:18px;font-weight:900;font-family:inherit;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:pop .35s ease;z-index:6;}
+  .fx-confirm.show{display:inline-block;}
+  .fx-confirm:active{transform:translateY(2px);}
+  /* 群予告：326キャラが下から大量に駆け上がる */
+  .fx-swarm{position:absolute;inset:0;overflow:hidden;z-index:7;display:none;pointer-events:none;}
+  .fx-swarm .runner{position:absolute;bottom:-180px;background-repeat:no-repeat;background-size:contain;background-position:center bottom;filter:drop-shadow(0 3px 5px rgba(0,0,0,.45));animation-name:runup;animation-timing-function:linear;animation-fill-mode:forwards;}
+  @keyframes runup{0%{transform:translateY(0);opacity:0}8%{opacity:1}88%{opacity:1}100%{transform:translateY(-150vh);opacity:0}}
+  @keyframes runupWobble{0%{transform:translate(0,0);opacity:0}8%{opacity:1}25%{transform:translate(-11px,-40vh)}50%{transform:translate(11px,-80vh)}75%{transform:translate(-8px,-118vh)}88%{opacity:1}100%{transform:translate(0,-150vh);opacity:0}}
+  @keyframes runupL{0%{transform:translate(0,0);opacity:0}8%{opacity:1}88%{opacity:1}100%{transform:translate(-52px,-150vh);opacity:0}}
+  @keyframes runupR{0%{transform:translate(0,0);opacity:0}8%{opacity:1}88%{opacity:1}100%{transform:translate(52px,-150vh);opacity:0}}
+  .fx-flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:5;pointer-events:none;}
+  .fx-flash.on{animation:flash .4s ease;}
+  @keyframes flash{0%{opacity:0}22%{opacity:1}100%{opacity:0}}
+  /* プチュン：ブラウン管シャットダウン風ブラックアウト */
+  .fx-crt{position:absolute;inset:0;background:#000;opacity:0;z-index:8;pointer-events:none;overflow:hidden;}
+  .fx-crt.on{opacity:1;}
+  .fx-crt .beam{position:absolute;left:0;right:0;top:50%;height:100vh;margin-top:-50vh;background:#fff;transform-origin:center center;opacity:0;}
+  .fx-crt.on .beam{animation:crtcollapse .5s cubic-bezier(.55,0,.85,.25) forwards;}
+  @keyframes crtcollapse{
+    0%{transform:scaleY(1) scaleX(1);opacity:.95;filter:brightness(1.7)}
+    38%{transform:scaleY(.02) scaleX(1);opacity:1;filter:brightness(2)}
+    66%{transform:scaleY(.02) scaleX(.03);opacity:1;filter:brightness(2)}
+    100%{transform:scaleY(0) scaleX(0);opacity:0}
+  }
+  /* rarity on prize modal */
+  .rankline{font-size:15px;font-weight:900;letter-spacing:.08em;color:var(--red);margin:2px 0;}
+  .rankline.r4{background:linear-gradient(90deg,#ff5b5b,#ffb03a,#5bd97f,#49c6ff,#ec6fd0);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:18px;}
+  .modal-card.r3{border-color:var(--mustard);box-shadow:0 0 0 4px rgba(231,164,58,.32),0 20px 50px rgba(70,58,44,.45);}
+  .modal-card.r4{border-color:#fff;box-shadow:0 0 0 5px #ff8a3a,0 0 34px 8px rgba(255,190,70,.8),0 20px 55px rgba(0,0,0,.5);}
+  /* 主催者設定 */
+  .admin{background:#fffdf5;border:2px dashed #c9a13b;border-radius:var(--r);padding:14px;margin-top:14px;}
+  .admin h4{margin:12px 0 4px;font-size:15px;color:#6a4a10;}
+  .adm-note{font-size:11.5px;color:var(--muted);margin:2px 0 8px;line-height:1.5;}
+  .admin .prob-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .admin .prob-grid label{display:flex;flex-direction:column;font-size:12px;font-weight:700;color:var(--ink);gap:3px;}
+  .admin,.admin *{box-sizing:border-box;}
+  .admin input,.admin select{font-family:inherit;font-size:14px;padding:8px;border:1.5px solid var(--line);border-radius:var(--r2);background:#fff;color:var(--ink);width:100%;min-width:0;}
+  .admin .prob-sum{margin-top:8px;font-size:13px;font-weight:800;}
+  .padminrow{border:1.5px solid var(--line);border-radius:var(--r);padding:8px;margin-bottom:8px;background:#fff;}
+  .pr-l1{display:flex;gap:6px;align-items:center;}
+  .pr-l2{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap;}
+  .padminrow .pf-em{width:44px;flex:none;text-align:center;padding:8px 2px;}
+  .padminrow .pf-name{flex:1;min-width:60px;}
+  .padminrow .pf-kind{width:78px;flex:none;}
+  .padminrow .pf-r{width:66px;flex:none;}
+  .pf-cntl{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:var(--muted);}
+  .padminrow .pf-cnt{width:56px;flex:none;text-align:center;}
+  .pf-prob{font-size:12px;font-weight:800;color:#2e7d32;margin-left:auto;white-space:nowrap;}
+  .padminrow .pf-del{border:none;background:#f3d6d0;color:#a33;border-radius:var(--r2);width:32px;height:34px;flex:none;font-weight:900;cursor:pointer;font-family:inherit;}
+  .padminrow .pf-del:active{transform:translateY(1px);}
+  .att-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;}
+  .att-l{display:flex;flex-direction:column;font-size:12px;font-weight:800;color:var(--ink);gap:3px;}
+  .att-l input{width:130px;}
+  .prow-head3{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-weight:700;margin-bottom:4px;}
+  .lose-box{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:9px 11px;background:#f6efe0;border-radius:var(--r);}
+  .lose-l{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--ink);}
+  .lose-l input{width:70px;}
+  .lose-p{font-size:12.5px;font-weight:800;color:#b26a00;}
+  .tot-box{margin-top:10px;font-size:12.5px;font-weight:800;color:var(--ink);line-height:1.6;}
+  .btn2{background:#eadfbf;border:1.5px solid #c9a13b;color:#6a4a10;border-radius:var(--r);padding:9px 12px;font-weight:800;font-family:inherit;cursor:pointer;font-size:13px;margin-top:4px;}
+  .btn2:active{transform:translateY(1px);}
+  /* 参加者情報 */
+  .pinfo{background:#fff;border:2px solid var(--line);border-radius:var(--r);padding:11px 13px;margin-bottom:12px;}
+  .pinfo-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+  .pinfo-l{display:flex;flex-direction:column;font-size:11.5px;font-weight:800;color:var(--muted);gap:3px;flex:1;min-width:0;}
+  .pinfo-l input{font-family:inherit;font-size:15px;font-weight:700;color:var(--ink);padding:8px 10px;border:1.5px solid var(--line);border-radius:var(--r2);width:100%;box-sizing:border-box;}
+  .pinfo-id{font-size:11.5px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;gap:3px;align-items:flex-end;}
+  .pinfo-id b{font-size:20px;color:var(--ink);letter-spacing:.04em;}
+  .pinfo-note{font-size:10.5px;color:var(--muted);margin:8px 0 0;line-height:1.5;}
+</style>
+<style>/* == fq-shindan-v1 / fq-shindan-mon-v1 : 福祉タイプ診断。演出の正本のスタイル定義には足さず、別ブロックにしてある == */
+  #shindanSec .sd-lead{color:var(--muted);font-size:12.5px;line-height:1.7;font-weight:500;margin:0 0 12px;}
+  .sd-cta{display:block;width:100%;border-radius:var(--r);padding:14px;font-size:16px;font-weight:900;cursor:pointer;
+    font-family:inherit;background:linear-gradient(135deg,#7fc4b0,var(--teal));color:#fff;
+    box-shadow:0 5px 0 #3b8271;border:2px solid #fff;}
+  .sd-cta:active{transform:translateY(2px);box-shadow:0 2px 0 #3b8271;}
+  .sd-locked{background:#fbf6ea;border:2px dashed var(--line);border-radius:var(--r);padding:12px 13px;
+    font-size:12.5px;color:var(--muted);font-weight:700;line-height:1.8;text-align:center;}
+  .sd-locked b{color:var(--ink);}
+  .sd-card{border:2px solid var(--line);border-radius:var(--r);background:#fbf6ea;padding:16px 14px 14px;position:relative;overflow:hidden;}
+  /* == fq-shindan-mon-v1 : モンスターの絵を中央に大きく出す ==
+     絵が無い型は .sd-img が読み込みに失敗するので、JS側で絵文字に切り替える。
+     ★fq-monster-v1: 絵は <picture> で webp を先に、読めない端末には png を出している。
+       .sd-img は CSS で 150×150 に決めているので、<img> に width/height は付けない
+       （★付けると CSS の指定より <img> の属性が勝ってしまう場面がある）。 */
+  .sd-hero{text-align:center;margin-bottom:2px;}
+  .sd-img{width:150px;height:150px;object-fit:contain;display:block;margin:0 auto;
+    filter:drop-shadow(0 4px 4px rgba(70,58,44,.16));}
+  .sd-em{font-size:76px;line-height:1.15;display:block;}
+  .sd-name{font-size:23px;font-weight:900;color:var(--ink);line-height:1.3;text-align:center;margin-top:6px;}
+  .sd-role{font-size:12px;font-weight:800;color:var(--muted);text-align:center;margin-top:3px;}
+  .sd-role b{color:var(--red);font-size:13px;}
+  .sd-catch{margin:12px 0 0;font-size:15.5px;font-weight:900;color:var(--teal);text-align:center;}
+  .sd-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-content:center;}
+  .sd-chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:800;}
+  .sd-blk{margin-top:11px;background:var(--card);border:2px solid var(--line);border-radius:var(--r);padding:10px 12px;}
+  .sd-blk h5{margin:0 0 4px;font-size:11.5px;font-weight:900;color:var(--mustard);letter-spacing:.02em;}
+  /* ★fq-monster-v1: 「なぜこのモンスター？」だけ見出しの色を変えて、下の2枠と見分けやすくする */
+  .sd-blk.sd-why h5{color:var(--teal);}
+  .sd-blk p{margin:0;font-size:12.5px;line-height:1.85;color:var(--ink);font-weight:600;}
+  .sd-blk p.sd-ask{color:var(--red);font-weight:800;}
+  .sd-again{margin-top:10px;text-align:center;}
+  .sd-modal .modal-card{max-width:340px;}
+  .sd-bd{display:block;margin:12px 0 0;font-size:13px;font-weight:900;text-align:left;}
+  .sd-bd input{width:100%;margin-top:6px;font-family:inherit;font-size:17px;font-weight:800;color:var(--ink);
+    background:#fbf6ea;border:2px solid var(--line);border-radius:var(--r);padding:11px 12px;}
+  .sd-err{color:var(--red);font-size:12.5px;font-weight:800;margin:8px 0 0;min-height:18px;}
+  .sd-note{font-size:11.5px;color:var(--muted);line-height:1.7;font-weight:600;margin:12px 0 0;}
+</style>
+<style>/* == fq-zukan-v1 : キャラクター図鑑 == */
+  #zukanSec .zk-lead{color:var(--muted);font-size:12.5px;line-height:1.8;font-weight:500;margin:0 0 12px;}
+  #zukanSec .zk-lead b{color:var(--ink);}
+  .zk-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .zk-count{font-size:13px;font-weight:900;color:var(--muted);white-space:nowrap;}
+  .zk-count b{font-size:26px;color:var(--red);margin-right:2px;}
+  .zk-bar{flex:1;height:14px;border-radius:999px;background:#ece2cc;border:2px solid var(--line);overflow:hidden;}
+  .zk-bar i{display:block;height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,#7fc4b0,var(--teal));transition:width .5s ease;}
+  .zk-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;}
+  .zk-cell{aspect-ratio:1;border-radius:var(--r);background:#fbf6ea;border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .zk-cell img{width:86%;height:86%;object-fit:contain;
+    filter:brightness(0) opacity(.16);transition:filter .35s ease;}
+  .zk-cell.got img{filter:none;}
+  .zk-cell.got{background:#fff;border-color:#d9c9a3;}
+  .zk-cell.justgot{border-color:var(--mustard);box-shadow:0 0 0 3px rgba(231,164,58,.35);}
+  .zk-note{margin-top:10px;font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.7;text-align:center;}
+  .zk-cool{margin-top:10px;background:#fbf6ea;border:2px dashed var(--line);border-radius:var(--r);
+    padding:10px 12px;font-size:12.5px;font-weight:800;color:var(--muted);text-align:center;}
+  .zk-cool b{color:var(--red);}
+  /* 登場のモーダル */
+  .zk-modal .modal-card{max-width:330px;}
+  .zk-modal .zk-em{font-size:15px;font-weight:900;color:var(--muted);letter-spacing:.04em;}
+  .zk-modal .zk-img{width:190px;height:190px;object-fit:contain;display:block;margin:10px auto 0;
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,.18));}
+  .zk-modal h3{margin:10px 0 0;font-size:26px;color:var(--red);}
+  .zk-modal .zk-no{font-size:13px;color:var(--muted);font-weight:800;margin-top:4px;}
+  .zk-modal .zk-prog{margin-top:12px;font-size:15px;font-weight:900;color:var(--teal);}
+</style>
+<style>/* == fq-logpose-v1 : つぎの行き先と称号 == */
+  .lp-box{background:#fff;border:2px solid var(--line);border-radius:var(--r);
+    padding:14px 15px 13px;margin:0 0 14px;box-shadow:0 3px 0 rgba(0,0,0,.04);}
+  .lp-box.done{background:#fbf6ea;border-color:var(--mustard);}
+  .lp-h{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:900;color:var(--ink);}
+  .lp-h .lp-em{font-size:19px;}
+  .lp-top{display:flex;align-items:center;gap:9px;margin:9px 0 10px;}
+  .lp-prog{font-size:12px;font-weight:900;color:var(--muted);white-space:nowrap;}
+  .lp-prog b{font-size:21px;color:var(--mustard);margin-right:1px;}
+  .lp-bar{flex:1;height:11px;border-radius:999px;background:#ece2cc;
+    border:2px solid var(--line);overflow:hidden;}
+  .lp-bar i{display:block;height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,#f3cf86,var(--mustard));transition:width .5s ease;}
+  .lp-hint{background:#fbf6ea;border:2px dashed var(--line);border-radius:var(--r);
+    padding:13px 12px;font-size:16px;font-weight:900;color:var(--ink);
+    text-align:center;line-height:1.8;letter-spacing:.03em;}
+  .lp-ans{margin-top:9px;text-align:center;}
+  .lp-ans .linkbtn{font-size:12px;}
+  .lp-name{margin-top:9px;text-align:center;font-size:17px;font-weight:900;color:var(--red);}
+  .lp-note{margin-top:10px;font-size:11.5px;color:var(--muted);
+    font-weight:600;line-height:1.7;text-align:center;}
+  .lp-note b{color:var(--ink);}
+  .lp-title{display:flex;align-items:center;justify-content:center;gap:6px;
+    margin:0 0 10px;padding:8px 10px;border-radius:var(--r);
+    background:#fbf6ea;border:2px solid var(--mustard);
+    font-size:13.5px;font-weight:900;color:var(--ink);text-align:center;line-height:1.6;}
+  .lp-title .lp-tem{font-size:17px;}
+  /* ゴールのモーダル */
+  .lp-modal .modal-card{max-width:340px;}
+  .lp-modal .lp-gem{font-size:38px;line-height:1;}
+  .lp-modal .zk-em{font-size:15px;font-weight:900;color:var(--muted);letter-spacing:.04em;margin-top:6px;}
+  .lp-modal .zk-img{width:180px;height:180px;object-fit:contain;display:block;margin:8px auto 0;
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,.18));}
+  .lp-modal h3{margin:10px 0 0;font-size:24px;color:var(--red);}
+  .lp-award{margin-top:10px;font-size:15px;font-weight:900;color:var(--teal);line-height:1.7;}
+</style>
+<style>/* == fq-menu-v1 : 下のメニュー（案内ページと同じもの）== */
+  /* ★ここは index.html の .tabbar から そのまま写したもの。**2つで1組**。
+       片方だけ直すと、ページをまたいだ瞬間にメニューの形が変わる。
+       並び・字の大きさ・色を変えるときは、必ず index.html も直すこと。
+     ★env(safe-area-inset-bottom) ＝ iPhone の下の黒い横棒のぶんの余白。
+       入れないと、いちばん下が横棒に隠れて押せなくなる。
+     ★奥ゆき（z-index）は 60。モーダル(80)・ガチャの演出(90)・
+       開発パネル(99999)より奥なので、演出中に手前へ出てくることはない。 */
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--ink);
+          display:flex;padding:6px 2px calc(6px + env(safe-area-inset-bottom));
+          box-shadow:0 -2px 10px rgba(0,0,0,.18);}
+  /* ★flex:1 1 auto ＝「字の長さに応じた幅」。8つあるので、
+       flex:1（全部おなじ幅）にすると「ステージ」が入りきらない。
+       2文字の『診断・図鑑・会場・協賛』が細くなって、そのぶんを回している。 */
+  .tabbar a,.tabbar button{flex:1 1 auto;min-width:0;position:relative;
+          background:none;border:0;cursor:pointer;color:#fff;opacity:.62;
+          font-family:inherit;font-weight:900;font-size:10px;line-height:1.25;
+          padding:6px 3px 4px;border-radius:var(--r2);white-space:nowrap;
+          text-decoration:none;
+          display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .tabbar .ic{font-size:18px;line-height:1;}
+  /* とてもせまい画面（iPhone SEなど）では、字だけ少し小さくして8つ収める */
+  @media(max-width:370px){ .tabbar a,.tabbar button{font-size:9px;padding:6px 2px 4px;}
+                           .tabbar .ic{font-size:16px;} }
+  .tabbar [aria-selected="true"]{opacity:1;background:rgba(255,255,255,.13);}
+  .tabbar [aria-selected="true"] .ic{transform:translateY(-1px);}
+  /* ★赤い点。ガチャが引けるようになったときだけ「クエスト」に出す。
+       ガチャは「クエスト」の中にあるので、開いていないと気づけない。 */
+  .tabbar .badge::after{content:'';position:absolute;top:3px;right:3px;
+          width:9px;height:9px;border-radius:50%;background:var(--red);
+          border:2px solid var(--ink);}
+  /* ★メニューに隠れるぶんの逃げ。メニューの高さを変えたら、ここも変えること。 */
+  body{padding-bottom:calc(66px + env(safe-area-inset-bottom));}
+  /* ★お知らせの帯も、メニューに隠れないよう上へずらす（もとは bottom:26px） */
+  #toast{bottom:calc(84px + env(safe-area-inset-bottom));}
+  @media(min-width:761px){
+    .tabbar{max-width:760px;margin:0 auto;border-radius:var(--r) var(--r) 0 0;}
+    .tabbar a,.tabbar button{font-size:12px;} .tabbar .ic{font-size:21px;}
+  }
+</style>
+
+<!-- == fq-soon-v1 / fq-openat-v1 : 準備中（工事中）のスイッチ ==
+     ★★開けかたは3つ。**通信は一切しません。**
+       会場にWi-Fiが無く、当日は1500人が各自の回線です。「サーバーに聞いてから開ける」
+       作りにすると、電波が届かない人には開きません。だから端末の中だけで決めています。
+
+       ① 日時       下の OPEN_AT を過ぎたら、ひとりでに開く（これが本命）
+       ② リハーサル  この端末が覚えている期限。期限が来ると自動で準備中へ戻る
+                     関係者用の設定のボタン、または URL に ?open=30（分）／?open=0 で解除
+       ③ URL        ?soon=0 で開く／?soon=1 で準備中／?dev=1 でも開く（自分だけ）
+
+     ★★OPEN_AT は index.html と quest.html の **2か所とも同じ日時**にすること。
+       いまは「12/13 になった瞬間」。開場は10:00だが、朝の準備と早く着いた方のぶん。
+     ★どうしても今すぐ開けたいときは、OPEN_AT を過去の日時にすれば開きます。
+     ★ここは <head> の中（絵を描く前）に置くこと。
+       あとに置くと、中身が一瞬ちらっと見えてしまう。 -->
+<script>
+(function(){
+  /* ★★fq-opencfg-v1: ここが「みんなに効く」開く日時。**index.html と quest.html の2か所**。
+     関係者用の設定でコピーできる1行は、この行のことです。 */
+  /* ★fq-open930-v1: 0:00 → 9:30（開場30分前）。変えるときは index.html と quest.html の2か所とも。 */
+  var OPEN_DEF = '2026-12-13T09:30:00+09:00';   /* ←★本番に開く日時（みんなに効く） */
+
+  var HOLDKEY = 'fq_open_until';         /* リハーサルの期限。この端末だけが覚えている */
+  var ATKEY   = 'fq_open_at';            /* ★試す用の日時。**この端末だけ**。みんなには効かない */
+  var now = Date.now(), hold = 0;
+  var OPEN_AT = Date.parse(OPEN_DEF);
+  try{ var a = parseInt(localStorage.getItem(ATKEY) || '0', 10) || 0; if (a) OPEN_AT = a; }catch(e){}
+
+  try{ hold = parseInt(localStorage.getItem(HOLDKEY) || '0', 10) || 0; }catch(e){}
+  if (hold && hold <= now){ try{ localStorage.removeItem(HOLDKEY); }catch(e){} hold = 0; }
+
+  /* ?open=30 … 30分だけ開ける／?open=0 … いま閉じる。ほかの端末で試すとき用 */
+  try{
+    var o = /[?&]open=(\d{1,4})/.exec(location.search);
+    if (o){
+      var mm = parseInt(o[1], 10) || 0;
+      if (mm > 0){ hold = now + mm * 60000; localStorage.setItem(HOLDKEY, String(hold)); }
+      else { hold = 0; localStorage.removeItem(HOLDKEY); }
+    }
+  }catch(e){}
+
+  var SOON = !(now >= OPEN_AT || hold);          /* 日時 か リハーサル で開く */
+  try{
+    var m = /[?&]soon=([01])/.exec(location.search);
+    if (m)                                  SOON = (m[1] === '1');
+    else if (/[?&]dev=1/.test(location.search)) SOON = false;
+  }catch(e){}
+  if (SOON) document.documentElement.className += ' soon-on';
+
+  /* ★★期限が来たら、開きっぱなしのタブでも その場で準備中へ戻す。
+     「終わったら自動で戻る」のを、画面を見ながら確かめられるようにするため。 */
+  if (!SOON && hold && now < OPEN_AT && !/[?&](soon=0|dev=1)/.test(location.search)){
+    setTimeout(function(){
+      try{ localStorage.removeItem(HOLDKEY); }catch(e){}
+      document.documentElement.className += ' soon-on';
+      try{ window.scrollTo(0, 0); }catch(e){}
+    }, Math.max(0, hold - Date.now()) + 400);
+  }
+
+  /* 関係者用の設定から読む（同じ日時・同じ名前を2度書かないため） */
+  window.FQ_OPEN = { at: OPEN_AT, def: OPEN_DEF, defAt: Date.parse(OPEN_DEF),
+                     key: HOLDKEY, atKey: ATKEY, hold: hold, soon: SOON };   /* ★fq-opencfg-v1 */
+})();
+</script>
+</head>
+<body>
+<script>/* == fq-menu-v1 ==
+   ★開いたときのURLを、いちばん先に覚えておく。
+     本体のスクリプトは ?q= を読んだあと history.replaceState でURLを消すので、
+     あとから location.search を見ても「QRから来たのか」が分からなくなる。 */
+window.__FQ_Q0 = location.search;</script>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <img src="img/app/brand.png" alt="">
+      <h1 class="hand">FUKUSHI <b>QUEST</b></h1>
+    </div>
+    <div class="ptbar">
+      <div class="ptchip"><span class="coin">P</span>ポイント <span class="val" id="pt">0</span></div>
+    </div>
+  </header>
+
+  <!-- == fq-soon-v1 : 準備中のお知らせ ==
+       ★これが出ているあいだ、下のセクション（なまえ・クエスト・診断・図鑑…）は
+         CSSでまとめて隠れています。**消してはいません。**
+       ★当日は <head> の SOON を false に。それだけで元どおり動きます。 -->
+  <section class="soonbox">
+    <div class="sn-em">🚧</div>
+    <h2>ただいま準備中です</h2>
+    <div class="sn-en">COMING SOON</div>
+    <p>クエスト、福祉タイプ診断、キャラクター図鑑は<br>
+       <b>イベント当日にオープン</b>します。</p>
+    <div class="sn-when">📅 2026年12月13日（日）<br>
+      10:00〜17:00<br>   <!-- fq-freebig-v1: 16:00→17:00 -->
+      📍 豊田市福祉センター</div>
+    <a class="sn-btn" href="index.html">イベントのご案内を見る →</a>
+    <!-- ★fq-square2-v1: 「ステージ」「みどころ」は1つのタブ（イベント）にまとまったので、
+         ここの言いまわしも合わせました。 -->
+    <p class="sn-note">イベントの中身、会場への行き方はもう見られます。<br>
+      このページをホーム画面に追加しておくと、<br>
+      当日そのままクエストをはじめられます。</p>
+  </section>
+
+  <section class="pinfo">
+    <div class="pinfo-row">
+      <label class="pinfo-l">なまえ<input id="playerName" maxlength="20" placeholder="ニックネームを入力" value=""></label>
+      <div class="pinfo-id">認識番号<b id="devId">—</b></div>
+    </div>
+    <p class="pinfo-note">大抽選会は、この「なまえ」と「認識番号」で当選が発表されます。会場受付で番号を伝えてください。</p>
+    <p class="pinfo-note" id="fqGrand" style="display:none;font-weight:800;font-size:12px;"></p><!-- fq-grand-v1 -->
+  </section>
+
+  <!-- == fq-menu-v1 ==
+       ★上に出ていたタブ（fq-tabs-v1）は、**下のメニューに引っ越しました**。
+         クエスト／診断／図鑑 は、いちばん下のメニューで切り替えます。
+         上下に2段あると、どちらを押せばいいのか分からなくなるため。
+       ★「なまえ・認識番号」は、どの画面でも見えたまま（このすぐ上）。
+         大抽選会で読み上げる番号なので、隠してはいけない。 -->
+
+  <section data-tab="quest">
+    <div class="sec-h hand"><span class="em">📜</span>クエスト</div>
+    <p class="sec-sub">会場のQRコードを読み取ってミッションを達成しよう。1つ達成ごとに1ポイント！</p>
+    <div id="quests"></div>
+  </section>
+
+  <!-- == fq-shindan-v1 == -->
+  <section id="shindanSec" data-tab="shindan">
+    <div class="sec-h hand"><span class="em">🔮</span>福祉タイプ診断</div>
+    <p class="sd-lead">生年月日から、あなたが福祉の現場で力を出しやすい「7つのタイプ」を見つけます。どのタイプにも、活躍できる場所があります。</p>
+    <div id="shindanBody"></div>
+  </section>
+
+  <section class="gacha-box" data-tab="quest">
+    <div class="sec-h hand" style="justify-content:center"><span class="em">🎁</span>ガチャに挑戦</div>
+    <button id="sndBtn" class="snd" data-act="snd">🔊 音あり</button>
+    <div class="steps" id="steps"></div>
+    <div class="gacha-stage">
+      <img class="gacha-keeper" src="img/app/gacha.png" alt="">
+      <div class="capsule" id="capsule"></div>
+    </div>
+    <button class="btn btn-gacha" id="gachaBtn" data-act="gacha">ガチャをまわす</button>
+    <div class="gacha-hint" id="gachaHint"></div>
+  </section>
+
+  <section data-tab="quest">
+    <div class="sec-h hand"><span class="em">🏅</span>獲得した景品</div>
+    <div class="prize-wrap">
+      <img class="prize-mascot" src="img/app/prize.png" alt="">
+      <div class="prize-row" id="prizes"><span class="empty">まだ景品はありません。ガチャをまわそう！</span></div>
+    </div>
+  </section>
+
+  <!-- == fq-zukan-v1 == -->
+  <section id="zukanSec" data-tab="zukan">
+    <div class="sec-h hand"><span class="em">📖</span>キャラクター図鑑</div>
+    <!-- == fq-logpose-v1 : つぎの行き先。fq_logpose.sql を Run すると出る == -->
+    <div class="lp-box" id="lpBox" style="display:none">
+      <div class="lp-h"><span class="lp-em">🧭</span><span id="lpHead">つぎの ぼうけん</span></div>
+      <div class="lp-top">
+        <div class="lp-prog"><b id="lpVisited">0</b>/<span id="lpTotal">8</span> か所</div>
+        <div class="lp-bar"><i id="lpBar"></i></div>
+      </div>
+      <div class="lp-hint" id="lpHint">…</div>
+      <div class="lp-ans" id="lpAnsWrap"><button class="linkbtn" data-act="lpAns">こたえを見る</button></div>
+      <div class="lp-name" id="lpName" style="display:none"></div>
+      <div class="lp-note" id="lpNote">見つけたら、そこの<b>QR</b>を読み取ろう。<br>
+        行き先は<b>人によってちがいます</b>。となりの人と同じとは限りません。</div>
+    </div>
+    <p class="zk-lead">会場のあちこちにいる<b>キャラクターのQR</b>を読み取ると、なかまが増えていきます。<br>
+      同じQRは<b>5分たつ</b>とまた読めます。ほかの場所のQRなら、すぐ読めます。</p>
+    <div class="zk-head">
+      <div class="zk-count"><b id="zkOwned">0</b>/<span id="zkTotal">69</span></div>
+      <div class="zk-bar"><i id="zkBar"></i></div>
+    </div>
+    <!-- == fq-logpose-v1 : 称号（この端末の中で計算する） == -->
+    <div class="lp-title" id="lpTitle" style="display:none"><span class="lp-tem">🏅</span><b id="lpTitleTx"></b></div>
+    <div class="zk-grid" id="zkGrid"></div>
+    <div id="zkMsg"></div>
+    <!-- == fq-zukan-retry-v1 : 「あとで受け取ります」の ==
+         中身はJSが入れます。CSSは足していません（.zk-note を使いまわす）。 -->
+    <div id="zkPend" hidden></div>
+  </section>
+
+  <section id="rankSec" style="display:none" data-tab="quest">
+    <div class="sec-h hand"><span class="em">🏆</span>ランキング</div>
+    <p class="sec-sub">会場のみんなのポイント上位です（自動で更新されます）。あなたは <b id="rankMe">—</b>。</p>
+    <div id="rankList"><span class="empty">読み込み中…</span></div>
+  </section>
+
+  <section>
+    <div class="sec-h hand"><span class="em">📱</span>QRを読み取る（テスト用）</div>
+    <div class="warnband">本番では、下のボタン1つ1つが<b>会場に貼る／職員が持つQRコード</b>になります。ここでは動作確認のため、ボタンでスキャンを再現できます。</div>
+    <div class="scan-grid">
+      <button class="scan-btn wide" data-act="scan" data-code="jigyosho"><span class="em">🏛️</span>事業所（ギルド）のQR<small>訪問で +1pt（1か所でOK）</small></button>
+      <button class="scan-btn" data-act="scan" data-code="talk_A"><span class="em">🗣️</span>職員と会話QR：A<small>会話で +1pt</small></button>
+      <button class="scan-btn" data-act="scan" data-code="talk_B"><span class="em">🗣️</span>職員と会話QR：B<small>別の職員 +1pt</small></button>
+      <button class="scan-btn" data-act="scan" data-code="check"><span class="em">📝</span>適性診断のQR<small>診断で +1pt</small></button>
+      <button class="scan-btn" data-act="scan" data-code="talk_C"><span class="em">🗣️</span>職員と会話QR：C<small>別の職員 +1pt</small></button>
+      <button class="scan-btn wide" data-act="scan" data-code="event_1"><span class="em">🎪</span>ホールのイベントQR①<small>休憩中に表示 +1pt</small></button>
+      <button class="scan-btn wide" data-act="scan" data-code="event_2"><span class="em">🎪</span>ホールのイベントQR②<small>別の時間帯 +1pt</small></button>
+    </div>
+  </section>
+
+  <section class="testpanel" id="devPanel" style="display:none">
+    <div class="sec-h hand"><span class="em">🧪</span>音・演出をすぐ確認（開発テスト用）</div>
+    <div class="warnband">本番公開時はこの枠ごと消せます。QRを貯めなくても、ここから<b>ガチャ演出と効果音</b>をすぐ再生して確認できます。<br>※音が出ないときは、先に画面を1回タップしてから押してください（スマホ／ブラウザの自動再生制限のためです）。</div>
+    <div class="scan-grid">
+      <button class="scan-btn" data-act="ptplus"><span class="em">➕</span>ポイント+1<small>ガチャ解放の確認用</small></button>
+      <button class="scan-btn" data-act="preview" data-lv="1"><span class="em">🎲</span>ノーマル<small>あたり</small></button>
+      <button class="scan-btn" data-act="preview" data-lv="2"><span class="em">✨</span>チャンス→あたり<small>レア度2</small></button>
+      <button class="scan-btn" data-act="preview" data-lv="3" data-rev="0"><span class="em">🔴</span>赤：激アツ→大当たり<small>レア度3</small></button>
+      <button class="scan-btn" data-act="preview" data-lv="4" data-rev="0"><span class="em">👑</span>特賞・直接<small>虹の大当たり</small></button>
+      <button class="scan-btn wide" data-act="preview" data-lv="4" data-rev="1"><span class="em">🌈</span>復活→虹の大当たり<small>ハズレ→プチュン→復活</small></button>
+      <button class="scan-btn wide" data-act="preview" data-lv="4" data-rev="2"><span class="em">🏃</span>群予告→虹の大当たり<small>326大群→プチュン→虹</small></button>
+      <button class="scan-btn wide" data-act="lose"><span class="em">😢</span>ハズレ演出<small>単体で確認</small></button>
+      <button class="scan-btn" data-act="reset"><span class="em">🔄</span>進捗リセット<small>最初から</small></button>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-h hand"><span class="em">💡</span>仕組みと使い方</div>
+    <details>
+      <summary>QRはどう作るの？（会場設置のしかた）</summary>
+      <div class="howto">
+        このアプリは<b>アプリのインストール不要</b>。QRコードは「ただのURL（リンク）」です。スマホのカメラでQRを読むと、このページが開いて自動でスキャンが記録されます。<br><br>
+        各QRは、このページのURLの後ろに <code>?q=コード</code> を付けたものにします。例：<br>
+        ・事業所：<code>…/?q=jigyosho</code><br>
+        ・職員と会話：<code>…/?q=talk_A</code>（職員ごとにA/B/C…）<br>
+        ・適性診断：<code>…/?q=check</code><br>
+        ・ホールのイベント：<code>…/?q=event_1</code><br><br>
+        無料のQR作成サイトにこのURLを貼れば画像ができます。<b>会話QRは職員が手に持つ／カードで提示</b>、<b>イベントQRはホール画面に休憩中だけ表示</b>すると、歩いて人と話さないと進めない＝自然にズル防止になります。
+      </div>
+    </details>
+    <details>
+      <summary>ガチャのルール（段階で解放）</summary>
+      <div class="howto">
+        ・会場のQRを読み取ると<b>ポイント</b>がもらえます（同じQRは1回だけ）<br>
+        ・ガチャは<b>1回ごとにポイントを使います</b>。ポイントがある限り、何回でもまわせます<br>
+        ・当たったら「獲得した景品」に<b>引換券</b>が出ます。お店でQRを見せて使ってください<br>
+        ・引換券は<b>1回だけ</b>使えます。スクショを配っても、使えるのは最初の1人だけです<!-- fq-voucher-v1 -->
+      </div>
+    </details>
+  </section>
+
+  <div class="foot">
+    <div id="revive"></div>
+    進捗はこの端末に保存されます。<br>
+    <span id="resetLink" style="display:none"><button class="linkbtn" data-act="reset">最初からやり直す（リセット）</button><br></span>
+    <button class="linkbtn" id="admLink" data-act="adminToggle" style="display:none;color:#6a4a10;font-weight:800;">⚙️ 主催者用の設定（景品・当たる確率）</button>
+    <div class="credit">キャラクター：326（ナカムラミツル）／ 許諾のうえ使用</div>
+  </div>
+
+  <section id="adminPanel" class="admin" style="display:none">
+    <div class="sec-h hand"><span class="em">⚙️</span>主催者用の設定</div>
+    <div class="adm-note">この設定はこの端末に保存されます。参加者には表示されません（この画面は下のボタンで閉じられます）。</div>
+
+    <!-- ★★fq-openat-v1: リハーサル用の仮ひらき。
+         ★**この端末だけ**が開きます。ほかの人の端末は開きません。
+           全員ぶん一度に開けるには通信が要り、会場にWi-Fiが無いためやめています。
+         ★ほかの端末で見たいときは、その端末で ?open=30 を付けて開く。
+         ★期限が来ると ひとりでに準備中へ戻ります。押し忘れても事故になりません。 -->
+    <!-- ★★fq-opencfg-v1: 本番に開く日時。
+         ★**押して効くのはこの端末だけ**（会議の場で見せる・試すため）。
+           来場者ぜんぶに効かせるには、下に出る1行をコードに入れて公開し直すこと。
+           日時を各自の端末の中に持たせているのは、会場にWi-Fiが無いから。
+           サーバーに聞く作りだと、電波の届かない人にはいつまでも開かない。 -->
+    <h4>準備中を解除する日時（本番）</h4>
+    <p class="adm-note">この日時を過ぎると、来場者の画面が<b>ひとりでに</b>本番へ切り替わります。通信は使いません。<br>★<b>入れて押しても、効くのはこの端末だけです（試す用）。</b>みんなに効かせるには、下に出る<b>1行</b>をコピーして、<code>index.html</code> と <code>quest.html</code> の<b>2か所とも</b>入れ替えてから公開し直してください。</p>
+    <div class="att-row">
+      <label class="att-l">開く日時<input type="datetime-local" id="openAt"></label>
+      <button class="btn2" data-act="openTry">この端末で試す</button>
+      <button class="btn2" data-act="openTryOff">試すのをやめる</button>
+    </div>
+    <div class="tot-box" id="openState">–</div>
+    <div class="adm-note" style="margin-top:8px;">みんなに効かせる1行（2か所とも）</div>
+    <textarea id="openLine" readonly rows="2" style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.7;border:2px solid var(--line);border-radius:var(--r2);background:#fbf6ea;padding:9px 10px;"></textarea>
+    <button class="btn2" data-act="openCopy" style="margin-top:6px;">この1行をコピー</button>
+
+    <!-- ★★fq-opencfg-v1: リハーサル。好きな分数を入れられるようにした。
+         ★期限が来ると ひとりでに準備中へ戻る。押し忘れても事故にならない。 -->
+    <h4>リハーサル（準備中を仮に開ける）</h4>
+    <p class="adm-note">この端末だけ、決めた時間のあいだ本番の画面にします。<b>時間が過ぎると、ひとりでに準備中へ戻ります。</b><br>ほかの端末でも見たいときは、その端末で URL のうしろに <code>?open=30</code>（30分ぶん）を付けて開いてください。閉じるときは <code>?open=0</code> です。</p>
+    <div class="att-row">
+      <label class="att-l">何分ひらく<input type="number" id="openMin" min="1" max="1440" step="5" value="60"></label>
+      <button class="btn2" data-act="openHold">この時間ひらく</button>
+      <button class="btn2" data-act="openHold" data-min="15">15分</button>
+      <button class="btn2" data-act="openHold" data-min="60">60分</button>
+      <button class="btn2" data-act="openHold" data-min="0">いま閉じる</button>
+    </div>
+
+    <h4>景品と当たる確率</h4>
+    <p class="adm-note">それぞれの景品の<b>個数</b>と<b>想定来場者数</b>を入れると、ハズレの数と各当選確率が自動で計算されます。数字はあとから自由に微調整できます（レア度＝演出の色：青1／緑2／赤3／虹4）。<br><b>★1人が最大3回引くので、ガチャの総回数は「来場者数×3」です。</b>ハズレの個数はその回数から計算されます。</p>
+    <div class="att-row">
+      <label class="att-l">想定来場者数<input type="number" id="attendees" min="0" step="1"></label>
+      <button class="btn2" data-act="autoLose">ガチャ総回数（来場者数×3）からハズレを自動計算</button>
+    </div>
+    <div class="prow-head3"><span>景品（絵文字・名前・種類・レア度）</span><span>個数 → 確率</span></div>
+    <div id="prizeRows"></div>
+    <button class="btn2" data-act="prizeAdd">＋ 景品を追加</button>
+    <div class="lose-box">
+      <label class="lose-l">ハズレ の個数<input type="number" id="loseCount" min="0" step="1"></label>
+      <div class="lose-p">当たらない確率 <b id="loseProb">–</b></div>
+    </div>
+    <div class="tot-box" id="totBox">–</div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-gacha" data-act="cfgSave" style="width:100%;">この内容で保存する</button>
+      <button class="linkbtn" data-act="cfgReset" style="margin-top:8px;">初期設定に戻す</button>
+    </div>
+  </section>
+</div>
+
+<div class="modal-fx" id="fx">
+  <div class="fxbg" id="fxbg"></div>
+  <div class="fx-rainbow" id="fxrainbow"></div>
+  <div class="fx-rays" id="fxrays"></div>
+  <div class="fx-center">
+    <div class="fx-capwrap" id="fxcapwrap"><div class="fx-cap" id="fxcap"></div></div>
+    <div class="fx-label hand" id="fxlabel">ガチャ！</div>
+    <div class="fx-gauge"><i id="fxgauge"></i></div>
+    <button class="fx-confirm" id="fxConfirm" data-act="fxconfirm">🎁 景品を確認する</button>
+  </div>
+  <div class="fx-swarm" id="fxswarm"></div>
+  <div class="fx-crt" id="fxcrt"><div class="beam"></div></div>
+  <div class="fx-flash" id="fxflash"></div>
+</div>
+
+<!-- == fq-shindan-v1 modal == -->
+<div class="modal sd-modal" id="shindanModal">
+  <div class="modal-card">
+    <div class="big">🔮</div>
+    <h3 class="hand">福祉タイプ診断</h3>
+    <label class="sd-bd">生年月日<input type="date" id="sdBirth" min="1900-01-01"></label>
+    <div class="sd-err" id="sdErr"></div>
+    <button class="btn" data-act="sdRun">診断する</button>
+    <p class="sd-note">入力した生年月日は、この端末の中で計算に使うだけです。サーバーには送りませんし、保存もしません（残るのは結果のタイプだけ）。</p>
+    <div class="sd-again"><button class="linkbtn" data-act="sdClose">あとにする</button></div>
+  </div>
+</div>
+
+<!-- == fq-zukan-v1 modal == -->
+<div class="modal zk-modal" id="zukanModal">
+  <div class="modal-card">
+    <div class="zk-em" id="zkEm">なかまが ふえた！</div>
+    <img class="zk-img" id="zkImg" alt="">
+    <h3 class="hand" id="zkTtl">ゲット！</h3>
+    <div class="zk-no" id="zkNo">No.—</div>
+    <div class="zk-prog" id="zkProg">—</div>
+    <button class="btn" data-act="zkClose">やった！</button>
+  </div>
+</div>
+
+<!-- == fq-logpose-v1 goal == -->
+<div class="modal lp-modal" id="lpModal">
+  <div class="modal-card">
+    <div class="lp-gem">🧭</div>
+    <div class="zk-em">ぜんぶ まわった！</div>
+    <img class="zk-img" id="lpImg" alt="">
+    <h3 class="hand">ログポース コンプリート！</h3>
+    <div class="lp-award">ここでしか会えない なかまと<br>称号「<span id="lpAwardTx">ログポースの ぼうけんしゃ</span>」</div>
+    <button class="btn" data-act="lpClose">やった！</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div class="modal" id="prizeModal">
+  <div class="modal-card">
+    <div class="big" id="prizeEmoji">🎉</div>
+    <div class="hand rankline" id="prizeRank">あたり！</div>
+    <div class="prize-name" id="prizeName">-</div>
+    <div class="kind" id="prizeKind">-</div>
+    <p>景品ブースでこの画面を見せて受け取ってね。</p>
+    <button class="btn" data-act="close" data-mod="prizeModal">やった！</button>
+  </div>
+</div>
+
+<div class="modal" id="reviveModal">
+  <div class="modal-card">
+    <img class="mimg" src="img/app/next.png" alt="">
+    <h3 class="hand">新しいクエスト解放！</h3>
+    <div class="prize-name" id="nextDest">-</div>
+    <p>クリアおめでとう！次はこの場所へ行ってみよう。会場をどんどん回ってね。</p>
+    <button class="btn" data-act="close" data-mod="reviveModal">行ってみる</button>
+  </div>
+</div>
+
+<script>
+var KEY='fukushi_quest_326_v1', mem={};
+var store={
+  get:function(){try{var s=localStorage.getItem(KEY);return s?JSON.parse(s):null;}catch(e){return mem[KEY]||null;}},
+  set:function(v){try{localStorage.setItem(KEY,JSON.stringify(v));}catch(e){mem[KEY]=v;}},
+  clear:function(){try{localStorage.removeItem(KEY);}catch(e){}mem={};}
+};
+function defState(){return {scanned:[],gacha:0,snapTalk:[0,0,0],snapEvent:[0,0,0],prizes:[],name:''};}
+var DIDKEY='fukushi_quest_326_did';
+function getDeviceId(){ try{var d=localStorage.getItem(DIDKEY); if(d)return d; d=String(1000+Math.floor(Math.random()*9000)); localStorage.setItem(DIDKEY,d); return d;}catch(e){ if(!mem[DIDKEY]) mem[DIDKEY]=String(1000+Math.floor(Math.random()*9000)); return mem[DIDKEY]; } }
+var DID=getDeviceId();
+var S=store.get()||defState();
+
+var QUESTS=[
+  {key:'jigyosho',img:'img/app/m_jigyosho.png',title:'事業所（ギルド）を訪問',desc:'事業所のQRを読み取る（1か所でOK）',test:function(c){return c.indexOf('jigyosho')===0;}},
+  {key:'talk',img:'img/app/m_talk.png',title:'職員と会話する',desc:'会話して表示されるQRを読み取る',test:function(c){return c.indexOf('talk')===0;}},
+  {key:'check',img:'img/app/m_check.png',title:'適性診断を受ける',desc:'診断ブースのQRを読み取る',test:function(c){return c==='check';}},
+  {key:'event',img:'img/app/m_event.png',title:'ホールのイベントに参加',desc:'ホール画面に出るQRを読み取る',test:function(c){return c.indexOf('event')===0;}}
+];
+var VALID=['jigyosho','talk_A','talk_B','talk_C','check','event_1','event_2'];
+// r = レア度(1:通常 2:チャンス 3:激アツ/地域協賛賞 4:特賞・大当たり)
+var PRIZES=[
+  {kind:'イベント賞',name:'お菓子の詰め合わせ',em:'🍬',r:1},
+  {kind:'イベント賞',name:'文房具セット',em:'✏️',r:1},
+  {kind:'イベント賞',name:'ノベルティ',em:'🎀',r:1},
+  {kind:'イベント賞',name:'オリジナルグッズ',em:'🎽',r:2},
+  {kind:'地域協賛賞',name:'カフェ券',em:'☕',r:3},
+  {kind:'地域協賛賞',name:'キッチンカー利用券',em:'🚚',r:3},
+  {kind:'地域協賛賞',name:'地域店舗の商品券',em:'🎫',r:3},
+  {kind:'特賞',name:'商店街 選べるギフト',em:'🌈',r:4}
+];
+/* ==== 主催者設定（景品・確率）: 端末に保存 ==== */
+var CFGKEY='fukushi_quest_326_cfg_v2';
+function defCfg(){ var dc={1:40,2:20,3:8,4:1}; return {attendees:200, lose:35, prizes: PRIZES.map(function(p){return {kind:p.kind,name:p.name,em:p.em,r:p.r,count:(dc[p.r]||10)};})}; }
+function loadCfg(){ try{var s=localStorage.getItem(CFGKEY); if(s) return JSON.parse(s);}catch(e){ if(mem[CFGKEY]) return mem[CFGKEY]; } return null; }
+function saveCfg(){ try{localStorage.setItem(CFGKEY,JSON.stringify(CFG));}catch(e){ mem[CFGKEY]=CFG; } }
+var CFG=loadCfg()||defCfg();
+if(!CFG.prizes||!CFG.prizes.length) CFG.prizes=defCfg().prizes;
+CFG.prizes.forEach(function(p){ if(p.count==null) p.count=10; });
+if(CFG.attendees==null) CFG.attendees=200;
+if(CFG.lose==null){ var _s=0; CFG.prizes.forEach(function(p){_s+=(+p.count||0);}); CFG.lose=Math.max(0,CFG.attendees-_s); }
+// 演出設定: colors=期待度の背景色(昇格順)、'RAINBOW'は虹, gaugeは期待度ゲージ色
+var FX={
+  1:{name:'あたり！',colors:['#5aa0e0'],rays:false,shake:false,dur:900, gaugeColor:'#7bb6e6'},
+  2:{name:'チャンス！',colors:['#5aa0e0','#57c08a'],rays:true,shake:false,dur:1500, gaugeColor:'#57c08a'},
+  3:{name:'激アツ！！',colors:['#5aa0e0','#57c08a','#e6291c'],rays:true,shake:true,dur:2100, gaugeColor:'#ff5a4a'},
+  4:{name:'…大当たりっ！！',colors:['#5aa0e0','#57c08a','#e6291c','#ffc23a','RAINBOW'],rays:true,shake:true,dur:3200, gaugeColor:'#ff7ad0'}
+};
+var busy=false;
+var NEXT_DEST=['A事業所（就労支援）','B事業所（生活介護）','C事業所（デイサービス）','作業体験ブース','相談コーナー'];
+
+function talkCount(){return S.scanned.filter(function(c){return c.indexOf('talk')===0;}).length;}
+function eventCount(){return S.scanned.filter(function(c){return c.indexOf('event')===0;}).length;}
+function points(){return S.scanned.length;}
+function questDone(q){return S.scanned.some(q.test);}
+function allDone(){return QUESTS.every(questDone);}
+function save(){store.set(S);}
+
+function scan(code){
+  /* fq-voucher-v1: 会場のQRは「呼び名.ランダムな文字」（例 talk_A.3f9c…）。
+     ★ランダムな部分の無い古い形（?q=talk_A）は、URLを手で打てば取れてしまうので受け付けない。
+     ★本当に正しいかはサーバー（fq_scan）が決める。ここでは待ち行列に入れるだけ。 */
+  code=String(code||'');
+  var base=code.split('.')[0];
+  if(VALID.indexOf(base)===-1){return;}
+  if(code.indexOf('.')<=0){toast('このQRは使えません');return;}
+  try{var _pq=JSON.parse(localStorage.getItem('fq_pending_codes_v1')||'[]')||[]; if(_pq.indexOf(code)===-1){_pq.push(code); localStorage.setItem('fq_pending_codes_v1',JSON.stringify(_pq));}}catch(e){}
+  if(window.fqFlushCodes) setTimeout(window.fqFlushCodes, 0);
+  if(S.scanned.indexOf(base)!==-1){toast('このQRはもう読み取り済みだよ');render();return;}
+  var wasAll=allDone();
+  S.scanned.push(base); save();
+  var label={jigyosho:'事業所を訪問！',talk_A:'職員Aと会話！',talk_B:'職員Bと会話！',talk_C:'職員Cと会話！',check:'適性診断クリア！',event_1:'イベント参加①！',event_2:'イベント参加②！'}[base]||'スキャン！';
+  toast('✅ '+label+'  +1pt');
+  render();
+  if(!wasAll && allDone()){ setTimeout(showRevive, 700); }
+}
+
+function gachaState(){
+  var g=S.gacha;
+  if(g===0){var need=3-points();return {can:points()>=3,stage:0,need: need>0?('あと <b>'+need+'ポイント</b> でガチャ1回目！'):'<b>ガチャ1回目</b>が引けます！'};}
+  if(g===1){var ok=talkCount()>S.snapTalk[1];return {can:ok,stage:1,need: ok?'<b>ガチャ2回目</b>が引けます！':'2回目は <b>職員と会話QR</b> を新しく読み取ろう'};}
+  if(g===2){var okT=talkCount()>S.snapTalk[2],okE=eventCount()>S.snapEvent[2];var msg;
+    if(okT&&okE)msg='<b>ガチャ3回目</b>が引けます！';else{var need=[];if(!okT)need.push('職員と会話QR');if(!okE)need.push('ホールのイベントQR');msg='3回目は '+need.map(function(x){return '<b>'+x+'</b>';}).join(' と ')+' を新しく読み取ろう';}
+    return {can:okT&&okE,stage:2,need:msg};}
+  return {can:false,stage:3,need:'🎊 本日のガチャは3回コンプリート！おつかれさま！'};
+}
+function pickDraw(){
+  var list=CFG.prizes||[], pool=[], total=0;
+  for(var i=0;i<list.length;i++){ var c=Math.max(0,+list[i].count||0); if(c>0){ pool.push([list[i],c]); total+=c; } }
+  var lose=Math.max(0,+CFG.lose||0); total+=lose;
+  if(total<=0){ var f=list[0]||{kind:'賞',name:'景品',em:'🎁',r:1}; return {lv:(+f.r||1), prize:f}; }
+  var r=Math.random()*total, acc=0;
+  for(var j=0;j<pool.length;j++){ acc+=pool[j][1]; if(r<acc) return {lv:(+pool[j][0].r||1), prize:pool[j][0]}; }
+  return {lv:0, prize:null};
+}
+function pickPrizeOfLevel(lv){
+  var list=CFG.prizes||[];
+  var pool=list.filter(function(x){return (+x.r)===lv;});
+  for(var L=lv; L>=1 && pool.length===0; L--){ pool=list.filter(function(x){return (+x.r)===L;}); }
+  if(!pool.length) return {kind:'賞',name:'景品',em:'🎁',r:lv};
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+/* ==== 効果音(WebAudioで合成・音源ファイル不要) ==== */
+var sfx=(function(){
+  var ctx=null, spinTimer=null, drumTimer=null, on=true;
+  function AC(){ if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){ctx=null;}} if(ctx&&ctx.state==='suspended')ctx.resume(); return ctx; }
+  function beep(freq,dur,type,vol){ var c=AC(); if(!c||!on)return; var o=c.createOscillator(),g=c.createGain();
+    o.type=type||'square'; o.frequency.value=freq; o.connect(g); g.connect(c.destination);
+    var t=c.currentTime; g.gain.setValueAtTime(vol||0.05,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.start(t); o.stop(t+dur+0.02); }
+  return {
+    setOn:function(v){on=v; if(!v)this.spinStop();},
+    isOn:function(){return on;},
+    spinStart:function(){ var c=AC(); if(!c||!on)return; this.spinStop(); spinTimer=setInterval(function(){ beep(170+Math.random()*70,0.06,'square',0.03); },95); },
+    spinStop:function(){ if(spinTimer){clearInterval(spinTimer);spinTimer=null;} },
+    drumStart:function(){ var c=AC(); if(!c||!on)return; this.drumStop(); var step=0;
+      drumTimer=setInterval(function(){ var cc=AC(); if(!cc||!on)return; step++;
+        var o=cc.createOscillator(), g=cc.createGain(); o.type='sine';
+        var f=(step%2===0)?155:120; var t=cc.currentTime;
+        o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*0.6,t+0.09);
+        g.gain.setValueAtTime(0.10,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.1);
+        o.connect(g); g.connect(cc.destination); o.start(t); o.stop(t+0.12);
+      }, 72); },
+    drumStop:function(){ if(drumTimer){clearInterval(drumTimer);drumTimer=null;} },
+    swarmSound:function(){ var c=AC(); if(!c||!on)return; var t=c.currentTime, dur=1.25;
+      var g=c.createGain(); g.connect(c.destination); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.09,t+0.3); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      var o=c.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(70,t); o.frequency.exponentialRampToValueAtTime(250,t+dur); o.connect(g); o.start(t); o.stop(t+dur+0.02);
+      for(var k=0;k<11;k++){ (function(k){ var tt=t+0.1+k*0.095; var gg=c.createGain(); gg.connect(c.destination); gg.gain.setValueAtTime(0.06,tt); gg.gain.exponentialRampToValueAtTime(0.0001,tt+0.06); var oo=c.createOscillator(); oo.type='square'; oo.frequency.setValueAtTime(k%2?165:120,tt); oo.connect(gg); oo.start(tt); oo.stop(tt+0.07); })(k); } },
+    kyuin:function(step){ var c=AC(); if(!c||!on)return; var o=c.createOscillator(),g=c.createGain(); o.type='triangle';
+      var t=c.currentTime, base=520+step*260; o.frequency.setValueAtTime(base,t); o.frequency.exponentialRampToValueAtTime(base*3,t+0.34);
+      g.gain.setValueAtTime(0.09,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.4); o.connect(g);g.connect(c.destination); o.start(t);o.stop(t+0.42); },
+    win:function(level){ var notes=level>=4?[523,659,784,1047,1319]:level===3?[523,659,784,1047]:level===2?[523,659,784]:[523,784];
+      notes.forEach(function(f,i){ setTimeout(function(){ beep(f,0.2,'triangle',0.09); }, i*95); }); },
+    kyuinPachi:function(rise){ var c=AC(); if(!c||!on)return; var t=c.currentTime, dur=0.5;
+      var g=c.createGain(); g.connect(c.destination);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.12,t+0.04); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      var trem=c.createGain(); trem.gain.value=0.55; trem.connect(g);
+      var lfo=c.createOscillator(), lfoG=c.createGain(); lfo.type='sine'; lfo.frequency.value=17; lfoG.gain.value=0.45; lfo.connect(lfoG); lfoG.connect(trem.gain);
+      var base=360+(rise||0)*130;
+      var o1=c.createOscillator(); o1.type='sawtooth'; o1.frequency.setValueAtTime(base,t); o1.frequency.exponentialRampToValueAtTime(base*4.4,t+dur*0.82);
+      var o2=c.createOscillator(); o2.type='sawtooth'; o2.frequency.setValueAtTime(base*1.012,t); o2.frequency.exponentialRampToValueAtTime(base*4.4*1.012,t+dur*0.82);
+      o1.connect(trem); o2.connect(trem); o1.start(t);o2.start(t);lfo.start(t);
+      o1.stop(t+dur+0.03);o2.stop(t+dur+0.03);lfo.stop(t+dur+0.03); },
+    puchun:function(){ var c=AC(); if(!c||!on)return; var t=c.currentTime;
+      var g1=c.createGain(); g1.connect(c.destination); g1.gain.setValueAtTime(0.0001,t); g1.gain.exponentialRampToValueAtTime(0.13,t+0.008); g1.gain.exponentialRampToValueAtTime(0.0001,t+0.07);
+      var o1=c.createOscillator(); o1.type='square'; o1.frequency.setValueAtTime(720,t); o1.connect(g1); o1.start(t); o1.stop(t+0.08);
+      var t2=t+0.05; var g2=c.createGain(); g2.connect(c.destination); g2.gain.setValueAtTime(0.0001,t2); g2.gain.exponentialRampToValueAtTime(0.17,t2+0.01); g2.gain.exponentialRampToValueAtTime(0.0001,t2+0.19);
+      var o2=c.createOscillator(); o2.type='sawtooth'; o2.frequency.setValueAtTime(2100,t2); o2.frequency.exponentialRampToValueAtTime(65,t2+0.16); o2.connect(g2); o2.start(t2); o2.stop(t2+0.21);
+      var t3=t+0.25; var g3=c.createGain(); g3.connect(c.destination); g3.gain.setValueAtTime(0.13,t3); g3.gain.exponentialRampToValueAtTime(0.0001,t3+0.05);
+      var o3=c.createOscillator(); o3.type='triangle'; o3.frequency.setValueAtTime(3300,t3); o3.connect(g3); o3.start(t3); o3.stop(t3+0.06); },
+    lose:function(){ var c=AC(); if(!c||!on)return; var t=c.currentTime;
+      [[392,0],[330,0.19],[247,0.42]].forEach(function(pr){ var f=pr[0], d=pr[1], tt=t+d;
+        var g=c.createGain(); g.connect(c.destination); g.gain.setValueAtTime(0.0001,tt); g.gain.exponentialRampToValueAtTime(0.075,tt+0.03); g.gain.exponentialRampToValueAtTime(0.0001,tt+0.3);
+        var o=c.createOscillator(),o2=c.createOscillator(); o.type='sawtooth'; o2.type='sawtooth'; o2.detune.value=-14;
+        o.frequency.setValueAtTime(f,tt); o2.frequency.setValueAtTime(f,tt);
+        o.frequency.exponentialRampToValueAtTime(f*0.94,tt+0.28); o2.frequency.exponentialRampToValueAtTime(f*0.94,tt+0.28);
+        o.connect(g); o2.connect(g); o.start(tt);o2.start(tt);o.stop(tt+0.32);o2.stop(tt+0.32); }); },
+    revive:function(){ var c=AC(); if(!c||!on)return; var t=c.currentTime;
+      var g=c.createGain(); g.connect(c.destination); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.13,t+0.04); g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
+      var o=c.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(170,t); o.frequency.exponentialRampToValueAtTime(1450,t+0.42); o.connect(g); o.start(t); o.stop(t+0.52);
+      [1047,1319,1568].forEach(function(f,i){ setTimeout(function(){ beep(f,0.18,'triangle',0.07); }, 380+i*70); }); },
+    kyoraku3:function(){ var c=AC(); if(!c||!on)return; var t0=c.currentTime;
+      for(var k=0;k<3;k++){ (function(k){ var t=t0+k*0.205;
+        var g=c.createGain(); g.connect(c.destination); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.13,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.19);
+        var base=560+k*150;
+        var o=c.createOscillator(); o.type='triangle'; o.frequency.setValueAtTime(base,t); o.frequency.exponentialRampToValueAtTime(base*2.15,t+0.16);
+        var o2=c.createOscillator(); o2.type='square'; var g2=c.createGain(); g2.gain.value=0.35; o2.connect(g2); g2.connect(g);
+        o2.frequency.setValueAtTime(base*1.5,t); o2.frequency.exponentialRampToValueAtTime(base*1.5*2.15,t+0.16);
+        o.connect(g); o.start(t);o2.start(t); o.stop(t+0.2);o2.stop(t+0.2); })(k); } }
+  };
+})();
+function toggleSnd(){ sfx.setOn(!sfx.isOn()); document.getElementById('sndBtn').textContent=sfx.isOn()?'🔊 音あり':'🔇 音なし'; }
+
+function setAura(color){
+  var bg=document.getElementById('fxbg'), rb=document.getElementById('fxrainbow');
+  if(color==='RAINBOW'){ rb.classList.add('on'); }
+  else { rb.classList.remove('on'); bg.style.background='radial-gradient(circle at 50% 45%,'+color+',#1a1330 80%)'; }
+}
+function fxFlash(){ var f=document.getElementById('fxflash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on'); }
+
+function runFx(level, done, revive){
+  var cfg=FX[level];
+  var rmode=(revive===true||revive===1||revive==='1')?1:((revive===2||revive==='2')?2:0);
+  var doRevive=(level>=3)&&rmode>0;
+  var swarm=(rmode===2);
+  var fx=document.getElementById('fx'), rays=document.getElementById('fxrays'),
+      cap=document.getElementById('fxcap'), capw=document.getElementById('fxcapwrap'),
+      label=document.getElementById('fxlabel'), gauge=document.getElementById('fxgauge'),
+      crt=document.getElementById('fxcrt'), confirmBtn=document.getElementById('fxConfirm');
+  fx.classList.add('show'); fx.classList.remove('shake');
+  document.getElementById('fxrainbow').classList.remove('on'); crt.classList.remove('on'); confirmBtn.classList.remove('show');
+  cap.classList.add('roll'); cap.classList.remove('fast');
+  rays.classList.remove('on','fast'); capw.classList.remove('kyuin');
+  gauge.style.background='#7bb6e6'; gauge.style.width='0';
+  var hot=(level>=3)&&!doRevive;
+
+  // === 抽選中：ドラムロールでためる（時間を長めに） ===
+  label.textContent='抽選中…'; setAura('#2f3550'); sfx.drumStart();
+  var drumMs=2000;
+  gauge.style.transition='width '+drumMs+'ms linear'; void gauge.offsetWidth; gauge.style.width='60%';
+  setTimeout(function(){ gauge.style.transition='width .3s ease, background .3s'; startReels(); }, drumMs);
+
+  function startReels(){
+    var colors, gcol;
+    if(doRevive){ colors=['#5aa0e0','#6a86b0','#5f7ba0']; gcol='#7bb6e6'; }
+    else { colors=cfg.colors; gcol=cfg.gaugeColor; }
+    gauge.style.background=gcol;
+    if(hot){ cap.classList.add('fast'); if(cfg.rays) rays.classList.add('on'); }
+    var n=colors.length, i=0, per=Math.max(520,Math.round((doRevive?1500:cfg.dur)/n));
+    (function step(){
+      setAura(colors[i]);
+      gauge.style.width=Math.round(60+(i+1)/n*40)+'%';
+      if(hot && colors[i]==='RAINBOW') gauge.style.background='linear-gradient(90deg,#ff5b5b,#ffb03a,#5bd97f,#49c6ff,#ec6fd0)';
+      if(i>0){ fxFlash(); if(hot){ sfx.kyuinPachi(i); } else { sfx.kyuin(i); } }
+      if(i>=1 && hot){ rays.classList.add('fast'); capw.classList.add('kyuin'); }
+      if(i>=1 && hot && cfg.shake){ fx.classList.add('shake'); }
+      label.textContent = hot ? 'ん…！？' : '…！？';
+      i++;
+      setTimeout(i<n?step:finish, per);
+    })();
+  }
+
+  function finish(){
+    sfx.spinStop();
+    function cleanup(){
+      fx.classList.remove('show','shake');
+      rays.classList.remove('on','fast'); cap.classList.remove('roll','fast');
+      capw.classList.remove('kyuin'); document.getElementById('fxrainbow').classList.remove('on');
+      crt.classList.remove('on'); confirmBtn.classList.remove('show'); done();
+    }
+    // 当たり表示のまま画面停止 → 「景品を確認する」ボタンで景品へ
+    function freeze(){
+      fx.classList.remove('shake'); rays.classList.remove('fast'); cap.classList.remove('roll','fast');
+      confirmBtn.classList.add('show');
+      pendingConfirm=function(){ confirmBtn.classList.remove('show'); cleanup(); };
+    }
+    function fanfare(big){ if(big){ sfx.kyoraku3(); setTimeout(function(){ sfx.win(4); }, 640); } else { sfx.win(level); } }
+    function hypeSound(){ sfx.kyuinPachi(2); }
+    // 最終の当たり演出（当たり文字＋光）を出して停止
+    function revealFinal(rc, text, big){
+      sfx.drumStop();
+      setAura(rc); rays.classList.add('on'); if(big) rays.classList.add('fast');
+      cap.classList.add('roll','fast'); if(big) fx.classList.add('shake');
+      fxFlash(); label.textContent=text; fanfare(big);
+      setTimeout(freeze, big?1150:900);
+    }
+    // ハズレ着地（復活ルート＝基本ハズレと同じ見た目）
+    function landLose(next){
+      rays.classList.remove('on','fast'); capw.classList.remove('kyuin'); cap.classList.remove('roll','fast'); fx.classList.remove('shake');
+      setAura('#33405a'); gauge.style.width='100%'; gauge.style.background='#59697f';
+      label.textContent='……ハズレ'; sfx.lose();
+      setTimeout(next, 1000);
+    }
+    // プチュン→復活（虹の大当たり）
+    function toRainbow(){
+      sfx.drumStop();
+      crt.classList.remove('on'); void crt.offsetWidth; crt.classList.add('on'); sfx.puchun();
+      setTimeout(function(){
+        crt.classList.remove('on');
+        setAura('RAINBOW'); rays.classList.add('on','fast'); cap.classList.add('roll','fast'); fx.classList.add('shake');
+        fxFlash(); label.textContent='復活っ…！！'; label.classList.add('buru'); sfx.revive();
+        setTimeout(function(){ label.classList.remove('buru'); revealFinal('RAINBOW','大当たり！！', true); }, 1500);
+      }, 650);
+    }
+    // 復活は必ず「虹の大当たり」
+    if(doRevive){
+      if(swarm){
+        // 群予告：赤系の途中から326キャラが大量に駆け上がる → プチュン → 虹大当たり
+        rays.classList.remove('on','fast'); capw.classList.remove('kyuin'); cap.classList.remove('roll','fast'); fx.classList.remove('shake');
+        setAura('#c0392b'); gauge.style.width='100%'; gauge.style.background='#ff5a4a';
+        label.textContent='なんだ…！？'; sfx.swarmSound();
+        runSwarm(function(){ label.textContent='キタァ…！！'; toRainbow(); });
+      } else {
+        landLose(toRainbow);
+      }
+      return;
+    }
+    // 全部あたり：チャンス／激アツのあとに「当たり」を表示
+    var rc=cfg.colors[cfg.colors.length-1];
+    if(level===2){
+      setAura(rc); rays.classList.add('on'); fxFlash(); label.textContent='チャンス！'; hypeSound();
+      setTimeout(function(){ revealFinal(rc,'あたり！', false); }, 850); return;
+    }
+    if(level===3){
+      setAura(rc); rays.classList.add('on','fast'); fx.classList.add('shake'); fxFlash(); label.textContent='激アツ！！'; hypeSound();
+      setTimeout(function(){ revealFinal(rc,'大当たり！', true); }, 950); return;
+    }
+    if(level===4){ revealFinal(rc,'大当たり！！', true); return; }
+    revealFinal(rc, cfg.name, false); // level 1: あたり！
+  }
+}
+
+function drawGacha(){
+  if(busy) return;
+  var gs=gachaState(); if(!gs.can) return;
+  busy=true; document.getElementById('gachaBtn').disabled=true;
+  var d=pickDraw(), lv=d.lv;
+  // ステージ消費（ハズレでも1回分は消費）
+  if(S.gacha===0){S.gacha=1;S.snapTalk[1]=talkCount();S.snapEvent[1]=eventCount();}
+  else if(S.gacha===1){S.gacha=2;S.snapTalk[2]=talkCount();S.snapEvent[2]=eventCount();}
+  else if(S.gacha===2){S.gacha=3;}
+  if(lv===0){ save(); render(); runLose(function(){ busy=false; render(); }); return; }
+  var p=d.prize;
+  var revive=false; // 特賞のとき：直接／プチュン復活／群予告復活 を抽選
+  if(lv===4){ var rr=Math.random(); revive = rr<0.4?false : (rr<0.7?1:2); }
+  S.prizes.push(p); save(); render();
+  runFx(lv, function(){ busy=false; showPrize(p,lv); confetti(lv); render(); }, revive);
+}
+
+function showPrize(p,lv){
+  lv=lv||1;
+  var card=document.querySelector('#prizeModal .modal-card');
+  card.className='modal-card'+(lv>=4?' r4':(lv>=3?' r3':''));
+  var rank=lv>=4?'特賞・大当たり！！':lv>=3?'大あたり！':'あたり！';
+  var rl=document.getElementById('prizeRank');
+  rl.textContent=rank; rl.className='hand rankline'+(lv>=4?' r4':'');
+  document.getElementById('prizeEmoji').textContent=p.em;
+  document.getElementById('prizeName').textContent=p.name;
+  document.getElementById('prizeKind').textContent=p.kind;
+  document.getElementById('prizeModal').classList.add('show');
+}
+function showRevive(){
+  var d=NEXT_DEST[Math.floor(Math.random()*NEXT_DEST.length)];
+  document.getElementById('nextDest').textContent='➡ '+d;
+  document.getElementById('reviveModal').classList.add('show');
+}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+var toastTimer;
+function toast(msg){var t=document.getElementById('toast');t.innerHTML=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show');},1700);}
+function confetti(level){
+  level=level||1;
+  var count=level>=4?72:level>=3?48:level>=2?32:22;
+  var colors=level>=4?['#ff5b5b','#ffb03a','#ffe83a','#5bd97f','#49c6ff','#ec6fd0']:['#e7a43a','#df5b45','#4fa891','#82b055','#ec9bb4','#6db7d6'];
+  for(var i=0;i<count;i++){(function(i){
+    var c=document.createElement('div');c.className='confetti';c.style.left=(Math.random()*100)+'vw';
+    c.style.background=colors[i%colors.length];c.style.transform='rotate('+(Math.random()*360)+'deg)';
+    document.body.appendChild(c);var dur=1200+Math.random()*900,delay=Math.random()*250;
+    c.animate([{transform:'translateY(0) rotate(0)',opacity:1},{transform:'translateY(105vh) rotate(540deg)',opacity:.9}],{duration:dur,delay:delay,easing:'ease-in'});
+    setTimeout(function(){c.remove();},dur+delay+60);
+  })(i);}
+}
+
+function render(){
+  document.getElementById('pt').textContent=points();
+  var qh='';
+  QUESTS.forEach(function(q){
+    var done=questDone(q);
+    qh+='<div class="quest'+(done?' done':'')+'">'
+      +'<img class="qimg" src="'+q.img+'" alt="">'
+      +'<div class="qbody"><div class="qtitle">'+q.title+'</div><div class="qdesc">'+q.desc+'</div></div>'
+      +'<div class="qright"><div class="qcheck">'+(done?'✓':'')+'</div><div class="qpt">'+(done?'達成':'+1pt')+'</div></div>'
+      +'</div>';
+  });
+  document.getElementById('quests').innerHTML=qh;
+  var g=S.gacha, stepLabels=['3ポイント','会話QR','会話+イベント'], sh='';
+  for(var i=0;i<3;i++){var cls=g>i?'cleared':(g===i?'on':'');sh+='<div class="step '+cls+'"><span class="n">'+(g>i?'✓':(i+1))+'</span>'+stepLabels[i]+'</div>';}
+  document.getElementById('steps').innerHTML=sh;
+  var gs=gachaState(), btn=document.getElementById('gachaBtn');
+  btn.disabled=!gs.can;
+  btn.textContent=gs.stage>=3?'コンプリート！':(gs.can?'ガチャをまわす（'+(gs.stage+1)+'回目）':'まだ引けません');
+  document.getElementById('gachaHint').innerHTML=gs.need;
+  if(S.prizes.length===0){document.getElementById('prizes').innerHTML='<span class="empty">まだ景品はありません。ガチャをまわそう！</span>';}
+  else{document.getElementById('prizes').innerHTML=S.prizes.map(function(p){return '<span class="prize-tag"><span class="em">'+p.em+'</span>'+p.name+'</span>';}).join('');}
+  document.getElementById('revive').innerHTML=allDone()?'<div style="color:#5f8a34;font-weight:900;margin-bottom:6px;">🎉 全クエストクリア！復活の儀式で次の会場へ</div>':'';
+}
+
+function resetAll(){if(!confirm('進捗をすべて消して最初からやり直しますか？'))return;store.clear();S=defState();render();toast('リセットしました');}
+
+/* ==== fq-role-v1: 表示モード（参加者／開発テスト／主催者）====
+   参加者は何もしなければ何も見えない。以下はURLで一度だけ開けば、その端末に記憶される。
+     ?dev=1   … 「音・演出をすぐ確認」パネルと「最初からやり直す」を出す
+     ?admin=1 … 「⚙️ 主催者用の設定」を出す
+   消すときは ?dev=0 / ?admin=0
+   ★これを入れた理由：参加者に見えていると「ポイント+1」連打でクエストを回らずに
+     ガチャが引け、確率も書き換えられてしまうため。 */
+var ROLEKEY='fukushi_quest_326_role';
+(function(){
+  /* fq-dev-gate-v1: ここでは何も出さない。何も覚えない。
+     旧版は ?dev=1 を一度開くと端末が覚えていたが、
+       ・URLさえ知っていれば誰でも出せた
+       ・貸し出す端末で消し忘れると、来場者に「ポイント+1」が見えた
+     ので、覚えるのをやめた。
+     実際に出すかどうかは、ページの最後にある fq-dev-gate-v1 の枠が決める
+     （登録した端末 かつ 合言葉が合ったときだけ。Supabase で照合する）。
+     ★この2行を消さないこと。消すと、旧版で覚えたままの端末にパネルが残る。 */
+  try{ localStorage.removeItem(ROLEKEY); }catch(e){}
+  var role={dev:false,admin:false};
+  var dp=document.getElementById('devPanel'); if(dp) dp.style.display='none';
+  var rl=document.getElementById('resetLink'); if(rl) rl.style.display='none';
+  var al=document.getElementById('admLink');   if(al) al.style.display='none';
+  window.FQ_ROLE=role;
+})();
+(function(){try{var params=new URLSearchParams(location.search);var q=params.get('q');if(q){scan(q);if(history.replaceState)history.replaceState(null,'',location.pathname);}}catch(e){}})();
+(function(){ var n=document.getElementById('playerName'); if(n) n.value=(S.name||''); var d=document.getElementById('devId'); if(d) d.textContent=DID; })();
+render();
+
+/* ==== CSPセーフ：インラインonclickの代わりにイベント委譲で全ボタンを動かす ==== */
+var __testPt=0;
+function testAddPoint(){ __testPt++; S.scanned.push('test_'+__testPt+'_'+Date.now()); save(); toast('✅ テスト ポイント +1'); render(); }
+function runLose(done){
+  var fx=document.getElementById('fx'), rays=document.getElementById('fxrays'),
+      cap=document.getElementById('fxcap'), capw=document.getElementById('fxcapwrap'),
+      label=document.getElementById('fxlabel'), gauge=document.getElementById('fxgauge');
+  fx.classList.add('show'); fx.classList.remove('shake');
+  document.getElementById('fxrainbow').classList.remove('on');
+  document.getElementById('fxcrt').classList.remove('on'); document.getElementById('fxConfirm').classList.remove('show');
+  rays.classList.remove('on','fast'); capw.classList.remove('kyuin');
+  cap.classList.add('roll'); cap.classList.remove('fast');
+  gauge.style.background='#7bb6e6'; gauge.style.width='0';
+  label.textContent='抽選中…'; setAura('#2f3550'); sfx.drumStart();
+  var drumMs=2000;
+  gauge.style.transition='width '+drumMs+'ms linear'; void gauge.offsetWidth; gauge.style.width='60%';
+  setTimeout(function(){ gauge.style.transition='width .3s ease, background .3s'; reels(); }, drumMs);
+  function reels(){
+    var cols=['#5aa0e0','#6a86b0'], i=0, n=cols.length;
+    (function step(){
+      setAura(cols[i]); gauge.style.width=Math.round(60+(i+1)/n*40)+'%';
+      if(i>0){ fxFlash(); sfx.kyuin(i); }
+      label.textContent=(i<n-1)?'…！？':'…';
+      i++; setTimeout(i<n?step:land, 560);
+    })();
+  }
+  function land(){
+    sfx.spinStop(); sfx.drumStop(); cap.classList.remove('roll','fast');
+    setAura('#33405a'); gauge.style.width='100%'; gauge.style.background='#59697f';
+    label.textContent='……ハズレ'; sfx.lose();
+    setTimeout(function(){
+      fx.classList.remove('show','shake');
+      document.getElementById('fxrainbow').classList.remove('on'); cap.classList.remove('roll','fast');
+      if(done)done();
+    }, 1500);
+  }
+}
+
+function previewLose(){ if(busy) return; busy=true; sfxUnlock(); runLose(function(){ busy=false; }); }
+/* == fq-newcast-v1 ==
+   ガチャ演出で飛び回る6体。★埋め込みをやめてファイルにした。
+   絵を変えるときは img/app/sw1〜sw6.png を差し替えて、
+   service-worker.js の CACHE の版を上げること。 */
+var SWARM_IMGS=['img/app/sw1.png','img/app/sw2.png','img/app/sw3.png','img/app/sw4.png','img/app/sw5.png','img/app/sw6.png'];
+function runSwarm(done){
+  var sw=document.getElementById('fxswarm'); sw.innerHTML=''; sw.style.display='block';
+  var N=46, maxEnd=0, paths=['runup','runup','runupWobble','runupL','runupR'];
+  for(var k=0;k<N;k++){
+    var d=document.createElement('div'); d.className='runner';
+    d.style.backgroundImage='url('+SWARM_IMGS[k%SWARM_IMGS.length]+')';
+    var h=60+Math.floor(Math.random()*78); d.style.height=h+'px'; d.style.width=Math.round(h*0.8)+'px';
+    d.style.left=Math.floor(Math.random()*94)+'%';
+    // 一体ずつ動きの個性：ビュンビュン速い / ふつう / ゆっくり
+    var r=Math.random(), dur;
+    if(r<0.34) dur=0.42+Math.random()*0.3;      // ビュンビュン
+    else if(r<0.74) dur=1.0+Math.random()*0.7;  // ふつう
+    else dur=1.8+Math.random()*0.85;            // ゆっくり
+    var delay=Math.random()*0.8;
+    d.style.animationName=(dur<0.75)?'runup':paths[k%paths.length]; // 速い子はまっすぐ、他は蛇行・斜めも
+    d.style.animationDuration=dur+'s'; d.style.animationDelay=delay+'s';
+    d.style.zIndex=String(Math.floor(h));
+    sw.appendChild(d);
+    maxEnd=Math.max(maxEnd,(dur+delay)*1000);
+  }
+  // 全キャラが上に抜けきってからプチュンへ
+  setTimeout(function(){ sw.style.display='none'; sw.innerHTML=''; if(done)done(); }, maxEnd+200);
+}
+function previewFx(lv, revive){ if(busy) return; busy=true; sfxUnlock(); runFx(lv, function(){ busy=false; }, revive); }
+function sfxUnlock(){ try{ if(window.AudioContext||window.webkitAudioContext){ /* AC()はsfx内。ここではダミー音で解錠 */ } }catch(e){} }
+function admEsc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function rLabel(r){return ({1:'青1',2:'緑2',3:'赤3',4:'虹4'})[r]||('レア度'+r);}
+function renderAdmin(){
+  var a=document.getElementById('attendees'); if(a) a.value=(CFG.attendees!=null?CFG.attendees:0);
+  var lc=document.getElementById('loseCount'); if(lc) lc.value=(CFG.lose!=null?CFG.lose:0);
+  var rows=CFG.prizes.map(function(p,i){
+    return '<div class="padminrow" data-idx="'+i+'">'
+      +'<div class="pr-l1"><input data-fld="em" class="pf-em" value="'+admEsc(p.em)+'" maxlength="4" placeholder="🎁"><input data-fld="name" class="pf-name" value="'+admEsc(p.name)+'" placeholder="景品名"><button class="pf-del" data-act="prizeDel" data-idx="'+i+'">✕</button></div>'
+      +'<div class="pr-l2"><input data-fld="kind" class="pf-kind" value="'+admEsc(p.kind)+'" placeholder="種類">'
+      +'<select data-fld="r" class="pf-r">'+[1,2,3,4].map(function(r){return '<option value="'+r+'"'+((+p.r)===r?' selected':'')+'>'+rLabel(r)+'</option>';}).join('')+'</select>'
+      +'<label class="pf-cntl">個数<input type="number" data-fld="count" class="pf-cnt" min="0" step="1" value="'+(p.count!=null?p.count:0)+'"></label>'
+      +'<span class="pf-prob">–</span></div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('prizeRows').innerHTML=rows;
+  recalcProbs();
+}
+function recalcProbs(){
+  var rows=document.querySelectorAll('#prizeRows .padminrow'), counts=[], sum=0;
+  rows.forEach(function(row){ var v=parseFloat(row.querySelector('[data-fld=count]').value); v=isNaN(v)?0:Math.max(0,v); counts.push(v); sum+=v; });
+  var lose=parseFloat((document.getElementById('loseCount')||{}).value); lose=isNaN(lose)?0:Math.max(0,lose);
+  var total=sum+lose;
+  rows.forEach(function(row,i){ var sp=row.querySelector('.pf-prob'); if(sp) sp.textContent = total>0? ('→ '+(counts[i]/total*100).toFixed(1)+'%') : '→ –'; });
+  var lp=document.getElementById('loseProb'); if(lp) lp.textContent = total>0? ((lose/total*100).toFixed(1)+'%') : '–';
+  var att=parseFloat((document.getElementById('attendees')||{}).value)||0;
+  var draws=att*(window.DRAWS_PER_PERSON||3);
+  var tb=document.getElementById('totBox');
+  if(tb){
+    var msg='景品 合計 <b>'+sum+'</b> 個 ＋ ハズレ <b>'+lose+'</b> ＝ <b>全'+total+'本</b>';
+    if(att){
+      msg+='<br>想定来場者 '+att+'人 × 3回 ＝ <b>ガチャ最大 '+draws+'回</b>';
+      if(total!==draws) msg+='（'+(draws>total?'不足 '+(draws-total):'余り '+(total-draws))+'）';
+      else msg+='（一致）';
+      /* 当たりは毎回この比率で抽選される（箱から減るのではない）。
+         景品はサーバー在庫なので、当選が在庫数に達した時点で以後は全部ハズレになる。
+         当たる確率は sum/total なので、在庫 sum 個が尽きるのは およそ total 回目。 */
+      if(sum>0 && total>0 && draws>total){
+        msg+='<br><b style="color:#c0392b">⚠ この設定だと、景品は約 '+total+' 回目（全体の '+Math.round(total/draws*100)+'%）で尽きます。</b>'
+           + '以降はみんなハズレになります。景品を増やすか、ハズレの個数を増やしてください。';
+      } else if(sum>0 && total>0){
+        msg+='<br><span style="color:#5f8a34">最後まで景品が残る見込みです。</span>';
+      }
+    }
+    tb.innerHTML=msg;
+  }
+}
+/* fq-draws3-v1: ハズレの個数は「来場者数」ではなく「ガチャの総回数」から引く。
+   1人が最大3回引ける設計なので、1500人なら最大4500回。
+   ここを1人1回で計算していると、当たりが出すぎて景品が中盤で尽きる。
+   ★この 3 は supabase_migration_20260824.sql の MAX_DRAWS と必ず同じ数にすること。 */
+var DRAWS_PER_PERSON=3;
+function autoLose(){
+  var rows=document.querySelectorAll('#prizeRows .padminrow'), sum=0;
+  rows.forEach(function(row){ var v=parseFloat(row.querySelector('[data-fld=count]').value); if(!isNaN(v)) sum+=Math.max(0,v); });
+  var att=parseFloat((document.getElementById('attendees')||{}).value)||0;
+  var draws=att*DRAWS_PER_PERSON;
+  var lc=document.getElementById('loseCount'); if(lc) lc.value=Math.max(0,Math.round(draws-sum));
+  recalcProbs();
+}
+function readAdminForm(){
+  var att=parseFloat((document.getElementById('attendees')||{}).value); CFG.attendees=isNaN(att)?0:Math.max(0,Math.round(att));
+  var lose=parseFloat((document.getElementById('loseCount')||{}).value); CFG.lose=isNaN(lose)?0:Math.max(0,Math.round(lose));
+  var arr=[];
+  document.querySelectorAll('#prizeRows .padminrow').forEach(function(row){
+    var cnt=parseFloat(row.querySelector('[data-fld=count]').value);
+    arr.push({
+      em:row.querySelector('[data-fld=em]').value.trim(),
+      name:row.querySelector('[data-fld=name]').value.trim(),
+      kind:row.querySelector('[data-fld=kind]').value.trim(),
+      r:parseInt(row.querySelector('[data-fld=r]').value,10)||1,
+      count:isNaN(cnt)?0:Math.max(0,Math.round(cnt))
+    });
+  });
+  CFG.prizes=arr;
+}
+function adminToggle(){ var el=document.getElementById('adminPanel'); if(el.style.display==='none'||!el.style.display){ el.style.display='block'; renderAdmin(); renderOpenState(); el.scrollIntoView({behavior:'smooth',block:'start'}); } else { el.style.display='none'; } }
+/* == fq-openat-v1 : リハーサル（準備中を仮に開ける） ==
+   ★期限だけを端末に置く。開いているかどうかは <head> が読み込みのたびに決める。
+     状態を2か所で持たないので、食い違いが起きない。
+   ★min=0 は「いま閉じる」。
+   ★押したあと読み込み直すのは、**本番と同じ道すじ**（最初の一瞬も含めて）を
+     そのまま確かめるため。付け外しだけを画面上でやると、そこが試せない。 */
+function fqWhen(t){ var d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+function renderOpenState(){
+  var el=document.getElementById('openState');
+  var F=window.FQ_OPEN||{}, at=F.at||0, k=F.key||'fq_open_until', now=Date.now(), u=0;
+  /* ★fq-opencfg-v1: 入力欄とコピー用の1行も、いまの日時に合わせておく */
+  var f=document.getElementById('openAt');
+  if(f && !f.value) f.value=fqLocalVal(at);
+  renderOpenLine(at);
+  if(!el) return;
+  try{ u=parseInt(localStorage.getItem(k)||'0',10)||0; }catch(e){}
+  /* ★この端末だけ日時を上書きしているときは、そうと分かるように書く */
+  var tryOn = (at !== (F.defAt||at));
+  var note = tryOn ? '（★この端末だけ の日時です。みんなには効いていません）' : '';
+  if(now>=at){ el.textContent='いまは本番です（'+fqWhen(at)+' を過ぎています）'+note; return; }
+  el.textContent = (u && now<u)
+    ? 'いま ひらいています。あと '+Math.ceil((u-now)/60000)+'分で 準備中へ戻ります'
+    : 'いまは 準備中です。'+fqWhen(at)+' になると、ひとりでに開きます'+note;
+}
+function openHold(min){
+  var F=window.FQ_OPEN||{}, k=F.key||'fq_open_until';
+  /* ★fq-opencfg-v1: data-min が無いボタンは、入力欄の分数を使う */
+  if(min===null){
+    var f=document.getElementById('openMin');
+    min=parseInt(f&&f.value,10);
+    if(!(min>0)){ toast('何分ひらくか入れてください'); return; }
+    if(min>1440) min=1440;
+  }
+  try{
+    if(min>0) localStorage.setItem(k, String(Date.now()+min*60000));
+    else       localStorage.removeItem(k);
+  }catch(e){ toast('この端末では覚えられません'); return; }
+  renderOpenState();
+  toast(min>0 ? ('✅ '+min+'分ひらきます') : '準備中に戻します');
+  setTimeout(function(){ location.reload(); }, 900);
+}
+/* == fq-opencfg-v1 : 本番に開く日時 ==
+   ★入力欄 → その端末だけの上書き（localStorage の fq_open_at）。試す用。
+   ★同じ画面に「コードに入れる1行」を出す。**みんなに効かせるのはこちら**。
+     日時は各自の端末の中に持たせている（会場にWi-Fiが無いため）ので、
+     サーバーに保存して全員に配る、という形にはできない。 */
+function fqLocalVal(t){                      /* datetime-local の欄に入れる形 */
+  var d=new Date(t), p=function(n){return ('0'+n).slice(-2);};
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());
+}
+function fqOffset(d){                        /* +09:00 のような時差の文字 */
+  var m=-d.getTimezoneOffset(), s=(m<0?'-':'+'), a=Math.abs(m), p=function(n){return ('0'+n).slice(-2);};
+  return s+p(Math.floor(a/60))+':'+p(a%60);
+}
+function fqIso(t){ var d=new Date(t); return fqLocalVal(t)+':00'+fqOffset(d); }
+function renderOpenLine(t){
+  var el=document.getElementById('openLine'); if(!el) return;
+  el.value = "  var OPEN_DEF = '"+fqIso(t)+"';   /* ←★本番に開く日時（みんなに効く） */";
+}
+function openTry(){
+  var f=document.getElementById('openAt'); if(!f||!f.value){ toast('日時を入れてください'); return; }
+  var t=Date.parse(f.value); if(isNaN(t)){ toast('日時が読めません'); return; }
+  var F=window.FQ_OPEN||{}, k=F.atKey||'fq_open_at';
+  try{ localStorage.setItem(k, String(t)); }catch(e){ toast('この端末では覚えられません'); return; }
+  renderOpenLine(t); toast('✅ この端末だけ その日時にしました');
+  setTimeout(function(){ location.reload(); }, 900);
+}
+function openTryOff(){
+  var F=window.FQ_OPEN||{}, k=F.atKey||'fq_open_at';
+  try{ localStorage.removeItem(k); }catch(e){}
+  toast('コードの日時に戻します');
+  setTimeout(function(){ location.reload(); }, 900);
+}
+function openCopy(){
+  var el=document.getElementById('openLine'); if(!el) return;
+  var done=function(){ toast('✅ コピーしました'); };
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(el.value).then(done, function(){ el.select(); toast('長押しでコピーしてください'); });
+      return;
+    }
+  }catch(e){}
+  try{ el.select(); document.execCommand('copy'); done(); }
+  catch(e){ toast('長押しでコピーしてください'); }
+}
+function prizeAdd(){ readAdminForm(); CFG.prizes.push({em:'🎁',name:'',kind:'',r:1,count:0}); renderAdmin(); }
+function prizeDel(i){ readAdminForm(); CFG.prizes.splice(i,1); renderAdmin(); }
+function cfgSave(){ readAdminForm(); CFG.prizes=CFG.prizes.filter(function(p){return (p.name||'').length||(p.em||'').length;}).map(function(p){return {kind:p.kind||'賞',name:p.name||'景品',em:p.em||'🎁',r:p.r||1,count:p.count||0};}); if(!CFG.prizes.length) CFG.prizes=defCfg().prizes; saveCfg(); renderAdmin(); render(); toast('✅ 設定を保存しました'); }
+function cfgReset(){ if(!confirm('景品・個数・確率を初期設定に戻しますか？'))return; CFG=defCfg(); saveCfg(); renderAdmin(); render(); toast('初期設定に戻しました'); }
+var pendingConfirm=null;
+document.addEventListener('input', function(ev){ var t=ev.target; if(!t) return; if(t.id==='playerName'){ S.name=t.value; save(); return; } /* ★fq-opencfg-v1: 日時を打ち直したら、コピー用の1行もその場で合わせる。
+     ★合わせないと、打ち直したのに古い日時をコピーしてしまう。 */
+  if(t.id==='openAt'){ var tt=Date.parse(t.value); if(!isNaN(tt)) renderOpenLine(tt); return; }
+  if((t.getAttribute&&t.getAttribute('data-fld')==='count')||t.id==='loseCount'||t.id==='attendees') recalcProbs(); });
+document.addEventListener('click', function(ev){
+  var el=ev.target.closest('[data-act]'); if(!el) return;
+  var act=el.getAttribute('data-act');
+  if(act==='snd'){ toggleSnd(); }
+  else if(act==='adminToggle'){ adminToggle(); }
+  else if(act==='prizeAdd'){ prizeAdd(); }
+  else if(act==='autoLose'){ autoLose(); }
+  else if(act==='prizeDel'){ prizeDel(parseInt(el.getAttribute('data-idx'),10)); }
+  else if(act==='cfgSave'){ cfgSave(); }
+  else if(act==='cfgReset'){ cfgReset(); }
+  else if(act==='openHold'){ var dm=el.getAttribute('data-min');
+    openHold(dm===null ? null : (parseInt(dm,10)||0)); }                 /* ★fq-openat-v1 */
+  else if(act==='openTry'){ openTry(); }                                 /* ★fq-opencfg-v1 */
+  else if(act==='openTryOff'){ openTryOff(); }
+  else if(act==='openCopy'){ openCopy(); }
+  else if(act==='gacha'){ drawGacha(); }
+  else if(act==='scan'){ scan(el.getAttribute('data-code')); }
+  else if(act==='reset'){ resetAll(); }
+  else if(act==='close'){ closeModal(el.getAttribute('data-mod')); }
+  else if(act==='ptplus'){ testAddPoint(); }
+  else if(act==='preview'){ var rv=el.getAttribute('data-rev'); previewFx(parseInt(el.getAttribute('data-lv'),10), rv==null?undefined:rv); }
+  else if(act==='lose'){ previewLose(); }
+  else if(act==='fxconfirm'){ if(pendingConfirm){ var f=pendingConfirm; pendingConfirm=null; f(); } }
+});
+</script>
+<script>
+/* == fq-shindan-v1 : 福祉タイプ診断 ==
+   数秘（ライフパスナンバー）を7分類に対応させる。
+   元の分類案は 1 が①と⑤、5 が③と⑤に重複していて型が一つに決まらなかったので、
+   特徴の濃い方に寄せて重複をなくしてある。詳細は README の fq-shindan-v1 を参照。 */
+(function(){
+  /* == fq-shindan-mon-v1 / fq-monster-v1 : 型はモンスター。名前はモンスター名、role が福祉の仕事のタイプ ==
+     絵は img/mon_1 〜 img/mon_7（tno の番号）。webp と png の2つずつ置いてある。
+     ★★どの番号がどの子か。**入れ替えないこと**:
+         ①ライオン ②タツノオトシゴ ③さる ④骨のパンダ ⑤チーター ⑥クラゲ ⑦ユニコーン
+     ★why は「なぜこのモンスターなのか」。HIROさんの文をそのまま置いている。
+       生きものの生態の話（②のオスが育てる話など）が入っていて、読みものとして効く。
+     ★em は絵が出せなかったときの控え。7体そろったが、消さずに残してある。 */
+  var T={
+    leader:{no:'①',name:'ガツガツモンスター',role:'リーダー型',em:'🔥',
+      cat:'決めて、前に出せる人',
+      chips:['行動力','決断力','やりきる'],
+      why:'群れの先頭に立って切り拓く強烈な統率力と、目標に向かって真っ直ぐ突き進む圧倒的な突破力は、百獣の王や統率された群れを率いるリーダーの気質そのものです。',
+      work:'迷う場面で判断して、まわりを動かしていく仕事に力が出ます。現場をまとめる管理者やサービス提供責任者、リーダー職。',
+      ask:'「ここでは誰が、何を決めているんですか？」'},
+    supporter:{no:'②',name:'ヨシヨシモンスター',role:'サポーター型',em:'🌿',
+      cat:'となりに居られる人',
+      chips:['優しさ','協調性','世話好き'],
+      why:'母性や包容力にあふれ、周囲を優しく包み込んで育てる姿は、我が子をしっかりと抱きしめて守り育てる温かい動物たちの生態に重なります。タツノオトシゴはオスがお腹の育児嚢にメスから受け取った卵を入れ、自分の体内で大切に守りながら出産します。',
+      work:'毎日のちいさな関わりが、そのまま仕事になります。介護職や生活支援員など、人のそばに立ち続ける現場。',
+      ask:'「利用者さんと、いちばん嬉しかった瞬間は？」'},
+    creator:{no:'③',name:'ウキウキモンスター',role:'クリエイター型',em:'🎨',
+      cat:'場を明るくする人',
+      chips:['表現力','自由','楽しさ'],
+      why:'好奇心が旺盛で、自由気ままに遊び心を表現しながら周囲を楽しませる、ムードメーカーとしての軽やかさと躍動感を持っています。',
+      work:'レクや行事、日々の暮らしに楽しみを作る役割。あなたが居るだけで空気が変わる現場は多いです。',
+      ask:'「どんなレクリエーションをやっていますか？」'},
+    takumi:{no:'④',name:'コツコツモンスター',role:'職人気質型',em:'🔍',
+      cat:'とことん突きつめる人',
+      chips:['分析','探究','専門性'],
+      why:'地道に巣を作り上げる確かな技術や、物事を深く見つめて本質を探求する知性、一歩引いたところから冷静に状況を分析する職人気質にぴったりです。',
+      work:'体の動きを見立てたり、記録から根拠を組み立てる仕事。機能訓練指導員やリハビリ職、専門職の道。',
+      ask:'「その人に合わせて、どこを見て決めていますか？」'},
+    /* ★fq-chal-v1: 呼び名は「チャレンジ型」。モンスター名と数秘の割り当て（5→⑤）は変えていない。 */
+    challenger:{no:'⑤',name:'イケイケモンスター',role:'チャレンジ型',em:'⚡',
+      cat:'動きながら考える人',
+      chips:['変化','冒険','突破力'],
+      why:'風のように素早く環境の変化に適応し、未知の世界へ迷わず飛び出していく、圧倒的なスピード感と行動力のエネルギッシュさを体現しています。',
+      work:'新しい取り組みを立ち上げたり、地域に出ていく仕事。訪問系や、これから作っていく事業と相性が良いです。',
+      ask:'「最近はじめた新しいこと、ありますか？」'},
+    visionary:{no:'⑥',name:'フワフワモンスター',role:'ビジョナリー型',em:'🌙',
+      cat:'先を見て、想いで動く人',
+      chips:['理想','直感','影響力'],
+      why:'物質世界を超えた高い視座から全体を見渡し、独自の直感と美意識ですべてを包み込むような、どこか神秘的で自由な精神の持ち主です。',
+      work:'その人の暮らし全体を描いて組み立てる仕事。相談支援専門員やケアマネジャーなど、絵を描く側の役割。',
+      ask:'「この仕事で、いちばん大事にしていることは？」'},
+    messenger:{no:'⑦',name:'ハピハピモンスター',role:'メッセンジャー型',em:'🌈',
+      cat:'人と人をつなぐ人',
+      chips:['導く力','社会への貢献','伝える'],
+      why:'大きなスケールで社会全体を見つめ、仲間や次世代へと愛や知恵を語り継ぎながら導いていく、圧倒的な存在感と包容力を秘めています。',
+      work:'事業所と地域をつなぎ、福祉の面白さを外に伝えていく役割。地域連携や広報、これから福祉を広げる側。',
+      ask:'「この仕事の面白さを、どう伝えていますか？」'}
+  };
+  /* 重複なし・1〜9と11/22/33の12個を全てカバー */
+  var N2K={1:'leader',8:'leader',2:'supporter',6:'supporter',3:'creator',
+           4:'takumi',7:'takumi',5:'challenger',9:'visionary',11:'visionary',
+           22:'messenger',33:'messenger'};
+
+  function digitSum(v){ var t=0,s=String(v),c; for(var i=0;i<s.length;i++){ c=parseInt(s.charAt(i),10); if(!isNaN(c)) t+=c; } return t; }
+  function lifePath(y,m,d){
+    var s=digitSum(String(y)+(m<10?'0':'')+m+(d<10?'0':'')+d);
+    while(s>9 && s!==11 && s!==22 && s!==33){ s=digitSum(s); }   /* 11/22/33 は残す */
+    return s;
+  }
+  function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function res(){ return (window.S && S.shindan && T[S.shindan.key]) ? S.shindan : null; }
+
+  /* fq-shindan-all-v1: 7タイプをぜんぶ見る */
+  function typeNo(t){ return '①②③④⑤⑥⑦'.indexOf(t.no) + 1; }
+  function allKeys(){ return Object.keys(T).sort(function(a, b){ return typeNo(T[a]) - typeNo(T[b]); }); }
+  function allTypesHtml(myKey){
+    var role = window.FQ_ROLE || {};
+    if (!role.dev && !role.admin) return '';   // 主催者だけ（関係者用の合言葉が合ったとき）
+    return '<div class="sd-all"><h5>7つのタイプをぜんぶ見る</h5><div class="sd-all-grid">'
+      + allKeys().map(function(k){
+          var t = T[k], n = typeNo(t);
+          return '<button type="button" class="sd-tile' + (k === myKey ? ' me' : '') + '" data-act="sdType" data-key="' + esc(k) + '">'
+            + (k === myKey ? '<span class="me-tag">あなた</span>' : '')
+            + '<picture><source srcset="img/mon_' + n + '.webp" type="image/webp"><img alt="" src="img/mon_' + n + '.png" loading="lazy"></picture>'
+            + '<b>' + esc(t.name) + '</b><small>タイプ' + n + '</small></button>';
+        }).join('')
+      + '</div></div>';
+  }
+  function typeCardHtml(k){
+    var t = T[k], n = typeNo(t);
+    return '<div class="sd-card">'
+      + '<div class="sd-hero"><picture><source srcset="img/mon_' + n + '.webp" type="image/webp"><img class="sd-img" alt="" src="img/mon_' + n + '.png"></picture></div>'
+      + '<div class="sd-name">' + esc(t.name) + '</div>'
+      + '<div class="sd-role">タイプ<b>' + n + '</b>　' + esc(t.role) + '</div>'
+      + '<p class="sd-catch">「' + esc(t.cat) + '」</p>'
+      + '<div class="sd-chips">' + t.chips.map(function(c){ return '<span class="sd-chip">' + esc(c) + '</span>'; }).join('') + '</div>'
+      + (t.why ? '<div class="sd-blk sd-why"><h5>なぜこのモンスター？</h5><p>' + esc(t.why) + '</p></div>' : '')
+      + '<div class="sd-blk"><h5>福祉の現場では</h5><p>' + esc(t.work) + '</p></div>'
+      + '<div class="sd-blk"><h5>ブースで聞いてみよう</h5><p class="sd-ask">' + esc(t.ask) + '</p></div>'
+      + '</div>';
+  }
+  function openType(k){
+    if (!T[k]) return;
+    var m = document.getElementById('sdAllModal');
+    if (!m) {
+      m = document.createElement('div'); m.className = 'modal sd-all-modal'; m.id = 'sdAllModal';
+      m.innerHTML = '<div class="modal-card"><div id="sdAllBody"></div><button class="btn" data-act="close" data-mod="sdAllModal">とじる</button></div>';
+      m.addEventListener('click', function(e){ if (e.target === m) m.classList.remove('show'); });   // 外側を押しても閉じる
+      document.body.appendChild(m);
+    }
+    document.getElementById('sdAllBody').innerHTML = typeCardHtml(k);
+    m.querySelector('.modal-card').scrollTop = 0;
+    m.classList.add('show');
+  }
+
+  function renderShindan(){
+    var box=document.getElementById('shindanBody'); if(!box) return;
+    var r=res();
+    if(!r){
+      var got = (window.S && S.scanned && S.scanned.indexOf('check')!==-1);
+      box.innerHTML = (got
+        ? '<button class="sd-cta" data-act="sdOpen">🔮 診断をはじめる</button>'
+        : '<div class="sd-locked">会場の<b>「適性診断」ブースのQR</b>を読み取ると診断できます。<br>ブースの人に声をかけてみてください。</div>')
+        + allTypesHtml(null);   // fq-shindan-all-v1
+      return;
+    }
+    var t=T[r.key];
+    /* == fq-shindan-mon-v1 ==
+       画面に出す数字はタイプ番号（1〜7）。数秘の数（33 など）は出さない。
+       参加者に意味が分からないし、占いに寄るため。計算と保存は今までどおり。
+       タイプ番号は T の no（①〜⑦）から起こしているので、T に項目を足していない。 */
+    var tno = '①②③④⑤⑥⑦'.indexOf(t.no) + 1;
+    box.innerHTML =
+      '<div class="sd-card">'
+      + '<div class="sd-hero">'
+      +   '<picture>'                                       /* ★fq-monster-v1 */
+      +     '<source srcset="img/mon_'+tno+'.webp" type="image/webp">'
+      +     '<img class="sd-img" alt="" src="img/mon_'+tno+'.png">'
+      +   '</picture>'
+      +   '<span class="sd-em" style="display:none">'+t.em+'</span>'
+      + '</div>'
+      + '<div class="sd-name">'+esc(t.name)+'</div>'
+      + '<div class="sd-role">タイプ<b>'+tno+'</b>　'+esc(t.role)+'</div>'
+      + '<p class="sd-catch">「'+esc(t.cat)+'」</p>'
+      + '<div class="sd-chips">'+t.chips.map(function(c){return '<span class="sd-chip">'+esc(c)+'</span>';}).join('')+'</div>'
+      + (t.why ? '<div class="sd-blk sd-why"><h5>なぜこのモンスター？</h5><p>'+esc(t.why)+'</p></div>' : '')
+      + '<div class="sd-blk"><h5>福祉の現場では</h5><p>'+esc(t.work)+'</p></div>'
+      + '<div class="sd-blk"><h5>ブースで聞いてみよう</h5><p class="sd-ask">'+esc(t.ask)+'</p></div>'
+      + '</div>'
+      + '<div class="sd-again"><button class="linkbtn" data-act="sdOpen">生年月日を入れ直す</button></div>'
+      + allTypesHtml(r.key);   // fq-shindan-all-v1
+    /* ★fq-monster-v1: 7体そろったが、この控えは残してある。
+       絵が落ちてこなかった端末（通信が細い・キャッシュが壊れた）でも、
+       絵文字が出て画面が崩れないようにするため。
+       ★インラインの onerror は使わない（このファイルはCSPセーフの方針） */
+    var im = box.querySelector('.sd-img');
+    if(im){
+      im.addEventListener('error', function(){
+        im.style.display='none';
+        var e = box.querySelector('.sd-em');
+        if(e) e.style.display='block';
+      });
+    }
+  }
+
+  function openShindan(){
+    var m=document.getElementById('shindanModal'); if(!m) return;
+    var e=document.getElementById('sdErr'); if(e) e.textContent='';
+    var inp=document.getElementById('sdBirth');
+    if(inp){ try{ inp.max=new Date().toISOString().slice(0,10); }catch(err){} }
+    m.classList.add('show');
+  }
+  function closeShindan(){
+    var m=document.getElementById('shindanModal'); if(m) m.classList.remove('show');
+    if(window.S){ S.shindanSkip=true; if(typeof save==='function') save(); }
+  }
+  function runShindan(){
+    var inp=document.getElementById('sdBirth'), err=document.getElementById('sdErr');
+    var v=(inp&&inp.value)||'';
+    var mm=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+    if(!mm){ if(err) err.textContent='生年月日を入れてください'; return; }
+    var y=+mm[1], m=+mm[2], d=+mm[3], dt=new Date(y,m-1,d);
+    if(y<1900 || dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d || dt>new Date()){
+      if(err) err.textContent='その日付は使えません'; return;
+    }
+    /* ★生年月日は保存しない。残すのは結果だけ */
+    var num=lifePath(y,m,d), key=N2K[num]||'supporter';
+    S.shindan={num:num,key:key}; S.shindanSkip=true;
+    if(typeof save==='function') save();
+    var mo=document.getElementById('shindanModal'); if(mo) mo.classList.remove('show');
+    renderShindan();
+    var sec=document.getElementById('shindanSec');
+    if(sec && sec.scrollIntoView) sec.scrollIntoView({behavior:'smooth',block:'center'});
+    if(typeof confetti==='function') confetti(3);
+    if(typeof toast==='function') toast('🔮 あなたは <b>'+T[key].name+'</b>！');
+  }
+
+  document.addEventListener('click', function(ev){
+    var el=(ev.target && ev.target.closest) ? ev.target.closest('[data-act]') : null;
+    if(!el) return;
+    var a=el.getAttribute('data-act');
+    if(a==='sdOpen'){ openShindan(); }
+    else if(a==='sdType'){ openType(el.getAttribute('data-key')); }   // fq-shindan-all-v1
+    else if(a==='sdClose'){ closeShindan(); }
+    else if(a==='sdRun'){ runShindan(); }
+  });
+
+  /* 既存の「適性診断」QR（?q=check）と連動。scan は後から Supabase 配線側でも
+     包まれるので、こちらが先に包んで両方が動くようにしておく。 */
+  if(typeof scan==='function'){
+    var _scan=scan;
+    window.scan=function(c){
+      _scan(c); renderShindan();
+      if(String(c||'').split('.')[0]==='check' && !res()){ setTimeout(openShindan, 800); } /* fq-voucher-v1 */
+    };
+  }
+  if(typeof render==='function'){ var _render=render; window.render=function(){ _render(); renderShindan(); }; }
+  if(typeof resetAll==='function'){ var _reset=resetAll; window.resetAll=function(){ _reset(); renderShindan(); }; }
+
+  renderShindan();
+  /* ?q=check で入った直後は自動で開く。「あとにする」を押したら二度と開かない */
+  if(window.S && S.scanned && S.scanned.indexOf('check')!==-1 && !res() && !S.shindanSkip){
+    setTimeout(openShindan, 900);
+  }
+})();
+
+</script>
+<script>
+/* PWA登録: HTTPS/localhostでのみ有効。static hosting(無料枠)で動作 */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('service-worker.js').catch(function(e){ console.warn('SW未登録:', e); });
+  });
+}
+</script>
+
+<!-- ===== 共有バックエンド（Supabase）配線：config.js が実値の時だけ有効。未設定なら演出はこれまで通りオフライン動作 ===== -->
+<script src="lib/qrcode.min.js"></script><!-- fq-voucher-v1: 引換券のQR（MIT・Kazuhiko Arase） -->
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  /* == fq-voucher-v1 : ポイント・抽選・引換券はサーバーが決める ==
+     ★景品が地域のお店のサービス＝本物になったので、端末の中では何も決めない。
+       ・端末ごとに「秘密の鍵」をもらう（fq_device_new）。認識番号と鍵がそろわないと動かない
+       ・会場のQRは推測できない文字列（例 talk_A.3f9c…）。読むと待ち行列に入れて、サーバーへ送る（fq_scan）
+       ・ポイントの残りはサーバーが数える。1回まわすと決まった数だけ減る（fq_draw）
+       ・当たったら引換券（推測できない番号＋QR）。お店が読んで、お店の暗証番号で使用済みにする
+     ★旧版の add_points / claim_prize / issue_recog は fq_voucher.sql で呼べなくしてある。
+       ここで呼び直さないこと（不正の入口だった）。
+     先に fq_voucher.sql を Supabase で Run しておくこと。 */
+  var cfg = window.FQ_CONFIG || {};
+  var REAL = !!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT')<0 && cfg.SUPABASE_ANON_KEY && cfg.SUPABASE_ANON_KEY.indexOf('YOUR-ANON')<0 && window.supabase);
+  if(!REAL){ return; } // 未設定：オフラインの正本演出をそのまま使う
+
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function emojiByRarity(r){ return ({1:'🎁',2:'🎀',3:'🎫',4:'🌈'})[r]||'🎁'; }
+  function kindByRarity(r){ return ({1:'イベント賞',2:'イベント賞',3:'地域協賛賞',4:'特賞'})[r]||'賞'; }
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var SECKEY='fq_secret_v1', VKEY='fq_vstate_v1', PENDKEY='fq_pending_codes_v1', SRVKEY='fukushi_quest_326_did_srv';
+  var SECRET = lsGet(SECKEY) || '';
+  var V = (function(){ try{ return JSON.parse(lsGet(VKEY)||'null') || {}; }catch(e){ return {}; } })();
+  if(!Array.isArray(V.vouchers)) V.vouchers = [];
+  if(typeof V.cost!=='number') V.cost = 1;
+  if(typeof V.balance!=='number') V.balance = null;      // null = まだサーバーから聞けていない
+  function saveV(){ lsSet(VKEY, JSON.stringify(V)); }
+  window.FQV = V;
+
+  function showDevId(){
+    var d=document.getElementById('devId'); if(!d) return;
+    d.textContent = SECRET ? DID : ('仮'+DID);
+    d.title = SECRET ? '' : 'まだ番号が確定していません。電波の良い場所で開き直してください。';
+  }
+
+  // ---- 端末の鍵をもらう（1台に1回だけ） ----
+  var devP = null;
+  function ensureDevice(){
+    if(SECRET && lsGet(SRVKEY)==='1'){ showDevId(); return Promise.resolve(true); }
+    if(devP) return devP;
+    devP = sb.rpc('fq_device_new').then(function(res){
+      devP = null;
+      var d = res && res.data;
+      if(!d || !d.ok || !d.secret){ showDevId(); return false; }
+      DID = d.recog; window.DID = d.recog; SECRET = d.secret;
+      lsSet('fukushi_quest_326_did', d.recog); lsSet(SECKEY, d.secret); lsSet(SRVKEY, '1');
+      showDevId();
+      return true;
+    }).catch(function(e){ devP = null; console.warn('fq_device_new失敗（電波が戻ったらもう一度）', e); showDevId(); return false; });
+    return devP;
+  }
+  function forgetDevice(){ SECRET=''; lsSet(SECKEY,''); lsSet(SRVKEY,''); }
+
+  // ---- サーバーの状態（残りポイント・持っている引換券）を取り直す ----
+  var stBusy=false;
+  function refreshState(){
+    if(stBusy || !SECRET) return Promise.resolve();
+    stBusy=true;
+    return sb.rpc('fq_state', {p_recog:String(DID), p_secret:SECRET}).then(function(res){
+      stBusy=false;
+      var d = res && res.data; if(!d) return;
+      if(!d.ok && d.reason==='auth'){ forgetDevice(); return ensureDevice().then(function(ok){ if(ok) return refreshState(); }); }
+      if(!d.ok) return;
+      V.balance = d.balance|0; V.cost = Math.max(1, d.cost|0); V.vouchers = d.vouchers || []; V.bases = d.bases || []; V.grand = !!d.grand; /* fq-grand-v1 */
+      // クエストの「達成」表示は、サーバーに届いたQRで合わせる（端末を変えても戻る）
+      (d.bases||[]).forEach(function(b){ if(S.scanned.indexOf(b)===-1) S.scanned.push(b); });
+      save(); saveV(); render();
+    }).catch(function(e){ stBusy=false; console.warn('fq_state失敗', e); });
+  }
+
+  // ---- 会場のQR：待ち行列からサーバーへ送る（電波が悪くても、あとで送る） ----
+  function pget(){ try{ return JSON.parse(lsGet(PENDKEY)||'[]')||[]; }catch(e){ return []; } }
+  function pset(a){ lsSet(PENDKEY, JSON.stringify(a)); }
+  var flushing=false;
+  function flushCodes(){
+    if(flushing || !SECRET) return;
+    var q=pget(); if(!q.length) return;
+    flushing=true;
+    var code=q[0];
+    sb.rpc('fq_scan', {p_recog:String(DID), p_secret:SECRET, p_code:String(code), p_nick:(S.name||'')}).then(function(res){
+      flushing=false;
+      var d=res && res.data; if(!d) return;                     // 返事が無い＝通信の不調。次の機会に
+      if(!d.ok && d.reason==='auth'){ forgetDevice(); ensureDevice().then(function(ok){ if(ok) flushCodes(); }); return; }
+      pset(pget().filter(function(c){ return c!==code; }));
+      if(d.ok){ V.balance=d.balance|0; saveV(); render(); refreshRanking(); }
+      else if(d.reason==='bad_code'){
+        var bb=String(code).split('.')[0];
+        if((V.bases||[]).indexOf(bb)===-1){ S.scanned=S.scanned.filter(function(x){ return x!==bb; }); save(); render(); }
+        toast('このQRは使えませんでした（ポイントは入りません）');
+      }
+      if(pget().length) setTimeout(flushCodes, 400);
+    }).catch(function(){ flushing=false; });
+  }
+  window.fqFlushCodes = flushCodes;
+
+  // ---- なまえ（ニックネーム） ----
+  var nameTimer=null;
+  function syncName(){
+    if(!(S.name||'').trim() || !SECRET) return;
+    sb.rpc('fq_set_name', {p_recog:String(DID), p_secret:SECRET, p_nick:(S.name||'')}).then(function(){ refreshRanking(); }).catch(function(){});
+  }
+  document.addEventListener('input', function(ev){ var t=ev.target; if(t && t.id==='playerName'){ clearTimeout(nameTimer); nameTimer=setTimeout(syncName, 600); } });
+
+  // ---- ランキング表示（fq-rank-lite-v1 のまま。上位20人＋自分の1行） ----
+  function renderRank(top, myRow){
+    var me = document.getElementById('rankMe');
+    if(me){ me.textContent = (myRow && (myRow.points||0)>0) ? (myRow.rank+'位 / '+myRow.points+'pt') : ((S.name||'')?'ランキング未反映':'なまえを入れてね'); }
+    var html = (top||[]).map(function(r,i){
+      var rk=r.rank||(i+1), mine=(r.recog_no===DID);
+      return '<div class="quest'+(mine?' done':'')+'" style="padding:8px 10px;margin-bottom:8px">'
+        + '<div style="min-width:30px;text-align:center;font-weight:900;font-size:18px;color:var(--mustard)">'+rk+'</div>'
+        + '<div class="qbody"><div class="qtitle">'+(esc(r.nickname)||'（未設定）')+(mine?' <span style="color:var(--red)">（あなた）</span>':'')+'</div>'
+        + '<div class="qdesc">認識番号 '+esc(r.recog_no)+'</div></div>'
+        + '<div class="qpt">'+ (r.points||0) +' pt</div></div>';
+    }).join('');
+    document.getElementById('rankList').innerHTML = html || '<span class="empty">まだ参加者がいません。最初の1人になろう！</span>';
+  }
+  var rankBusy=false, RANKCOLS='recog_no,nickname,points,rank';
+  function refreshRanking(){
+    if(rankBusy) return; rankBusy=true;
+    Promise.all([
+      sb.from('ranking').select(RANKCOLS).gt('points',0).order('rank',{ascending:true}).limit(20),
+      sb.from('ranking').select(RANKCOLS).eq('recog_no', DID).limit(1)
+    ]).then(function(rs){
+      rankBusy=false;
+      if(rs[0] && rs[0].error){ console.warn('ranking取得エラー', rs[0].error); return; }
+      renderRank((rs[0] && rs[0].data) || [], (((rs[1] && rs[1].data) || [])[0]) || null);
+    }).catch(function(e){ rankBusy=false; console.warn('ranking取得失敗', e); });
+  }
+
+  // ---- 画面：ポイント・ガチャのボタン・引換券の一覧 ----
+  function statusLabel(v){ return v.status==='used' ? '使用済み' : (v.status==='expired' ? '期限切れ' : '使えます'); }
+  function fmtDate(s){ if(!s) return ''; var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (m[1]+'年'+(+m[2])+'月'+(+m[3])+'日') : String(s); }
+  var _render = window.render;
+  window.render = function(){
+    _render();
+    var bal = V.balance, cost = V.cost||1;
+    var pt=document.getElementById('pt'); if(pt) pt.textContent = (bal==null ? '…' : bal);
+    var st=document.getElementById('steps'); if(st) st.style.display='none';
+    var btn=document.getElementById('gachaBtn'), hint=document.getElementById('gachaHint');
+    if(btn){
+      var can = !!SECRET && bal!=null && bal>=cost && !busy;
+      btn.disabled = !can;
+      btn.textContent = 'ガチャをまわす（1回 '+cost+'pt）';
+    }
+    if(hint){
+      if(!SECRET || bal==null) hint.innerHTML='ポイントを確かめています…<br>電波の良い場所で開いてね';
+      else if(bal>=cost) hint.innerHTML='のこり <b>'+bal+'pt</b>：あと <b>'+Math.floor(bal/cost)+'回</b> まわせます';
+      else hint.innerHTML='あと <b>'+(cost-bal)+'ポイント</b> でまわせます。会場のQRを読み取ろう';
+    }
+    var gEl=document.getElementById('fqGrand');   /* fq-grand-v1 */
+    if(gEl){
+      gEl.style.display = SECRET ? 'block' : 'none';
+      gEl.style.color = V.grand ? 'var(--red)' : '';
+      gEl.textContent = V.grand ? '🎉 大抽選会の対象です（認識番号 '+DID+'）' : 'ガチャを1回まわすと、大抽選会の対象になります';
+    }
+    var box=document.getElementById('prizes');
+    if(box){
+      if(!V.vouchers.length){ box.innerHTML='<span class="empty">まだ景品はありません。ガチャをまわそう！</span>'; }
+      else box.innerHTML = '<div class="fqv-list">' + V.vouchers.map(function(v,i){
+        return '<button type="button" class="fqv-card'+(v.status!=='ok'?' off':'')+'" data-fqv="'+i+'">'
+          + '<span class="fqv-em">'+emojiByRarity(v.rarity)+'</span>'
+          + '<span class="fqv-body"><b>'+esc(v.prize)+'</b><small>'+esc(v.shop||'')+(v.expires_on?'　'+esc(fmtDate(v.expires_on))+'まで':'')+'</small></span>'
+          + '<span class="fqv-st">'+statusLabel(v)+'</span></button>';
+      }).join('') + '</div><p class="fqv-tip">タップすると引換券（QR）が出ます</p>';
+    }
+  };
+
+  // ---- 引換券の画面 ----
+  var modal=document.createElement('div');
+  modal.className='modal'; modal.id='fqvModal';
+  modal.innerHTML='<div class="modal-card fqv-modal"><div class="fqv-h" id="fqvH">引換券</div>'
+    + '<div class="prize-name" id="fqvPrize">-</div><div class="kind" id="fqvShop">-</div>'
+    + '<div class="fqv-desc" id="fqvDesc"></div>'
+    + '<div class="fqv-qr" id="fqvQr"></div>'
+    + '<div class="fqv-code">券番号 <b id="fqvCode">-</b></div>'
+    + '<div class="fqv-state" id="fqvState"></div>'
+    + '<div class="fqv-note"><b>お店でこの画面のQRを見せてください。</b>お店の人が読み取って「使用済み」にします。<br>'
+    + '⚠️ この券は<b>1回だけ</b>使えます。家族や友だちに譲ることもできますが、<b>スクショを何人に配っても、使えるのは最初にお店で使った1人だけ</b>です。2人目からは「使用済み」と出て使えません。<br>'
+    + '📷 スクショを撮っておくと、電波が無いときも見せられます。</div>'
+    + '<button class="btn" data-act="close" data-mod="fqvModal">とじる</button></div>';
+  document.body.appendChild(modal);
+  function shopUrl(token){ return location.origin + location.pathname.replace(/[^\/]*$/, '') + 'shop.html?t=' + encodeURIComponent(token); }
+  function openVoucher(v){
+    document.getElementById('fqvH').textContent = (v.rarity>=4?'特賞 ':'') + '引換券';
+    document.getElementById('fqvPrize').textContent = v.prize || '';
+    document.getElementById('fqvShop').textContent = v.shop ? ('使えるお店：'+v.shop) : '';
+    document.getElementById('fqvDesc').textContent = [v.description||'', v.expires_on ? ('有効期限：'+fmtDate(v.expires_on)+'まで') : ''].filter(Boolean).join('　');
+    document.getElementById('fqvCode').textContent = v.code || '';
+    var stEl=document.getElementById('fqvState');
+    stEl.textContent = v.status==='ok' ? '' : ('この券は'+statusLabel(v)+'です');
+    stEl.style.display = v.status==='ok' ? 'none' : 'block';
+    var qr=document.getElementById('fqvQr');
+    try{ var q=qrcode(0,'M'); q.addData(shopUrl(v.token)); q.make(); qr.innerHTML=q.createSvgTag({cellSize:5, margin:2, scalable:true}); }
+    catch(e){ qr.innerHTML='<span class="empty">QRを出せませんでした。券番号をお店に伝えてください。</span>'; }
+    qr.style.opacity = v.status==='ok' ? '1' : '.25';
+    modal.classList.add('show');
+  }
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest && ev.target.closest('[data-fqv]'); if(!b) return;
+    var v = V.vouchers[parseInt(b.getAttribute('data-fqv'),10)]; if(v) openVoucher(v);
+    refreshState();
+  });
+
+  // ---- ガチャ：サーバーが当たり外れを決め、その結果に合わせて演出を流す ----
+  window.drawGacha = function(){
+    if(busy) return;
+    if(!SECRET){ toast('電波の良い場所で開き直してね'); ensureDevice(); return; }
+    var cost=V.cost||1;
+    if(V.balance==null || V.balance<cost){ toast('ポイントが足りません'); return; }
+    busy = true; var gb=document.getElementById('gachaBtn'); if(gb) gb.disabled=true;
+    sb.rpc('fq_draw', {p_recog:String(DID), p_secret:SECRET}).then(function(res){
+      var d = res && res.data;
+      if(!d){ throw (res && res.error) || new Error('no data'); }
+      if(!d.ok){
+        busy=false;
+        if(d.reason==='points'){ V.balance=d.balance|0; V.cost=d.cost|0||cost; saveV(); toast('ポイントが足りません'); }
+        else if(d.reason==='auth'){ forgetDevice(); ensureDevice(); toast('もう一度まわしてね'); }
+        render(); return;
+      }
+      V.balance = d.balance|0; V.cost = d.cost|0 || cost; V.grand = true; saveV(); /* fq-grand-v1: 1回まわせば大抽選会の対象 */
+      if(!d.win){ render(); runLose(function(){ busy=false; render(); }); return; }
+      var v = d.voucher, lv = Math.max(1, Math.min(4, v.rarity|0));
+      V.vouchers.unshift(v); saveV();
+      var revive=false;
+      if(lv===4){ var rr=Math.random(); revive = rr<0.4?false:(rr<0.7?1:2); }
+      var p = { em:emojiByRarity(lv), name:v.prize, kind:(v.shop ? v.shop : kindByRarity(lv)), r:lv };
+      runFx(lv, function(){ busy=false; showPrize(p, lv); confetti(lv); render(); }, revive);
+    }).catch(function(e){
+      // ★通信に失敗したら、何も起きていない（ポイントも減っていない）。端末の中で景品は出さない
+      console.warn('fq_draw失敗', e);
+      busy=false; render();
+      toast('つながりませんでした。電波の良い場所でもう一度まわしてね（ポイントは減っていません）');
+    });
+  };
+  // 当たりの画面のボタンで、そのまま引換券を開けるように
+  (function(){
+    var pm=document.querySelector('#prizeModal p');
+    if(pm) pm.textContent='「獲得した景品」の引換券を、お店で見せて使ってね。';
+  })();
+
+  // ---- テスト用のQRボタン（本物のQRではない）は参加者に見せない ----
+  (function(){ var b=document.querySelector('[data-act="scan"]'); var s=b && b.closest('section'); if(s) s.style.display='none'; })();
+
+  // ---- 起動 ----
+  var rs=document.getElementById('rankSec'); if(rs) rs.style.display='block';
+  render();
+  ensureDevice().then(function(){
+    flushCodes();
+    refreshState();
+    syncName();
+    refreshRanking();
+  });
+  window.addEventListener('online', function(){ ensureDevice().then(function(){ flushCodes(); refreshState(); }); });
+
+  /* fq-rank-lite-v1: realtime購読は本部モニター(honbu.html)だけにする。参加者端末は購読しない */
+  setInterval(function(){
+    if(document.visibilityState!=='visible') return;
+    if(window.busy) return;
+    refreshRanking();
+    flushCodes();
+  }, 60000);
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='visible'){ refreshRanking(); flushCodes(); refreshState(); }
+  });
+})();
+</script>
+
+<!-- == fq-zukan-order-v1 ==
+     ★図鑑のスクリプトは、必ず supabase-js と config.js の「うしろ」に置くこと。
+       前に置くと window.FQ_CONFIG も window.supabase もまだ無く、
+       図鑑が毎回「通信できません」になる。 -->
+<script>
+/* == fq-zukan-v1 : キャラクター図鑑 ==
+   会場のQR（?z=場所の名前）を読むと、キャラが1体ずつ増える。
+   ★5分の判定はサーバー（zukan_scan）でやる。端末の履歴を消しても回避できない。
+   ★ポイントとは別勘定。participants にも draws にも触らない。
+   先に fq_zukan.sql を Supabase で Run しておくこと。 */
+(function(){
+  'use strict';
+  /* == fq-zukan-69-v1 ==
+     ★体数を変えるときは、ここと Supabase の zukan_config.char_count の
+       両方を直すこと。ここは通信できないときの控えで、
+       つながればサーバーの値で上書きされる。 */
+  var TOTAL = 69;                       /* img/zukan/z_01.png 〜 z_69.png */
+  var KEY   = 'fukushi_quest_326_zukan';/* 通信できない時の控え（表示用だけ） */
+
+  var cfg = window.FQ_CONFIG || {};
+  var REAL = !!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0
+             && cfg.SUPABASE_ANON_KEY && cfg.SUPABASE_ANON_KEY.indexOf('YOUR-ANON') < 0
+             && window.supabase);
+  var sb = REAL ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
+
+  var owned = {};
+  try{ (JSON.parse(localStorage.getItem(KEY)||'[]')||[]).forEach(function(n){ owned[n]=1; }); }catch(e){}
+  function saveLocal(){
+    try{ localStorage.setItem(KEY, JSON.stringify(Object.keys(owned).map(Number))); }catch(e){}
+  }
+  function pad(n){ return (n<10?'0':'')+n; }
+  function src(n){ return 'img/zukan/z_'+pad(n)+'.png'; }
+
+  /* ---- 升目を作る ---- */
+  var grid = document.getElementById('zkGrid');
+  var cells = [];
+  if(grid){
+    for(var i=1;i<=TOTAL;i++){
+      var c=document.createElement('div'); c.className='zk-cell';
+      var im=document.createElement('img'); im.loading='lazy'; im.alt=''; im.src=src(i);
+      c.appendChild(im); grid.appendChild(c); cells.push(c);
+    }
+  }
+  function paint(justGot){
+    var n=0;
+    cells.forEach(function(c,i){
+      var has=!!owned[i+1];
+      if(has) n++;
+      c.classList.toggle('got', has);
+      c.classList.toggle('justgot', (i+1)===justGot);
+    });
+    var o=document.getElementById('zkOwned'), t=document.getElementById('zkTotal'),
+        b=document.getElementById('zkBar');
+    if(o) o.textContent=n;
+    if(t) t.textContent=TOTAL;
+    if(b) b.style.width=Math.round(n/TOTAL*100)+'%';
+    return n;
+  }
+
+  /* ---- 画面下のお知らせ ---- */
+  function msg(html, cool){
+    var m=document.getElementById('zkMsg'); if(!m) return;
+    m.innerHTML = html ? ('<div class="'+(cool?'zk-cool':'zk-note')+'">'+html+'</div>') : '';
+  }
+  function mmss(sec){
+    sec=Math.max(0,Math.round(sec));
+    var m=Math.floor(sec/60), s=sec%60;
+    return m>0 ? (m+'分'+(s<10?'0':'')+s+'秒') : (s+'秒');
+  }
+
+  /* ---- 登場のモーダル ---- */
+  function show(n, isNew, got){
+    var mo=document.getElementById('zukanModal'); if(!mo) return;
+    document.getElementById('zkImg').src = src(n);
+    document.getElementById('zkEm').textContent  = isNew ? 'なかまが ふえた！' : 'もう会ったことがあるね';
+    document.getElementById('zkTtl').textContent = isNew ? 'ゲット！' : 'また会えたね';
+    document.getElementById('zkNo').textContent  = 'No.'+pad(n);
+    document.getElementById('zkProg').textContent = got+' / '+TOTAL+' 体';
+    mo.classList.add('show');
+    if(isNew && typeof confetti==='function') confetti(2);
+  }
+
+  /* ---- サーバーとやりとり ---- */
+  function refresh(){
+    if(!sb || !window.DID) return;
+    sb.rpc('zukan_list', {p_recog: String(window.DID)}).then(function(r){
+      if(!r || r.error || !r.data) return;
+      var d = r.data;
+      if(d.total) TOTAL = d.total;
+      owned = {};
+      (d.chars||[]).forEach(function(n){ owned[n]=1; });
+      saveLocal(); paint(0);
+      /* fq-logpose-v1: 持っている数を称号へ渡す */
+      try{ document.dispatchEvent(new CustomEvent('fq-zukan',{detail:d})); }catch(e){}
+    }).catch(function(){});
+  }
+
+  /* ══════════ fq-zukan-retry-v1 : 電波が戻ったら あとで受け取る ══════════
+     ★会場にWi-Fiが無く、建物の中には電波の弱い場所がある。
+       そこでQRを読んでも、いままでは その場で終わりだった。
+       読んだ場所まで戻らないとキャラが手に入らない。
+     ★読み取りに失敗した場所を端末に覚えておいて、
+       電波が戻ったら自動でサーバーへ送る。
+     ★サーバー側は直していない。記録するのは「場所の名前」だけで、
+       どのキャラになるかを決めるのはサーバー側なので、
+       あとから送っても同じように処理される。 */
+  var PKEY = 'fukushi_quest_326_zk_pending';
+  function pget(){ try{ return JSON.parse(localStorage.getItem(PKEY)||'[]')||[]; }catch(e){ return []; } }
+  function pset(a){ try{ localStorage.setItem(PKEY, JSON.stringify(a.slice(0,16))); }catch(e){} }
+  function padd(spot){
+    /* 同じ場所は二重に入れない。新しいほうを先頭に */
+    var a = pget().filter(function(x){ return x && x.spot !== spot; });
+    a.unshift({ spot:String(spot), at:Date.now() });
+    pset(a); pnote();
+  }
+  function pdel(spot){
+    pset(pget().filter(function(x){ return !x || x.spot !== spot; })); pnote();
+  }
+  function pclean(){
+    var lim = Date.now() - 12*3600*1000;      /* 12時間たった控えは捨てる */
+    pset(pget().filter(function(x){ return x && x.at > lim; }));
+  }
+  function pnote(){
+    var el = document.getElementById('zkPend'); if(!el) return;
+    var n = pget().length;
+    el.hidden = !n;
+    el.innerHTML = n
+      ? '<div class="zk-note">電波が戻ったら、あと <b>'+n+'か所</b>ぶん 自動で受け取ります。<br>'
+        + 'このまま先へ進んで大丈夫です。</div>'
+      : '';
+  }
+
+  var flushing = false;
+  function pflush(){
+    if(flushing || !sb || !window.DID) return;
+    pclean();
+    var q = pget(); if(!q.length) return;
+    flushing = true;
+    var item = q[0];
+    sb.rpc('zukan_scan', {p_recog:String(window.DID), p_spot:String(item.spot)}).then(function(r){
+      flushing = false;
+      /* つながらない・サーバーが答えない → 待ち行列に残して、次の機会に */
+      if(!r || r.error || !r.data) return;
+      var d = r.data;
+      if(d.total) TOTAL = d.total;
+      try{ document.dispatchEvent(new CustomEvent('fq-zukan',{detail:d})); }catch(e){}
+      /* ★ここまで来たら「サーバーに届いた」。ok でも cooldown でも待ち行列から外す。
+           cooldown ＝ さっき読んだばかり ＝ **もう受け取れている**。 */
+      pdel(item.spot);
+      if(d.ok){
+        owned[d.char]=1; saveLocal();
+        var n = paint(d.char);
+        show(d.char, d.is_new !== false, d.owned || n);
+        msg('');
+      }
+      if(pget().length) setTimeout(pflush, 600);   /* つぎの1件 */
+    }).catch(function(){ flushing = false; });
+  }
+
+  var busyZk=false;
+  function doScan(spot){
+    if(busyZk) return;
+    if(!sb){ msg('図鑑をつかうには通信が必要です。電波の良い場所でもう一度ひらいてください。', true); return; }
+    if(!window.DID){ setTimeout(function(){ doScan(spot); }, 800); return; }
+    busyZk=true;
+    msg('よみとり中…');
+    sb.rpc('zukan_scan', {p_recog: String(window.DID), p_spot: String(spot)}).then(function(r){
+      busyZk=false;
+      /* ★fq-zukan-retry-v1: サーバーが答えを返せなかった（通信・サーバー側の不調）。
+           場所を覚えておいて、あとで送り直す。 */
+      if(!r || r.error || !r.data){
+        padd(spot);
+        msg('いまは受け取れませんでした。<br><b>あとで自動で受け取ります</b>。このまま先へ進んで大丈夫です。', true);
+        return;
+      }
+      var d=r.data;
+      if(d.total) TOTAL=d.total;
+      /* fq-logpose-v1: つぎの行き先とゴールを渡す */
+      try{ document.dispatchEvent(new CustomEvent('fq-zukan',{detail:d})); }catch(e){}
+      if(d.ok){
+        owned[d.char]=1; saveLocal();
+        var n=paint(d.char);
+        show(d.char, d.is_new !== false, d.owned || n);
+        msg('');
+        var el=document.getElementById('zukanSec');
+        if(el && el.scrollIntoView) el.scrollIntoView({behavior:'smooth', block:'center'});
+      } else if(d.reason==='cooldown'){
+        paint(0);
+        countdown(d.wait);
+      } else {
+        msg('このQRは読み取れませんでした。', true);
+      }
+    }).catch(function(){
+      busyZk=false;
+      /* ★fq-zukan-retry-v1: 電波が届かなかった。ここがいちばん多い。
+           「戻ってもう一度」ではなく、覚えておいて あとで送る。 */
+      padd(spot);
+      msg('いまは電波が届きませんでした。<br><b>あとで自動で受け取ります</b>。このまま先へ進んで大丈夫です。', true);
+    });
+  }
+
+  /* ---- クールダウンの残り時間を数える ---- */
+  var coolTimer=null;
+  function countdown(sec){
+    if(coolTimer) clearInterval(coolTimer);
+    var end = Date.now() + sec*1000;
+    function tick(){
+      var left = (end - Date.now())/1000;
+      if(left<=0){
+        clearInterval(coolTimer); coolTimer=null;
+        msg('もう一度このQRを読み取れます！', true);
+        return;
+      }
+      msg('このQRは、さっき読んだばかりです。<br>あと <b>'+mmss(left)+'</b> でまた読めます。<br>'
+        + 'そのあいだに <b>ほかの場所のQR</b> をさがしてみよう。', true);
+    }
+    tick(); coolTimer=setInterval(tick, 1000);
+  }
+
+  /* ---- 閉じるボタン ---- */
+  document.addEventListener('click', function(ev){
+    var el=(ev.target && ev.target.closest) ? ev.target.closest('[data-act]') : null;
+    if(!el) return;
+    if(el.getAttribute('data-act')==='zkClose'){
+      var mo=document.getElementById('zukanModal'); if(mo) mo.classList.remove('show');
+    }
+  });
+
+  /* ---- 起動 ---- */
+  paint(0);
+  pclean();          /* 古い控えを捨ててから数える。捨てないと数だけ残る */
+  pnote();
+
+  /* == fq-zukan-retry-v1 : 送り直すきっかけ ==
+     ★画面を見ているときだけ送る。裏に回っている間は通信しない。
+     ★ガチャの演出中は邪魔しない（window.busy）。
+     ★30秒ごとに見るが、待ち行列が空なら何もしない。 */
+  addEventListener('online', pflush);
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible') pflush();
+  });
+  setInterval(function(){
+    if(document.visibilityState !== 'visible') return;
+    if(window.busy) return;
+    pflush();
+  }, 30000);
+
+  /* URLの ?z= を拾う。
+     ★本体の ?q= ハンドラは q があるときだけ URL を書き換えるので、
+       ?z= 単独ならこの時点でも残っている。 */
+  var spot=null;
+  try{ spot = new URLSearchParams(location.search).get('z'); }catch(e){}
+
+  /* 認識番号はサーバー発行を待つ（fq-recog-serial-v1）。
+     待ちすぎないよう、最大4秒であきらめて手元の番号で進む。 */
+  var waited=0;
+  (function waitId(){
+    var srv=false;
+    try{ srv = localStorage.getItem('fukushi_quest_326_did_srv')==='1'; }catch(e){}
+    if(srv || waited>=4000 || !sb){
+      refresh();
+      pflush();                 /* fq-zukan-retry-v1: 前に取りこぼした場所を送り直す */
+      if(spot){
+        if(history.replaceState) history.replaceState(null,'',location.pathname);
+        setTimeout(function(){ doScan(spot); }, 300);
+      }
+      return;
+    }
+    waited+=300; setTimeout(waitId, 300);
+  })();
+})();
+
+</script>
+
+<script>
+/* == fq-logpose-v1 : ログポース ==
+   会場の8か所を、人によってちがう順番で回らせる。
+   画面には つぎの1か所だけ出す。そこのQRを読むと 次が出る。
+
+   ★ルートはサーバーに保存していない。
+     「まだ読んでいない場所のうち、その人の順番で次の1つ」を毎回計算している。
+     順番は md5(認識番号 + 場所) で決まるので、人ごとに違い、何度見ても同じ。
+     → 当日スポットを増やしても、既に回っている人が壊れない。
+
+   ★称号はここ（端末の中）で計算する。サーバーには持たせない。
+   ★ヒントと場所の名前は、本部モニター（honbu.html?admin=1）から当日変えられる。
+
+   先に fq_logpose.sql を Supabase で Run しておくこと。
+   Run していなければ、この箱は出ないだけで、図鑑はこれまでどおり動く。 */
+(function(){
+  'use strict';
+  var KEY_GOAL = 'fukushi_quest_326_lp_goal';   /* ゴールした印（表示用だけ） */
+  var GOAL_TITLE = 'ログポースの ぼうけんしゃ';
+
+  /* 称号。持っている数で決まる。上から順に見て、届いている一番上を出す。 */
+  var TITLES = [
+    {n:72, t:'326 コンプリート'},
+    {n:50, t:'326マスター'},
+    {n:36, t:'図鑑 はんぶん マスター'},
+    {n:20, t:'326ハンター'},
+    {n:10, t:'なかま あつめ 名人'},
+    {n:5,  t:'なかま あつめ 見習い'},
+    {n:1,  t:'はじめての なかま'}
+  ];
+
+  var cfg = window.FQ_CONFIG || {};
+  var REAL = !!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0
+             && cfg.SUPABASE_ANON_KEY && cfg.SUPABASE_ANON_KEY.indexOf('YOUR-ANON') < 0
+             && window.supabase);
+  var sb = REAL ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
+
+  var goaled = false;
+  try{ goaled = localStorage.getItem(KEY_GOAL)==='1'; }catch(e){}
+  var goalChar = 0;
+  var lastState = null;   /* 最後に受け取った状態。再描画に使う */
+  var lastOwned = 0;      /* 最後に分かった 持っている数 */
+
+  function $(id){ return document.getElementById(id); }
+  function pad(n){ return (n<10?'0':'')+n; }
+
+  /* ---- 称号 ---- */
+  function paintTitle(owned){
+    var box=$('lpTitle'), tx=$('lpTitleTx');
+    if(!box || !tx) return;
+    var t = null;
+    for(var i=0;i<TITLES.length;i++){ if(owned >= TITLES[i].n){ t = TITLES[i].t; break; } }
+    var list = [];
+    if(goaled) list.push(GOAL_TITLE);
+    if(t) list.push(t);
+    if(!list.length){ box.style.display='none'; return; }
+    tx.innerHTML = list.join('</b>　／　<b>');
+    box.style.display='';
+  }
+
+  /* ---- つぎの行き先 ---- */
+  var shownAnswer = false;   /* 「こたえを見る」を押したか */
+  var curSpot = null;        /* いま指している場所。変わったら こたえは隠しなおす */
+  function paintState(st){
+    var box=$('lpBox'); if(!box) return;
+    if(!st || !st.ok || !st.total){ box.style.display='none'; return; }
+    lastState = st;
+    box.style.display='';
+    var v = st.visited||0, tot = st.total||0;
+    $('lpVisited').textContent = v;
+    $('lpTotal').textContent   = tot;
+    $('lpBar').style.width = Math.round(v/Math.max(1,tot)*100)+'%';
+
+    if(st.done){
+      box.classList.add('done');
+      $('lpHead').textContent = 'ぼうけん、ぜんぶ まわった！';
+      $('lpHint').innerHTML = 'おめでとう！<br>会場のぜんぶの場所を まわりました。';
+      $('lpAnsWrap').style.display='none';
+      $('lpName').style.display='none';
+      $('lpNote').innerHTML = 'あとは すきな場所のQRを読んで、なかまを増やそう。';
+      return;
+    }
+
+    box.classList.remove('done');
+    $('lpHead').textContent = 'つぎの ぼうけん';
+    var nx = st.next || {};
+    $('lpHint').textContent = nx.hint || (nx.name || 'つぎの場所をさがそう');
+    $('lpNote').innerHTML = '見つけたら、そこの<b>QR</b>を読み取ろう。<br>'
+      + '行き先は<b>人によってちがいます</b>。となりの人と同じとは限りません。';
+
+    /* 行き先が変わったら「こたえ」は隠しなおす */
+    if(curSpot !== (nx.spot||'')){ curSpot = (nx.spot||''); shownAnswer = false; }
+    var nm=$('lpName'), aw=$('lpAnsWrap');
+    if(shownAnswer && nx.name){
+      nm.textContent = '→ ' + nx.name;
+      nm.style.display=''; aw.style.display='none';
+    } else if(nx.name){
+      nm.style.display='none'; aw.style.display='';
+    } else {
+      nm.style.display='none'; aw.style.display='none';
+    }
+  }
+
+  function refresh(){
+    if(!sb || !window.DID) return;
+    sb.rpc('logpose_state', {p_recog: String(window.DID)}).then(function(r){
+      /* ★fq_logpose.sql をまだ Run していなければ、ここで error になる。
+           そのときは箱を出さないだけ。図鑑は動く。 */
+      if(!r || r.error || !r.data) return;
+      paintState(r.data);
+    }).catch(function(){});
+  }
+
+  /* ---- ゴールしたとき ---- */
+  function celebrate(){
+    goaled = true;
+    try{ localStorage.setItem(KEY_GOAL,'1'); }catch(e){}
+    var mo=$('lpModal'); if(!mo) return;
+    var im=$('lpImg');
+    if(im && goalChar > 0) im.src = 'img/zukan/z_'+pad(goalChar)+'.png';
+    else if(im) im.removeAttribute('src');
+    mo.classList.add('show');
+    if(typeof confetti==='function') confetti(3);
+    paintTitle(lastOwned);          /* ★称号に「ぼうけんしゃ」を足す */
+  }
+
+  /* ---- 図鑑からの知らせを受け取る ---- */
+  document.addEventListener('fq-zukan', function(ev){
+    var d = (ev && ev.detail) || {};
+    if(typeof d.goal_char === 'number' && d.goal_char > 0) goalChar = d.goal_char;
+    if(typeof d.owned === 'number') lastOwned = d.owned;
+    else if(d.chars) lastOwned = d.chars.length;
+    paintTitle(lastOwned);
+    /* ★スキャンの返事には logpose が入っている。図鑑の読み込みには入っていない。
+         入っていないときだけ、あらためて聞きにいく。 */
+    if(d.logpose) paintState(d.logpose);
+    else if(d.char || d.reason) refresh();
+    if(d.just_goal && !goaled) setTimeout(celebrate, 1400);
+  });
+
+  /* ---- ボタン ---- */
+  document.addEventListener('click', function(ev){
+    var el=(ev.target && ev.target.closest) ? ev.target.closest('[data-act]') : null;
+    if(!el) return;
+    var a = el.getAttribute('data-act');
+    if(a==='lpAns'){
+      shownAnswer = true;
+      if(lastState) paintState(lastState); else refresh();
+    } else if(a==='lpClose'){
+      var mo=$('lpModal'); if(mo) mo.classList.remove('show');
+    }
+  });
+
+  /* ---- 起動（認識番号がサーバーから届くのを待つ。最大4秒） ---- */
+  paintTitle(0);
+  var waited=0;
+  (function waitId(){
+    var srv=false;
+    try{ srv = localStorage.getItem('fukushi_quest_326_did_srv')==='1'; }catch(e){}
+    if(srv || waited>=4000 || !sb){ refresh(); return; }
+    waited+=300; setTimeout(waitId, 300);
+  })();
+})();
+</script>
+
+<!-- fq-dev-gate-v1: 開発パネル／主催者設定は、登録した端末で合言葉が合ったときだけ出す -->
+<script>
+(function(){
+  'use strict';
+  var p; try{ p = new URLSearchParams(location.search); }catch(e){ return; }
+  var wantDev = (p.get('dev')   === '1');
+  var wantAdm = (p.get('admin') === '1');
+  if (!wantDev && !wantAdm) return;          /* ★URLに付いていなければ、何も起きない */
+
+  var cfg  = window.FQ_CONFIG || {};
+  var real = !!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0
+                && cfg.SUPABASE_ANON_KEY && window.supabase);
+
+  function open_(){
+    if (wantDev){
+      var dp=document.getElementById('devPanel'); if(dp) dp.style.display='';
+      var rl=document.getElementById('resetLink'); if(rl) rl.style.display='';
+    }
+    if (wantAdm){
+      var al=document.getElementById('admLink'); if(al) al.style.display='';
+    }
+    window.FQ_ROLE = { dev: wantDev, admin: wantAdm };
+    if (typeof window.render === 'function') window.render();   // fq-shindan-all-v1: 主催者だけの表示を出し直す
+  }
+
+  /* 小さな枠を作る（画面の上に重ねる） */
+  var box = document.createElement('div');
+  box.id = 'fqDevGate';
+  box.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);'
+    + 'display:flex;align-items:center;justify-content:center;padding:16px;'
+    + 'font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;';
+  box.innerHTML =
+    '<div style="background:#fff;border-radius:var(--r);padding:20px 22px;max-width:420px;width:100%;">'
+    + '<div style="font-weight:900;font-size:18px;margin-bottom:10px;">関係者用</div>'
+    + '<div id="fqGateMsg" style="font-size:13px;color:#666;line-height:1.8;margin-bottom:12px;">'
+    + '合言葉を入れてください。</div>'
+    /* fq-pass-eye-v1: 打ち間違いに気づけるよう、見るボタンを付ける */
+    + '<div style="display:flex;gap:8px;align-items:center;">'
+    + '<input id="fqGatePass" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"'
+    + ' style="flex:1;padding:11px 12px;font-size:16px;border:2px solid #ddd;border-radius:var(--r2);">'
+    + '<button type="button" id="fqGateEye" title="合言葉を見る"'
+    + ' style="flex:0 0 auto;padding:10px 13px;font-size:18px;line-height:1;border:1px solid #ccc;'
+    + 'border-radius:var(--r2);background:#eee;cursor:pointer;">👁</button>'
+    + '</div>'
+    + '<div id="fqGateDid" style="display:none;font-size:12px;color:#444;background:#f4f4f4;'
+    + 'border-radius:var(--r2);padding:10px 12px;margin-top:12px;line-height:1.8;word-break:break-all;"></div>'
+    + '<div style="display:flex;gap:9px;margin-top:14px;">'
+    + '<button id="fqGateGo" style="flex:1;padding:11px;font-size:16px;font-weight:800;border:none;'
+    + 'border-radius:var(--r2);background:#2e7d32;color:#fff;">確認</button>'
+    + '<button id="fqGateNo" style="flex:1;padding:11px;font-size:16px;font-weight:700;border:1px solid #ccc;'
+    + 'border-radius:var(--r2);background:#eee;color:#555;">やめる</button>'
+    + '</div></div>';
+  document.body.appendChild(box);
+
+  var msg = box.querySelector('#fqGateMsg');
+  var pw  = box.querySelector('#fqGatePass');
+  var did = box.querySelector('#fqGateDid');
+  var go  = box.querySelector('#fqGateGo');
+  /* fq-pass-eye-v1: 押すたびに 見える／隠れる を切り替える。
+     ★人前で押さないこと。ページを開き直せば必ず隠れた状態から始まる。 */
+  var eye = box.querySelector('#fqGateEye');
+  if (eye) eye.addEventListener('click', function(){
+    var showing = (pw.type === 'text');
+    pw.type = showing ? 'password' : 'text';
+    eye.textContent = showing ? '👁' : '🙈';
+    eye.title = showing ? '合言葉を見る' : '合言葉を隠す';
+    try { pw.focus(); } catch(e) {}
+  });
+
+  function close_(){ box.remove(); }
+  box.querySelector('#fqGateNo').addEventListener('click', close_);
+
+  if (!real){
+    msg.textContent = '通信の設定(config.js)が無いので、確認できません。';
+    go.disabled = true; pw.disabled = true;
+    return;
+  }
+
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  var myDid = (typeof DID !== 'undefined' && DID) ? String(DID) : '';
+
+  go.addEventListener('click', function(){
+    if (!pw.value.trim()) return;
+    go.disabled = true; msg.style.color = '#666'; msg.textContent = '確認中…';
+    sb.rpc('fq_dev_check', { p_pass: pw.value, p_did: myDid }).then(function(r){
+      if (r.error) throw r.error;
+      var d = r.data || {};
+      if (d.ok){ close_(); open_(); return; }
+      msg.style.color = '#c0392b';
+      msg.textContent = d.message || '確認できませんでした。';
+      if (d.reason === 'device'){
+        /* ★端末の登録は SQL Editor からしかできない。ここでは番号を見せるだけ。 */
+        did.style.display = '';
+        did.innerHTML = 'この端末の番号：<br><b>' + myDid + '</b><br>'
+          + 'Supabase の SQL Editor で fq_dev_devices に登録してください。';
+      }
+      pw.value = ''; go.disabled = false;
+    }).catch(function(e){
+      msg.style.color = '#c0392b';
+      msg.textContent = '通信できませんでした（' + (e.message || e) + '）。';
+      go.disabled = false;
+    });
+  });
+  pw.addEventListener('keydown', function(e){ if (e.key === 'Enter') go.click(); });
+  setTimeout(function(){ try{ pw.focus(); }catch(e){} }, 100);
+})();
+</script>
+
+<!-- == fq-menu-v1 : 下のメニュー ==
+     ★案内ページ（index.html）と**同じ並び・同じ見た目**。2つで1組。
+       並びを変えるときは index.html の #tabbar も必ず合わせること。
+     ★まん中の3つ（クエスト・診断・図鑑）だけが、このページの中身の切り替え。
+       ほか5つは案内ページへのリンク（<a>）なので、
+       **JSが動かない端末でも必ず飛べる**。 -->
+<nav class="tabbar" id="tabbar" role="tablist" aria-label="ページの切りかえ">
+  <a href="index.html"        ><span class="ic">🏠</span>ホーム</a>
+  <!-- ★fq-onehome-v1: 「イベント」のタブはやめました（中身はホームに入っています）。
+       ★★下のタブバーは index.html と 2つで 1組。必ず両方同じにすること。 -->
+  <button type="button" role="tab" data-tab="quest"   aria-selected="true"><span class="ic">📜</span>クエスト</button>
+  <button type="button" role="tab" data-tab="shindan" aria-selected="false"><span class="ic">🔮</span>診断</button>
+  <button type="button" role="tab" data-tab="zukan"   aria-selected="false"><span class="ic">📖</span>図鑑</button>
+  <a href="index.html#place"  ><span class="ic">📍</span>会場</a><!-- fq-pin-v1: 世界地図の絵は小さいと緑のかたまりに見えたので、位置ピンに -->
+  <a href="index.html#support"><span class="ic">🤝</span>協賛</a>
+</nav>
+
+<script>
+/* == fq-menu-v1 : 画面の切り替え ==
+   ★このスクリプトは いちばん最後に置くこと。
+     セクションの表示・非表示が全部決まったあとで引き取るため。
+     先に動かすと、あとから本体がランキングを出して、メニューと食い違う。 */
+(function(){
+  'use strict';
+  var KEY  = 'fukushi_quest_326_tab';
+  var OK   = /^(quest|shindan|zukan)$/;
+  var bar  = document.getElementById('tabbar');
+  if(!bar) return;
+  var btns = [].slice.call(bar.querySelectorAll('button[data-tab]'));
+
+  /* ★いま出ている／隠れている状態を、先に控えておく。
+       ランキング（#rankSec）は、通信できているときだけ本体が 'block' にする
+       （fq-rank-lite-v1）。ここで控えておかないと、
+       クエストを開くたびに「通信できていないランキング」まで出てしまう。 */
+  var secs = [].slice.call(document.querySelectorAll('section[data-tab]')).map(function(s){
+    var d = s.style.display || '';
+    return { el:s, tab:s.getAttribute('data-tab'), off:(d === 'none'), on:(d === 'none' ? '' : d) };
+  });
+  if(!secs.length || !btns.length) return;
+
+  var cur = 'quest';
+
+  function show(key, toTop){
+    if(!OK.test(key)) key = 'quest';
+    cur = key;
+    secs.forEach(function(o){
+      o.el.style.display = (!o.off && o.tab === key) ? o.on : 'none';
+    });
+    btns.forEach(function(b){
+      b.setAttribute('aria-selected', b.getAttribute('data-tab') === key ? 'true' : 'false');
+    });
+    try{ localStorage.setItem(KEY, key); }catch(e){}
+    if(toTop) window.scrollTo(0, 0);
+  }
+
+  /* ★URLのうしろに #zukan のような目印を付けて切り替える。
+       こうしておくと、スマホの「戻る」でひとつ前の画面に戻れる。
+       案内ページから quest.html#zukan と書いて呼ぶこともできる。 */
+  function hash(){
+    var k = (location.hash || '').slice(1);
+    return OK.test(k) ? k : '';
+  }
+
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){
+      var k = b.getAttribute('data-tab');
+      if(k === cur){ window.scrollTo(0, 0); return; }   // 同じところを押したら上へ
+      location.hash = k;                                 // ← hashchange が下で受ける
+    });
+  });
+
+  /* ★最初に出す画面。QRから開いたときは、その結果が見えるところを出す。
+       本体は ?q= を読んだあと history.replaceState でURLを消してしまうので、
+       body の先頭で控えた値（__FQ_Q0）を見る。 */
+  var q0 = window.__FQ_Q0 || '';
+  var start = hash();
+  if(!start){
+    if(/[?&]z=/.test(q0))            start = 'zukan';    // キャラのQR → 図鑑
+    else if(/[?&]q=check/.test(q0))  start = 'shindan';  // 診断のQR   → 診断
+    else if(/[?&]q=/.test(q0))       start = 'quest';    // ほかのQR   → クエスト
+    else { try{ start = localStorage.getItem(KEY) || 'quest'; }catch(e){} }
+  }
+  if(!OK.test(start)) start = 'quest';
+  show(start, false);
+
+  /* 戻る／進む。目印が消えていたら、開いたときの画面に戻す */
+  window.addEventListener('hashchange', function(){ show(hash() || start, true); });
+
+  /* ★ガチャが引けるようになったら「クエスト」に赤い点を出す。
+       ガチャはクエストの中にあるので、開いていないと気づけない。
+       本体の render() が押せる・押せないを切り替えるので、それを見ている。 */
+  var qtab = bar.querySelector('button[data-tab="quest"]');
+  setInterval(function(){
+    if(document.visibilityState !== 'visible') return;
+    var g = document.getElementById('gachaBtn');
+    if(qtab) qtab.classList.toggle('badge', !!(g && !g.disabled));
+  }, 700);
+
+  /* ほかのスクリプトから切り替えたいとき用 */
+  window.FQ_TAB = show;
+})();
+</script>
+</body>
+</html>
