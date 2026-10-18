@@ -29,11 +29,32 @@
   .idle .no{ font-size:min(17vw,26vh); letter-spacing:.12em; color:#f0c95a; text-shadow:0 0 .1em rgba(240,201,90,.55); }
   .hint{ position:fixed; left:0; right:0; bottom:2vh; text-align:center; font-size:14px; color:#8a7a5a; }
   .hint.off{ display:none; }
+  /* fq-grand-smile-v1: 笑顔コンテストの1位発表 */
+  #smStage{ position:fixed; inset:0; z-index:2; display:none; flex-direction:column; align-items:center; justify-content:center; gap:2.4vh; }
+  #smStage.on{ display:flex; }
+  #smStage .ttl{ font-size:min(6.4vw,8.4vh); font-weight:900; color:#f0c95a; letter-spacing:.1em; text-shadow:0 0 .1em rgba(240,201,90,.55); }
+  #smStage .row{ display:flex; flex-wrap:wrap; gap:2.6vh 2.4vw; align-items:flex-start; justify-content:center; max-width:94vw; }
+  #smStage .row.many .pic{ width:min(19vw,26vh); height:min(19vw,26vh); }
+  #smStage .row.many .cap{ margin-top:.8vh; font-size:min(1.9vw,2.6vh); max-width:min(19vw,26vh); }
+  #smStage .row.many .vt{ font-size:min(2.6vw,3.4vh); }
+  #smStage .card{ display:flex; flex-direction:column; align-items:center; }
+  #smStage .pic{ width:min(30vw,44vh); height:min(30vw,44vh); object-fit:cover; border-radius:2vh;
+    border:.6vh solid #f0c95a; background:#241d12; box-shadow:0 0 4vh rgba(240,201,90,.45); }
+  #smStage .row.one .pic{ width:min(44vw,56vh); height:min(44vw,56vh); }
+  #smStage .cap{ margin-top:1.4vh; text-align:center; font-size:min(2.8vw,3.6vh); font-weight:800; max-width:min(44vw,56vh); line-height:1.3; }
+  #smStage .vt{ margin-top:.6vh; font-size:min(4.2vw,5.6vh); font-weight:900; color:#f0c95a; }
+  #smStage .tie{ font-size:min(3vw,4vh); font-weight:800; color:#f7efd9; display:none; }
+  #smStage .tie.on{ display:block; }
 </style>
 </head>
 <body>
 <div class="stage idle" id="stage"><div class="no" id="no">大抽選会</div><div class="nm" id="nm"></div></div>
 <div class="hint" id="hint">画面を1回クリックすると音が出せるようになります（F11 などで全画面に）。この文字はクリックで消えます。</div>
+<div id="smStage"><!-- fq-grand-smile-v1 -->
+  <div class="ttl" id="smTtl">笑顔コンテスト</div>
+  <div class="row" id="smRow"></div>
+  <div class="tie" id="smTie">同じ票数です。一位はこのあと会場で決めます</div>
+</div>
 <script>
 (function(){
   'use strict';
@@ -257,6 +278,7 @@
     $('nm').textContent = ''; $('nm').classList.remove('show');
   }
   function start(n, label){
+    smStop();                       // fq-grand-smile-v1: 番号の抽選に移るときは笑顔の発表を消す
     stopSound(); fireworksStop();   // fq-grand-v6
     $('stage').classList.remove('idle'); $('nm').textContent = ''; $('nm').classList.remove('show');
     run = { n: n || 4, answer: null, locked: [], t0: Date.now(), last: 0, label: String(label || '') };
@@ -290,13 +312,64 @@
     })();
   }
 
+  /* ---- fq-grand-smile-v1: 笑顔コンテストの1位発表。本部モニターから写真と票数をもらって見せるだけ ---- */
+  var SM = null;
+  function escA(s){ return esc(s).replace(/"/g, '&quot;'); }
+  function smCard(it){
+    var u = String(it.u == null ? '' : it.u), t = String(it.t == null ? '' : it.t);
+    var v = (it.v == null ? null : (it.v | 0)), no = String(it.no == null ? '' : it.no);
+    return '<div class="card">'
+         + (u ? '<img class="pic" alt="" src="' + escA(u) + '">' : '<div class="pic"></div>')
+         + '<div class="cap">' + (no ? esc(no) + '\u756a\u3000' : '') + esc(t)
+         + (v === null ? '' : '<div class="vt">' + v + '\u7968</div>') + '</div></div>';
+  }
+  function smStop(){
+    if (SM) { if (SM.timer) clearInterval(SM.timer); if (SM.end) clearTimeout(SM.end); }
+    SM = null;
+    $('smStage').classList.remove('on'); $('smTie').classList.remove('on'); $('smRow').innerHTML = '';
+  }
+  function smileShow(m){
+    smStop(); stopSound(); fireworksStop(); run = null;
+    var win = (m.win && m.win.length) ? m.win : [];
+    var all = (m.all && m.all.length) ? m.all : win;
+    var sec = Math.max(2, Math.min(20, (+m.sec) || 7));
+    $('stage').classList.remove('idle'); $('no').textContent = '';
+    $('nm').textContent = ''; $('nm').classList.remove('show');
+    $('smStage').classList.add('on');
+    $('smTtl').textContent = '\u7b11\u9854\u30b3\u30f3\u30c6\u30b9\u30c8\u3000\u7b2c\uff11\u4f4d\u306f\u2026';
+    $('smRow').className = 'row one';
+    var i = 0;
+    $('smRow').innerHTML = smCard({ u: (all[0] || {}).u, t: '\uff1f\uff1f\uff1f' });
+    drumroll(sec);
+    var me = { };
+    SM = me;
+    me.timer = setInterval(function(){
+      if (SM !== me) return;
+      i = (i + 1) % Math.max(1, all.length);
+      $('smRow').innerHTML = smCard({ u: (all[i] || {}).u, t: '\uff1f\uff1f\uff1f' });
+    }, 140);
+    me.end = setTimeout(function(){
+      if (SM !== me) return;
+      clearInterval(me.timer); me.timer = null;
+      $('smTtl').textContent = '\u7b11\u9854\u30b3\u30f3\u30c6\u30b9\u30c8\u3000\u7b2c\uff11\u4f4d';
+      $('smRow').className = 'row' + (win.length === 1 ? ' one' : (win.length >= 4 ? ' many' : ''));
+      $('smRow').innerHTML = win.length
+        ? win.map(function(w){ return smCard(w); }).join('')
+        : smCard({ t: '\uff08\u5199\u771f\u304c\u3042\u308a\u307e\u305b\u3093\uff09' });
+      if (win.length > 1) $('smTie').classList.add('on');
+      fanfare(); fireworks(16, true); confetti(14);
+      var st = $('stage'); st.classList.remove('flash'); void st.offsetWidth; st.classList.add('flash');
+    }, sec * 1000);
+  }
   /* ---- 本部モニターからの合図 ---- */
   function onMsg(m){
     if (!m || typeof m !== 'object') return;
     if (m.type === 'ping') { send({ type: 'hello' }); return; }
+    if (m.type === 'smile') { smileShow(m); return; }                                      /* fq-grand-smile-v1 */
+    if (m.type === 'smileStop') { smStop(); stopSound(); fireworksStop(); idle(); return; }  /* fq-grand-smile-v1 */
     if (m.type === 'start') start(m.n, m.label);
     else if (m.type === 'result' && run) { run.answer = { recog_no: String(m.recog_no || ''), nickname: String(m.nickname || '') }; run.n = run.answer.recog_no.length || run.n; }
-    else if (m.type === 'abort' || m.type === 'clear') { stopSound(); fireworksStop(); idle(); }
+    else if (m.type === 'abort' || m.type === 'clear') { smStop(); stopSound(); fireworksStop(); idle(); }   /* fq-grand-smile-v1: smStop を足した */
   }
   var bc = null;
   try { bc = new BroadcastChannel('fq-grand'); bc.onmessage = function(e){ onMsg(e.data); }; } catch(e) { bc = null; }

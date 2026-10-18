@@ -900,6 +900,13 @@ boot();
       <p class="lpnote" id="smStat"></p>
       <p class="lpnote">投票は<b>1人1票</b>（登録したなまえと番号で数えています）。<b>同じ票数のときは同じ順位</b>で出ます。1位が複数のときは現場で決めてください。参加者の画面には票数は一切出ません。</p>
       <div id="smList"></div>
+      <div class="lprow" style="margin-top:12px;"><!-- fq-grand-smile-v1 -->
+        <button class="lpbtn" id="smScreenOpen">会場の画面を開く</button>
+        <button class="gbtn" id="smAnnounce">1位を発表する</button>
+        <button class="lpbtn sm del" id="smScreenClear">会場の画面を消す</button>
+        <span class="vsmall" id="smScreenSt"></span>
+      </div>
+      <p class="lpnote">「1位を発表する」を押すと、<b>会場の画面</b>でドラムロールが鳴り、写真が切りかわりながら約7秒じらしてから1位を出します。1位が同票のときは、ならべて「同じ票数です」と出ます。<b>先に受付を締め切って、もう一度「読み込む」を押してから</b>発表してください。</p>
       <h3 style="margin:18px 0 6px;font-size:15px;">写真をふやす・直す</h3>
       <div class="sform">
         <input type="number" id="smNo" placeholder="番号" style="width:84px;">
@@ -925,6 +932,7 @@ boot();
   if (!real) { say('config.js が未設定なので使えません。', 'ng'); $('smLoad').disabled = true; return; }
   var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
   var pass = $('smPass'), OPEN = false;
+  var ROWS = [];   /* fq-grand-smile-v1: 会場の画面に送るために、読み込んだ行をおぼえておく */
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function rpc(name, args){ return sb.rpc(name, args).then(function(r){ if (r.error) throw r.error; return r.data || {}; }); }
 
@@ -937,6 +945,7 @@ boot();
       $('smToggle').textContent = OPEN ? '受付を締め切る' : '受付を開ける';
       $('smStat').innerHTML = '受付：<b>' + (OPEN ? '受付中' : '締切') + '</b>　投票した人：<b>' + (d.voters|0)
                             + '人</b>　合計：<b>' + (d.total_votes|0) + '票</b>';
+      ROWS = d.rows || [];   /* fq-grand-smile-v1 */
       $('smList').innerHTML = (d.rows||[]).map(function(r){
         return '<div class="srow' + (r.active ? '' : ' off') + '">'
              + '<span class="rk">' + (r.rank|0) + '位' + (r.tie ? '<span class="tie">同票</span>' : '') + '</span>'
@@ -972,6 +981,34 @@ boot();
       }).catch(function(e){ say(String(e.message || e), 'ng'); });
   });
 
+  /* ---- fq-grand-smile-v1: 会場の画面（grand_screen.html）で1位を発表する ---- */
+  var sbc = null, SMSCREEN = false;
+  function smScrSt(){ $('smScreenSt').textContent = SMSCREEN ? '会場の画面：つながっています' : '会場の画面：まだ開いていません'; }
+  function ssend(m){ if (sbc) try { sbc.postMessage(m); } catch(e) {} }
+  try {
+    sbc = new BroadcastChannel('fq-grand');
+    sbc.onmessage = function(e){ if (e.data && e.data.type === 'hello') { SMSCREEN = true; smScrSt(); } };
+  } catch(e) { sbc = null; }
+  smScrSt(); ssend({ type: 'ping' });
+
+  $('smScreenOpen').addEventListener('click', function(){
+    window.open('grand_screen.html', 'fqGrandScreen', 'width=1280,height=720');
+    setTimeout(function(){ ssend({ type: 'ping' }); }, 1200);
+  });
+  $('smScreenClear').addEventListener('click', function(){ ssend({ type: 'smileStop' }); });
+
+  $('smAnnounce').addEventListener('click', function(){
+    if (!ROWS.length) { say('先に「読み込む」を押してください。', 'ng'); return; }
+    if (OPEN && !confirm('まだ受付中です。このまま発表すると、あとから入った票は入りません。発表しますか？')) return;
+    var top = ROWS.filter(function(r){ return (r.rank | 0) === 1 && r.active; });
+    if (!top.length) { say('1位がまだありません。', 'ng'); return; }
+    if (!confirm('会場の画面で1位を発表します。よろしいですか？' + (top.length > 1 ? '\n（1位は' + top.length + '枚の同票です）' : ''))) return;
+    ssend({ type: 'smile', sec: 7,
+      all: ROWS.filter(function(r){ return r.active && r.img; }).map(function(r){ return { u: r.img }; }),
+      win: top.map(function(r){ return { u: r.img || '', t: r.title || '', v: r.votes | 0, no: r.no }; }) });
+    if (!SMSCREEN) say('会場の画面が開いていないようです。「会場の画面を開く」を押してから、もう一度どうぞ。', 'ng');
+    else say('会場の画面で発表しています。');
+  });
   $('smList').addEventListener('click', function(e){
     var b = e.target.closest('button'); if (!b) return;
     if (b.hasAttribute('data-del')) {
