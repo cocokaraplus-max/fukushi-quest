@@ -330,6 +330,23 @@
   .sd-catch{margin:12px 0 0;font-size:15.5px;font-weight:900;color:var(--teal);text-align:center;}
   .sd-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-content:center;}
   .sd-chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:800;}
+  /* fq-smile-v1 笑顔コンテスト */
+  .sm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:4px;}
+  .sm-card{position:relative;background:var(--paper);border:3px solid var(--line);border-radius:var(--r);
+           padding:6px 6px 8px;text-align:center;cursor:pointer;transition:.15s;}
+  .sm-card:active{transform:scale(.97);}
+  .sm-card.mine{border-color:var(--red);box-shadow:0 0 0 3px rgba(223,91,69,.22);}
+  .sm-card.off{cursor:default;opacity:.55;}
+  .sm-card img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;display:block;background:#e8e0cc;}
+  .sm-card .no{position:absolute;top:10px;left:10px;background:var(--ink);color:#fff;font-size:12px;
+               font-weight:900;border-radius:8px;padding:2px 7px;}
+  .sm-card .ti{margin-top:6px;font-size:12.5px;font-weight:700;line-height:1.5;color:var(--ink);}
+  .sm-card .me{position:absolute;top:10px;right:10px;background:var(--red);color:#fff;font-size:11px;
+               font-weight:900;border-radius:8px;padding:3px 7px;display:none;}
+  .sm-card.mine .me{display:block;}
+  .sm-msg{margin-top:10px;font-size:13px;font-weight:700;color:var(--red);min-height:20px;}
+  .sm-closed{background:var(--paper);border:2px dashed var(--line);border-radius:var(--r);
+             padding:12px;text-align:center;font-size:13px;font-weight:700;color:var(--muted);}
   .sd-blk{margin-top:11px;background:var(--card);border:2px solid var(--line);border-radius:var(--r);padding:10px 12px;}
   .sd-blk h5{margin:0 0 4px;font-size:11.5px;font-weight:900;color:var(--mustard);letter-spacing:.02em;}
   /* ★fq-monster-v1: 「なぜこのモンスター？」だけ見出しの色を変えて、下の2枠と見分けやすくする */
@@ -642,6 +659,15 @@ window.__FQ_Q0 = location.search;</script>
     <div class="sec-h hand"><span class="em">🏆</span>ランキング</div>
     <p class="sec-sub">会場のみんなのポイント上位です（自動で更新されます）。あなたは <b id="rankMe">—</b>。</p>
     <div id="rankList"><span class="empty">読み込み中…</span></div>
+  </section>
+
+  <!-- fq-smile-v1 笑顔コンテスト。写真が1枚も無いときは出ない -->
+  <section id="smileSec" data-tab="quest" style="display:none">
+    <div class="sec-h hand"><span class="em">😊</span>笑顔コンテスト</div>
+    <p class="sec-sub" id="smSub">いちばん笑顔だと思う1枚を選んでください。<b>おひとり1票</b>です。</p>
+    <div id="smClosed" class="sm-closed" style="display:none">いまは投票を受け付けていません。</div>
+    <div id="smGrid" class="sm-grid"></div>
+    <div class="sm-msg" id="smMsg"></div>
   </section>
 
   <section>
@@ -2674,6 +2700,72 @@ if ('serviceWorker' in navigator) {
 
   /* ほかのスクリプトから切り替えたいとき用 */
   window.FQ_TAB = show;
+})();
+</script>
+
+<script>
+/* ===== fq-smile-v1 笑顔コンテスト（参加者）=====
+   ・1人1票。だれが何票かは、この画面には一切おりてきません（サーバーが返さない）
+   ・押しまちがえても、締切までなら入れ直せます
+   ・写真が0枚、または fq_smile.sql をまだ流していないときは、この節ごと出ません */
+(function(){
+  'use strict';
+  var cfg = window.FQ_CONFIG || {};
+  if (!(cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0 && window.supabase)) return;
+  var sec = document.getElementById('smileSec'); if (!sec) return;
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function secret(){ try{ return localStorage.getItem('fq_secret_v1') || ''; }catch(e){ return ''; } }
+
+  var MINE = null, OPEN = false, BUSY = false;
+
+  function draw(photos){
+    $('smGrid').innerHTML = photos.map(function(p){
+      var on = OPEN ? '' : ' off';
+      return '<div class="sm-card' + (String(p.id) === String(MINE) ? ' mine' : '') + on + '" data-id="' + esc(p.id) + '">'
+           + '<span class="no">' + esc(p.no) + '</span><span class="me">あなたの1票</span>'
+           + '<img alt="" loading="lazy" src="' + esc(p.img) + '">'
+           + (p.title ? '<div class="ti">' + esc(p.title) + '</div>' : '')
+           + '</div>';
+    }).join('');
+  }
+
+  function load(){
+    var sc = secret(); if (!sc || !window.DID) return;
+    return sb.rpc('fq_smile_list', {p_recog:String(window.DID), p_secret:sc}).then(function(r){
+      if (r.error || !r.data || !r.data.ok) return;          /* SQL 未実行などは だまって出さない */
+      var d = r.data, ps = d.photos || [];
+      if (!ps.length) { sec.style.display = 'none'; return; }
+      OPEN = !!d.open; MINE = d.mine;
+      sec.style.display = '';
+      $('smClosed').style.display = OPEN ? 'none' : '';
+      $('smSub').innerHTML = OPEN
+        ? 'いちばん笑顔だと思う1枚を選んでください。<b>おひとり1票</b>です。'
+        : '結果は大抽選会で発表します。';
+      draw(ps);
+      $('smMsg').textContent = (MINE && OPEN) ? 'えらびました。締め切りまでなら、押し直して変えられます。' : '';
+    }).catch(function(){});
+  }
+
+  $('smGrid').addEventListener('click', function(e){
+    var c = e.target.closest('.sm-card'); if (!c || !OPEN || BUSY) return;
+    var id = parseInt(c.getAttribute('data-id'), 10); if (!id) return;
+    BUSY = true; $('smMsg').textContent = '送っています…';
+    sb.rpc('fq_smile_vote', {p_recog:String(window.DID), p_secret:secret(), p_id:id}).then(function(r){
+      BUSY = false;
+      var d = (r && r.data) || {};
+      if (r.error || !d.ok) { $('smMsg').textContent = d.message || 'うまく送れませんでした。電波の良いところでもう一度おためしください。'; return; }
+      MINE = d.mine;
+      [].slice.call($('smGrid').querySelectorAll('.sm-card')).forEach(function(x){
+        x.classList.toggle('mine', String(x.getAttribute('data-id')) === String(MINE));
+      });
+      $('smMsg').textContent = 'ありがとうございます。締め切りまでなら、押し直して変えられます。';
+    }).catch(function(){ BUSY = false; $('smMsg').textContent = 'うまく送れませんでした。'; });
+  });
+
+  setTimeout(load, 1200);
+  setInterval(load, 60000);          /* 受付が開いた／締まったのを拾う */
 })();
 </script>
 </body>

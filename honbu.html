@@ -871,5 +871,126 @@ boot();
   });
 })();
 </script>
+
+<!-- fq-smile-v1 笑顔コンテスト（?admin=1 のときだけ出る）。1人1票・同票は同率で出す -->
+<style>
+  .scard{ border-color:#6a4a7a; }
+  .srow{ display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid var(--line); font-size:15px; }
+  .srow.off{ opacity:.45; }
+  .srow .rk{ min-width:76px; font-weight:900; color:var(--gold); font-size:18px; }
+  .srow .rk .tie{ display:block; font-size:11px; color:var(--sub); font-weight:700; }
+  .srow .th{ width:46px; height:46px; object-fit:cover; border-radius:8px; background:#3d3527; }
+  .srow .no{ min-width:40px; font-weight:900; }
+  .srow .ti{ flex:1; color:var(--sub); }
+  .srow .vt{ min-width:72px; text-align:right; font-weight:900; font-size:20px; }
+  .sform{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:10px 0; }
+  .sform input{ padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:#1c180f; color:var(--cream); }
+</style>
+<div class="wrap" id="smWrap" style="display:none;">
+  <div class="card lpcard scard" style="grid-column:1 / -1;">
+    <h2>😊 笑顔コンテスト</h2>
+    <div class="lprow">
+      <label for="smPass">合言葉</label>
+      <input type="password" id="smPass" class="lpin" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:180px;">
+      <button class="lpbtn" id="smLoad">読み込む</button>
+      <button class="lpbtn sm" id="smToggle" disabled>受付を開ける</button>
+    </div>
+    <div class="lpmsg" id="smMsg2"></div>
+    <div id="smBody" style="display:none;">
+      <p class="lpnote" id="smStat"></p>
+      <p class="lpnote">投票は<b>1人1票</b>（登録したなまえと番号で数えています）。<b>同じ票数のときは同じ順位</b>で出ます。1位が複数のときは現場で決めてください。参加者の画面には票数は一切出ません。</p>
+      <div id="smList"></div>
+      <h3 style="margin:18px 0 6px;font-size:15px;">写真をふやす・直す</h3>
+      <div class="sform">
+        <input type="number" id="smNo" placeholder="番号" style="width:84px;">
+        <input type="text" id="smTitle" placeholder="一言（本名は入れない）" style="width:230px;">
+        <input type="text" id="smImg" placeholder="img/smile/01.jpg" style="width:230px;">
+        <button class="lpbtn sm" id="smAdd">追加する</button>
+      </div>
+      <p class="lpnote">写真は <b>img/smile/</b> に置いて、ファイル名を入れてください（外部のURLでも動きます）。行の「直す」で番号・一言・ファイル名を書きかえ、「消す」でその写真と入っていた票を消します。</p>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  'use strict';
+  var p = new URLSearchParams(location.search);
+  if (p.get('admin') !== '1') return;
+  var cfg = window.FQ_CONFIG || {};
+  var real = cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') < 0 && window.supabase;
+  var wrap = document.getElementById('smWrap'); if (!wrap) return;
+  wrap.style.display = '';
+  function $(id){ return document.getElementById(id); }
+  function say(t, cls){ var m=$('smMsg2'); m.className='lpmsg'+(cls?' '+cls:''); m.textContent=t; }
+  if (!real) { say('config.js が未設定なので使えません。', 'ng'); $('smLoad').disabled = true; return; }
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  var pass = $('smPass'), OPEN = false;
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function rpc(name, args){ return sb.rpc(name, args).then(function(r){ if (r.error) throw r.error; return r.data || {}; }); }
+
+  function load(){
+    if (!pass.value.trim()) { say('合言葉を入れてください。', 'ng'); return Promise.resolve(); }
+    return rpc('fq_admin_smile_list', {p_pass: pass.value}).then(function(d){
+      if (!d.ok) { say(d.message || '読み込めませんでした。', 'ng'); return; }
+      say(''); $('smBody').style.display = ''; OPEN = !!d.open;
+      $('smToggle').disabled = false;
+      $('smToggle').textContent = OPEN ? '受付を締め切る' : '受付を開ける';
+      $('smStat').innerHTML = '受付：<b>' + (OPEN ? '受付中' : '締切') + '</b>　投票した人：<b>' + (d.voters|0)
+                            + '人</b>　合計：<b>' + (d.total_votes|0) + '票</b>';
+      $('smList').innerHTML = (d.rows||[]).map(function(r){
+        return '<div class="srow' + (r.active ? '' : ' off') + '">'
+             + '<span class="rk">' + (r.rank|0) + '位' + (r.tie ? '<span class="tie">同票</span>' : '') + '</span>'
+             + '<img class="th" alt="" src="' + esc(r.img) + '">'
+             + '<span class="no">' + esc(r.no) + '</span>'
+             + '<span class="ti">' + esc(r.title || '') + (r.active ? '' : '（非公開）') + '</span>'
+             + '<span class="vt">' + (r.votes|0) + '票</span>'
+             + '<button class="lpbtn sm" data-ed="' + esc(r.id) + '" data-no="' + esc(r.no) + '" data-ti="' + esc(r.title||'') + '" data-im="' + esc(r.img||'') + '">直す</button>'
+             + '<button class="lpbtn sm" data-del="' + esc(r.id) + '">消す</button></div>';
+      }).join('') || '<p class="lpnote">まだ写真がありません。下から足してください。</p>';
+    }).catch(function(e){ say('読み込めませんでした（' + (e.message || e) + '）。fq_smile.sql は流しましたか？', 'ng'); });
+  }
+  $('smLoad').addEventListener('click', load);
+
+  $('smToggle').addEventListener('click', function(){
+    var next = !OPEN;
+    if (next && !confirm('投票の受付を開けます。よろしいですか？')) return;
+    if (!next && !confirm('投票を締め切ります。これ以降は投票できなくなります。よろしいですか？')) return;
+    rpc('fq_admin_smile_open', {p_pass: pass.value, p_open: next}).then(function(d){
+      if (!d.ok) { say(d.message || 'できませんでした。', 'ng'); return; }
+      load();
+    }).catch(function(e){ say(String(e.message || e), 'ng'); });
+  });
+
+  $('smAdd').addEventListener('click', function(){
+    var no = parseInt($('smNo').value, 10);
+    if (!no) { say('番号を入れてください。', 'ng'); return; }
+    rpc('fq_admin_smile_save', {p_pass: pass.value, p_id: null, p_no: no,
+        p_title: $('smTitle').value, p_img: $('smImg').value, p_active: true, p_sort: no})
+      .then(function(d){
+        if (!d.ok) { say(d.message || '足せませんでした。', 'ng'); return; }
+        $('smNo').value = ''; $('smTitle').value = ''; $('smImg').value = ''; load();
+      }).catch(function(e){ say(String(e.message || e), 'ng'); });
+  });
+
+  $('smList').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.hasAttribute('data-del')) {
+      if (!confirm('この写真と、入っていた票を消します。よろしいですか？')) return;
+      rpc('fq_admin_smile_delete', {p_pass: pass.value, p_id: parseInt(b.getAttribute('data-del'),10)})
+        .then(load).catch(function(err){ say(String(err.message || err), 'ng'); });
+      return;
+    }
+    if (b.hasAttribute('data-ed')) {
+      var no = prompt('番号', b.getAttribute('data-no')); if (no === null) return;
+      var ti = prompt('一言（本名は入れない）', b.getAttribute('data-ti')); if (ti === null) return;
+      var im = prompt('画像のファイル名', b.getAttribute('data-im')); if (im === null) return;
+      rpc('fq_admin_smile_save', {p_pass: pass.value, p_id: parseInt(b.getAttribute('data-ed'),10),
+          p_no: parseInt(no,10), p_title: ti, p_img: im, p_active: true, p_sort: parseInt(no,10)})
+        .then(function(d){ if (!d.ok) { say(d.message || '直せませんでした。', 'ng'); return; } load(); })
+        .catch(function(err){ say(String(err.message || err), 'ng'); });
+    }
+  });
+})();
+</script>
 </body>
 </html>
