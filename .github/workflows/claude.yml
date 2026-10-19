@@ -1,0 +1,54 @@
+# ジャービスの依頼を Claude に作らせる（fq-claude-v1）
+#
+# 使い方
+#   Issue か Pull Request のコメントに「@claude 〜してください」と書くと、
+#   Claude がブランチを切って直し、Pull Request を出すところまでやる。
+#   HIROさんはスマホの GitHub アプリで中身を見て、よければ Merge するだけ。
+#   Merge すると GitHub Pages に反映される。
+#
+# ★自動では動かない。@claude と書いたときだけ動く。
+#   ジャービスの依頼書が出ただけでは走らないので、作らせるかどうかは毎回ヒロさまが決める。
+#
+# 先に要るもの（どちらもヒロさまの手元で）
+#   1. Claude の GitHub アプリをこのリポジトリに入れる → https://github.com/apps/claude
+#   2. リポジトリの Settings → Secrets and variables → Actions に CLAUDE_CODE_OAUTH_TOKEN を入れる
+#      （`npx @anthropic-ai/claude-code setup-token` で出るトークン。
+#        これを使うと API の追加課金ではなく、Claude のサブスクの枠を使う）
+#      ※ API キーで払う形にするなら、Secret を ANTHROPIC_API_KEY にして、
+#        下の claude_code_oauth_token の行を
+#          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+#        に書きかえる
+#   ★鍵はここにも、チャットにも書かない。GitHub の Secrets にだけ置く。
+name: Claude
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+# 同じ所で何本も走って無駄にお金を使わないようにする
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  claude:
+    if: contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # 回りすぎて高くならないよう、やり取りの回数に上限をつける
+          claude_args: "--max-turns 20"

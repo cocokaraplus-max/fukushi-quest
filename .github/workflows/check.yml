@@ -1,0 +1,31 @@
+# 押す前の点検（fq-check-ci-v1）
+#
+# HTML の中の JavaScript の文法を見る。福祉クエストは HTML1枚に JS が全部入っているので、
+# カンマを1つ落としただけでページ全体が動かなくなる。しかも開くまで分からない。
+# Pull Request の画面に赤か緑が付けば、中身を読み切らなくても「赤なら押さない」が判断できる。
+name: 押す前の点検
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check_js
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: JavaScript の文法を見る
+        run: python3 check_js.py
