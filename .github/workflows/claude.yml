@@ -50,5 +50,12 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # 回りすぎて高くならないよう、やり取りの回数に上限をつける
-          claude_args: "--max-turns 20"
+          # --max-turns … 回りすぎて高くならないよう、やり取りの回数に上限をつける
+          # --allowedTools … 使ってよいコマンドを名ざしで渡す。
+          #   まとめて直すのに python3 が、後片づけに rm が要る（2026-10-19 に実際に止まった）。
+          #   「何でも実行してよい」にはしない。この実行環境には認証トークンが置かれているので、
+          #   要るコマンドだけを足していく。
+          #   ※ ここは実際に CLI へ渡る行なので、この中にコメントは書かないこと。
+          claude_args: |
+            --max-turns 20
+            --allowedTools "Bash(python3:*),Bash(rm:*)"
