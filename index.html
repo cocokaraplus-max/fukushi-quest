@@ -603,10 +603,17 @@ const FQ = {
   /* ★大きさは、ほかのキャラ（散歩は1人あたり約44px、うさぎは約48〜80px）に
        そろえてある。これより大きくすると、カウントダウンの数字に頭がかかる。
        ★★大きくしたくなったら、必ず画面で数字との重なりを見ること。 */
-  .m-cross{--aw:clamp(46px,13vw,74px);bottom:8px;left:0;
+  /* ★fq-326size-v1: 電車の子（幅55・高さ82・頭が床から190）に頭の高さをそろえた。
+       男の子 幅59・頭190 ／ 女の子 幅87・頭190（画面幅390pxのとき）。
+     ★女の子だけ幅が大きいのは、絵の左に銃が長く出ていて横に広いから。
+       体の大きさは男の子と同じくらい。幅の数字だけ見て縮めないこと。
+     ★足もとの高さはわざとずらしてある（女の子を下＝手前に）。
+       頭が同じ高さで足もとが下だと「手前にいる」ように見え、すれ違いが立体になる。
+     ★★これ以上大きくすると、カウントダウンの数字に頭がかかる。
+       電車の子が上限の目安。大きくしたら必ず画面で重なりを見ること。 */
+  .m-cross{--aw:clamp(53px,15.1vw,85px);bottom:10px;left:0;
            animation:a-cross 60s linear infinite;}
-  /* 女の子は少し手前。下に置いて、少し大きくする（すれ違いが重なって見えないように） */
-  .m-cross.cr{--aw:clamp(54px,15vw,86px);bottom:0;
+  .m-cross.cr{--aw:clamp(78px,22.4vw,125px);bottom:2px;
               animation-name:a-cross-r;}
   .m-cross img{animation:i-cross .46s ease-in-out infinite alternate;
                animation-delay:var(--at);}
@@ -2140,26 +2147,33 @@ const FQ = {
      ★組み立て: まとまり（色の見出し）→ その下に正方形のカード2枚。
        チラシの「4つのまとまり × 2つずつ」という意味はそのまま残している。
      ★色はサイトの5色から取っている（チラシ印刷用のくすんだ色はやめた）。 */
-  .fband{display:grid;grid-template-columns:1fr;gap:20px;margin:14px 0 4px;}
-  @media(min-width:700px){ .fband{grid-template-columns:1fr 1fr;gap:22px 20px;} }
-  .fgrp.or{--c:var(--orange);} .fgrp.gr{--c:var(--green);}
-  .fgrp.bl{--c:var(--blue);}   .fgrp.pk{--c:var(--pink);}
-  .fgh{display:inline-block;background:var(--c);color:#fff;
+  /* ★★fq-dsc-line-v1: 写真をやめて、1行ずつの形にした。
+       ①写真はどれもフリー素材で、当日の様子ではない。名前だけで十分伝わる
+       ②縦が3分の1以下になり、スマホでも一目で全部入る
+       ③8枚ぶんの読み込みが無くなる
+     ★写真（img/sq_*.jpg / .webp）も、データの p:'sq_◯◯' も消していない。
+       戻したいときは、このパッチの前に戻せばそのまま出る。
+     ★--cd は札の色。チラシの明るい色に白文字だとコントラストが足りないので、
+       **札と文字にだけ**少し濃いほうを使う。帯や丸は明るいまま。
+       ★片方だけ直さないこと（並べて同じ色に見える組にしてある）。 */
+  .fband{border-top:2.5px solid var(--ink);margin:16px 0 6px;}
+  .fgrp.or{--c:var(--orange);--cd:#B03C04;} .fgrp.gr{--c:var(--green);--cd:#1C7A38;}
+  .fgrp.bl{--c:var(--blue);--cd:#0B6AA6;}   .fgrp.pk{--c:var(--pink);--cd:#C32566;}
+  .fgrp{display:flex;align-items:center;gap:14px;padding:15px 2px;
+        border-bottom:1px solid var(--line);}
+  .fgrp:last-child{border-bottom:0;}
+  .fgh{flex:0 0 auto;min-width:128px;text-align:center;white-space:nowrap;
+       background:var(--cd);color:#fff;
        border:2.5px solid var(--ink);border-radius:var(--r2);
-       box-shadow:3px 3px 0 var(--ink);padding:3px 12px;margin-bottom:10px;
-       font-size:13px;font-weight:900;letter-spacing:.09em;}
-  .fgc{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .fg{background:#fff;border:2.5px solid var(--ink);border-radius:var(--r);
-      overflow:hidden;box-shadow:4px 5px 0 var(--ink);}
-  .fg picture{display:block;}
-  /* ★★height:auto を必ず書くこと。
-     <img> に width/height を書くと、それが高さの指定として効いてしまい、
-     aspect-ratio が負ける（実際に 168×520 の縦長になった）。 */
-  .fg img{width:100%;height:auto;aspect-ratio:1;object-fit:cover;display:block;
-          border-bottom:2.5px solid var(--ink);}
-  .fg b{display:block;background:var(--c);color:#fff;text-align:center;
-        padding:6px 3px;font-weight:900;letter-spacing:.03em;
-        font-size:clamp(10.5px,3vw,13px);line-height:1.3;}
+       box-shadow:3px 3px 0 var(--ink);padding:4px 10px;
+       font-size:12.5px;font-weight:900;letter-spacing:.06em;}
+  .fgc{font-size:clamp(15px,4.4vw,19px);font-weight:900;line-height:1.5;}
+  .fgc i{font-style:normal;font-weight:700;color:#6B6152;margin:0 .1em;}
+  /* 細い画面では札を上、名前を下にする（横に並べると名前が折り返して読みにくい） */
+  @media(max-width:520px){
+    .fgrp{flex-direction:column;align-items:flex-start;gap:9px;padding:13px 2px;}
+    .fgh{min-width:0;}
+  }
 
 
   /* ══════════ チップ ══════════ */
@@ -2333,6 +2347,8 @@ const FQ = {
   footer{background:var(--ink);color:#fff;text-align:center;padding:26px 18px 34px;margin-top:44px;}
   footer .h{font-size:15px;font-weight:900;}
   footer .c{font-size:11.5px;opacity:.7;margin-top:8px;line-height:1.8;}
+  /* fq-326credit-v1: 著作権表示は、ほかの文より少し離して小さく */
+  footer .c.cr326{margin-top:14px;font-size:10.5px;opacity:.6;letter-spacing:.04em;}
 
   /* ══════════ 下のタブバー（fq-tabs-v1）══════════
      スマホのアプリと同じ「下に並んだタブ」。押すとページの中身が入れかわります。
@@ -2665,6 +2681,9 @@ const FQ = {
 <footer>
   <div class="h" id="host"></div>
   <div class="c">つながるフェスタ 2026<br>いつもの「福祉」のイメージが、ちょっと変わる一日。</div>
+  <!-- fq-326credit-v1: 326さんのキャラクターをトップの演出で使わせていただいている。
+       ★文言は絵の中の表記（©326）に合わせてある。変えるときはここだけ。 -->
+  <div class="c cr326">キャラクターイラスト ©326</div>
 </footer>
 
 <button class="totop" id="toTop" type="button" aria-label="いちばん上に戻る">↑</button>
@@ -2764,7 +2783,13 @@ const FQ = {
        うしろだとキャッチコピーに隠れて、ほとんど見えなかった。 */
     /* ★fq-usagi-v1: うさぎ軍団も文字のまえへ（列車といっしょに歩くため）。
        skate は出番を外したが、戻したときのためにここには残してある。 */
-    const FRONT = ['bounce', 'skate', 'walk', 'dash', 'float', 'usagi'];
+    /* ★fq-front-v1: cross（326さんの2人）と rocket を前に出した。
+         cross  … 電車の子の大きさにしたので、うしろだと頭が数字に隠れて
+                  切れたように見える。数字の【前】を通す。
+         rocket … 空へ飛んでいく子。ロゴの文字の【前】を飛ばす。
+       ★ここに名前を足すと #actorsfront（z-index 3）に入る。
+         前後は中の z-index ではなく、この箱で決まる（上の注意書きのとおり）。 */
+    const FRONT = ['bounce', 'skate', 'walk', 'dash', 'float', 'usagi', 'cross', 'rocket'];
     const sit   = A.filter(c => c.move === 'sit');
     const peek  = A.filter(c => c.move === 'peek');
     const front = A.filter(c => FRONT.indexOf(c.move) >= 0);
@@ -3097,20 +3122,15 @@ const FQ = {
   /* ── DISCOVER ── */
   $('#discoverText').textContent = FQ.discover.text;
 
-  /* ★★fq-square-v1: まとまり（色の見出し）→ 正方形のカード2枚。
-     写真は <picture> で WebP を先に出し、読めない端末には .jpg を出す。
-     ★alt には名前を入れている（読み上げで何の写真か分かるように）。
-     ★width / height を書いておくと、読み込み中に画面がガタつかない。 */
-  $('#fband').innerHTML = (FQ.discover.flyer || []).map(g => {
-    const card = it => '<div class="fg"><picture>'
-        + '<source srcset="img/' + esc(it.p) + '.webp" type="image/webp">'
-        + '<img src="img/' + esc(it.p) + '.jpg" alt="' + esc(it.n) + '" '
-        + 'width="520" height="520" loading="lazy" decoding="async">'
-        + '</picture><b>' + esc(it.n) + '</b></div>';
-    return '<div class="fgrp ' + esc(g.c) + '">'
+  /* ★★fq-dsc-line-v1: まとまり（色の札）→ 中身の名前を「、」でつないで1行。
+     ★データ（FQ.discover.flyer）は前のまま。p:'sq_◯◯'（写真の名前）も残してある。
+       写真に戻したくなったら、このパッチの前に戻せばそのまま出る。
+     ★「、」は <i> で包んで色を薄くしている（名前そのものを前に出すため）。 */
+  $('#fband').innerHTML = (FQ.discover.flyer || []).map(g =>
+    '<div class="fgrp ' + esc(g.c) + '">'
       + '<span class="fgh">' + g.cat.map(esc).join('・') + '</span>'
-      + '<div class="fgc">' + g.items.map(card).join('') + '</div></div>';
-  }).join('');
+      + '<span class="fgc">' + g.items.map(it => esc(it.n)).join('<i>、</i>') + '</span>'
+    + '</div>').join('');
   /* ── FOOD ── */
   /* ── ガチャの告知（fq-gacha-v1）── */
   (function(){
