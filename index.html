@@ -128,6 +128,9 @@ const FQ = {
                     （20秒ひとまわり。丸の鼓動に合わせてあるため）
            dash   … 横を走り抜ける。歩く子を追い抜く役
            sit    … 開催日の「（日）」の丸に腰かけて、足をぶらぶらさせる
+           cross  … 両端から出てきて、しばらく立ってから走り出し、
+                    まん中ですれ違って反対の端へ抜ける（326さんの2人）
+                    ★この動きだけ2人ひと組。片方だけにしないこと
        ・at   … 出てくるタイミング（秒）
        ・x/y  … 使うのは、位置を自分で決めたいときだけ。
                 上の8つの動きは、位置をCSS側で決めているので x/y は要りません
@@ -243,6 +246,16 @@ const FQ = {
            追いつくのは画面の外。画面の中では追い抜かない（測って確認済み）。
          ★遅れを縮めすぎると、画面の中で前の子を追い抜いてしまう。 */
       { photo:'img/usagi_26.png',  move:'usagi', at:32.07, cls:'urun ubig'   },
+
+      /* ★★fq-326cross-v1: 326さんの2人（ご本人の許可をいただいています）。
+           46.6秒から。電車が戻りきった直後で、床が空いている時間。
+         ★2人ひと組。at は必ず同じにすること（同時に出て、同時に走り出す）。
+         ★並びの順がそのまま前後になる。女の子をあとに置いて手前にしている。
+         ★絵は切り抜き済みの透過（img/326_*.webp）。
+           ph() は ch_ / usagi_ / lg2_ で始まる名前しか webp に替えないので、
+           ここでは最初から .webp を書いている。 */
+      { photo:'img/326_boy.webp',  move:'cross', at:46.6 },
+      { photo:'img/326_girl.webp', move:'cross', at:46.6, cls:'cr' },
     ],
   },
 
@@ -577,6 +590,46 @@ const FQ = {
   @keyframes i-step{
     from{transform:translateY(0)     rotate(-4deg);}
     to  {transform:translateY(-12px) rotate(4deg);}
+  }
+
+  /* ══ fq-326cross-v1 : 326さんの2人がすれ違う ══
+     両端から同時に出る → 約2.2秒 立っている → 走り出して、まん中ですれ違う
+     → 反対の端へ抜ける。ぜんぶで約6.3秒（60秒のうち 46.6〜52.9秒）。
+     ★コマの％は 60秒を100としたもの。1秒＝1.667％。
+       0.5 …出る／2.0 …立ち位置に着く／5.6 …走り出す／10.5 …抜けきる
+     ★★どのコマにも opacity を書くこと（a-walk と同じ。書かないと走っている
+       あいだじゅう だんだん透明になる）。
+     ★2人は同じ時間割で、向きだけが逆。a-cross を直したら a-cross-r も同じ数字に。 */
+  /* ★大きさは、ほかのキャラ（散歩は1人あたり約44px、うさぎは約48〜80px）に
+       そろえてある。これより大きくすると、カウントダウンの数字に頭がかかる。
+       ★★大きくしたくなったら、必ず画面で数字との重なりを見ること。 */
+  .m-cross{--aw:clamp(46px,13vw,74px);bottom:8px;left:0;
+           animation:a-cross 60s linear infinite;}
+  /* 女の子は少し手前。下に置いて、少し大きくする（すれ違いが重なって見えないように） */
+  .m-cross.cr{--aw:clamp(54px,15vw,86px);bottom:0;
+              animation-name:a-cross-r;}
+  .m-cross img{animation:i-cross .46s ease-in-out infinite alternate;
+               animation-delay:var(--at);}
+  @keyframes a-cross{
+      0%        {opacity:0; transform:translateX(-120px);}
+      0.4%      {opacity:1; transform:translateX(-120px);}
+      2.0%      {opacity:1; transform:translateX(18px);}
+      5.6%      {opacity:1; transform:translateX(18px);}
+     10.3%      {opacity:1; transform:translateX(calc(100vw + 20px));}
+     10.5%,100% {opacity:0; transform:translateX(calc(100vw + 20px));}
+  }
+  @keyframes a-cross-r{
+      0%        {opacity:0; transform:translateX(calc(100vw + 120px));}
+      0.4%      {opacity:1; transform:translateX(calc(100vw + 120px));}
+      2.0%      {opacity:1; transform:translateX(calc(100vw - var(--aw) - 18px));}
+      5.6%      {opacity:1; transform:translateX(calc(100vw - var(--aw) - 18px));}
+     10.3%      {opacity:1; transform:translateX(-120px);}
+     10.5%,100% {opacity:0; transform:translateX(-120px);}
+  }
+  /* 立っているあいだは呼吸、走っているあいだは足どりに見える。ひとつで兼ねている */
+  @keyframes i-cross{
+    from{transform:translateY(0)    rotate(-2.5deg);}
+    to  {transform:translateY(-7px) rotate(2.5deg);}
   }
 
   /* ② ぴょんぴょん … その場ではねる。x（横）と y（下からの高さ）で位置を決める。
